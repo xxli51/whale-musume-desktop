@@ -1,0 +1,140 @@
+[data-whale-desktop-settings] {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  z-index: 1000;
+  display: flex;
+  width: min(680px, calc(100vw - 40px));
+  max-height: min(820px, calc(100vh - 40px));
+  flex-direction: column;
+  overflow: hidden;
+  color: #182235;
+  background: rgb(250 252 255 / 98%);
+  border: 1px solid rgb(80 112 155 / 25%);
+  border-radius: 18px;
+  box-shadow: 0 24px 80px rgb(15 32 55 / 32%);
+  font: 13px/1.5 "Microsoft YaHei UI", "Segoe UI", sans-serif;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+  user-select: text;
+}
+
+[data-whale-desktop-settings][hidden] { display: none; }
+
+.wm-settings-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  color: #fff;
+  background: linear-gradient(135deg, #4b9fea, #7b72e9);
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.wm-settings-head:active { cursor: grabbing; }
+
+.wm-settings-head strong { font-size: 16px; }
+.wm-settings-head span { margin-left: 8px; font-size: 11px; opacity: 0.8; }
+.wm-settings-close { color: #fff !important; background: rgb(255 255 255 / 16%) !important; cursor: pointer; }
+
+.wm-settings-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px;
+  overflow: auto;
+}
+
+.wm-card {
+  padding: 12px 14px;
+  background: #fff;
+  border: 1px solid #dfe7f1;
+  border-radius: 13px;
+}
+
+.wm-card summary {
+  cursor: pointer;
+  font-weight: 700;
+  list-style: none;
+}
+
+.wm-card summary::-webkit-details-marker { display: none; }
+.wm-card summary::after { float: right; content: "▸"; color: #718096; }
+.wm-card[open] summary::after { content: "▾"; }
+.wm-card-content { padding-top: 12px; }
+
+.wm-stats,
+.wm-switches,
+.wm-actions,
+.wm-achievements {
+  display: grid;
+  gap: 8px;
+}
+
+.wm-stats { grid-template-columns: repeat(5, 1fr); }
+.wm-switches { grid-template-columns: repeat(2, 1fr); }
+.wm-actions { grid-template-columns: repeat(4, 1fr); }
+.wm-achievements { grid-template-columns: repeat(5, 1fr); }
+
+.wm-stat,
+.wm-achievement {
+  padding: 7px 4px;
+  text-align: center;
+  background: #f5f8fc;
+  border: 1px solid #e1e8f2;
+  border-radius: 9px;
+}
+
+.wm-stat small,
+.wm-achievement small { display: block; color: #718096; }
+.wm-achievement.locked { opacity: 0.35; filter: grayscale(1); }
+
+.wm-row {
+  display: flex;
+  min-height: 38px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border-bottom: 1px solid #edf1f6;
+}
+
+.wm-row:last-child { border-bottom: 0; }
+.wm-row input[type="text"],
+.wm-row input[type="password"],
+.wm-row select {
+  width: min(280px, 55%);
+  box-sizing: border-box;
+  padding: 6px 9px;
+  color: #182235;
+  background: #fff;
+  border: 1px solid #ccd8e6;
+  border-radius: 8px;
+}
+
+.wm-settings-body button {
+  padding: 6px 10px;
+  color: #253858;
+  background: #eef4fb;
+  border: 1px solid #cfdaea;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.wm-settings-body button:hover { background: #dfebf8; }
+.wm-settings-body button:disabled { cursor: default; opacity: 0.45; }
+.wm-switch { justify-content: flex-start; }
+.wm-switch input { accent-color: #4b9fea; }
+.wm-note { color: #718096; font-size: 11px; }
+.wm-status { min-height: 18px; color: #53657d; font-size: 12px; }
+.wm-danger { color: #b42318 !important; background: #fff2f0 !important; border-color: #f3c3bd !important; }
+
+.wm-quest-progress { width: 100px; height: 7px; overflow: hidden; background: #dde5ef; border-radius: 5px; }
+.wm-quest-progress i { display: block; height: 100%; background: #4b9fea; }
+
+@media (max-width: 620px) {
+  .wm-stats { grid-template-columns: repeat(3, 1fr); }
+  .wm-actions { grid-template-columns: repeat(2, 1fr); }
+  .wm-achievements { grid-template-columns: repeat(3, 1fr); }
+}

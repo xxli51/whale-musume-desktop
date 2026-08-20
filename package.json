@@ -1,0 +1,64 @@
+{
+  "name": "whale-musume-desktop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "鲸鱼娘 Windows 桌面宠物",
+  "author": "Lex.Xander",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/xxli51/whale-musume-desktop.git"
+  },
+  "homepage": "https://github.com/xxli51/whale-musume-desktop#readme",
+  "bugs": {
+    "url": "https://github.com/xxli51/whale-musume-desktop/issues"
+  },
+  "main": "main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test test/repository.test.mjs",
+    "qa:display": "electron tools/display-diagnostic.cjs",
+    "build": "electron-builder --win nsis",
+    "build:portable": "electron-builder --win portable"
+  },
+  "devDependencies": {
+    "electron": "43.4.1",
+    "electron-builder": "26.15.3"
+  },
+  "build": {
+    "appId": "com.xxli51.whale-musume-desktop",
+    "productName": "鲸鱼娘桌面宠物",
+    "artifactName": "WhaleMusume-Desktop-${version}-${arch}.${ext}",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.cjs",
+      "preload.cjs",
+      "renderer/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "assets",
+        "to": "assets",
+        "filter": ["**/*"]
+      },
+      {
+        "from": "build/icon.png",
+        "to": "icon.png"
+      }
+    ],
+    "win": {
+      "icon": "build/icon.ico",
+      "target": ["nsis"],
+      "requestedExecutionLevel": "asInvoker"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "鲸鱼娘桌面宠物"
+    }
+  }
+}
