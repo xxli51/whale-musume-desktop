@@ -80,3 +80,9 @@ preload.cjs   安全的渲染进程桥接层
 桌面版基于 [Sutera-Diffusus/dsh-whale-musume](https://github.com/Sutera-Diffusus/dsh-whale-musume) 的角色资源、状态机与交互代码改造。
 
 本仓库使用 MIT License。上游版权及许可声明见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
+
+## 免责声明
+
+本项目是社区维护的非官方开源项目，与 DeepSeek、DeepSeek Harness 及相关机构不存在官方隶属、赞助或背书关系。软件按“现状”提供，安装和使用风险由用户自行承担。角色形象、商标及第三方内容的相关权利归各自权利人所有。
+
+完整内容请阅读 [DISCLAIMER.md](DISCLAIMER.md)。

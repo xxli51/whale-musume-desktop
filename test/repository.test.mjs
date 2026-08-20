@@ -18,10 +18,20 @@ test("standalone repository contains every runtime entry", () => {
     "assets/dsh-whale-moe.css",
     "assets/whale-moe-core.js",
     "build/icon.ico",
-    "build/icon.png"
+    "build/icon.png",
+    "DISCLAIMER.md"
   ]) {
     assert.equal(existsSync(path.join(root, relative)), true, `${relative} is required`);
   }
+});
+
+test("repository exposes license and disclaimer notices", () => {
+  const readme = read("README.md");
+  const disclaimer = read("DISCLAIMER.md");
+  assert.match(readme, /\[DISCLAIMER\.md\]\(DISCLAIMER\.md\)/);
+  assert.match(disclaimer, /非官方项目/);
+  assert.match(disclaimer, /按现状提供/);
+  assert.match(disclaimer, /THIRD_PARTY_NOTICES\.md/);
 });
 
 test("desktop package is self-contained", () => {
