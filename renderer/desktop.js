@@ -32,8 +32,8 @@
     .catch(function (error) { console.error("鲸鱼娘资源加载失败", error); });
 
   var interactive = false;
-  function updateMouseMode(event) {
-    var target = document.elementFromPoint(event.clientX, event.clientY);
+  function updateMouseModeAt(clientX, clientY) {
+    var target = document.elementFromPoint(clientX, clientY);
     var next = Boolean(target && target.closest && target.closest(
       "[data-dsh-whale-frame], [data-dsh-whale-bubble], [data-dsh-whale-prefs], " +
       "[data-dsh-whale-context], [data-dsh-whale-game], [data-dsh-whale-catch], " +
@@ -44,10 +44,27 @@
     api.setMouseInteractive(next);
   }
 
+  function updateMouseMode(event) {
+    updateMouseModeAt(event.clientX, event.clientY);
+  }
+
   window.addEventListener("mousemove", updateMouseMode, { passive: true });
-  window.addEventListener("blur", function () {
-    interactive = false;
-    api.setMouseInteractive(false);
+  api.onCursorProbe(function (point) {
+    if (!point || !Number.isFinite(point.x) || !Number.isFinite(point.y)) return;
+    updateMouseModeAt(point.x, point.y);
+  });
+  api.onSystemState(function (state) {
+    window.dispatchEvent(new CustomEvent("whale-desktop-system-state", { detail: state }));
+  });
+  api.onComputerState(function (state) {
+    window.dispatchEvent(new CustomEvent("whale-desktop-computer-state", { detail: state }));
+  });
+  function syncComputerLinkPreference() {
+    api.setComputerLinkEnabled(localStorage.getItem("whale-moe:computer-link") !== "0");
+  }
+  syncComputerLinkPreference();
+  window.addEventListener("whale-moe-prefs-change", function (event) {
+    if (event.detail && event.detail.key === "computer-link") syncComputerLinkPreference();
   });
   api.onResetPosition(function () {
     localStorage.removeItem("whale-moe:floatX");

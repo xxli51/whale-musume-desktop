@@ -21,5 +21,17 @@ contextBridge.exposeInMainWorld("whaleDesktop", Object.freeze({
   },
   onOpenSettings(callback) {
     ipcRenderer.on("whale:open-settings", () => callback());
+  },
+  onCursorProbe(callback) {
+    ipcRenderer.on("whale:cursor-probe", (_event, point) => callback(point));
+  },
+  onSystemState(callback) {
+    ipcRenderer.on("whale:system-state", (_event, state) => callback(state));
+  },
+  setComputerLinkEnabled(enabled) {
+    ipcRenderer.send("whale:set-computer-link-enabled", Boolean(enabled));
+  },
+  onComputerState(callback) {
+    ipcRenderer.on("whale:computer-state", (_event, state) => callback(state));
   }
 }));

@@ -36,12 +36,26 @@
     return node;
   }
 
-  function section(title, open) {
+  function section(title, open, meta) {
     var details = element("details", "wm-card");
     details.open = Boolean(open);
-    details.appendChild(element("summary", "", title));
+    var summary = element("summary");
+    summary.appendChild(element("span", "wm-summary-title", title));
+    if (meta) summary.appendChild(element("span", "wm-summary-meta", meta));
+    details.appendChild(summary);
     var content = element("div", "wm-card-content");
     details.appendChild(content);
+    details.addEventListener("toggle", function () {
+      if (!details.open) return;
+      var panel = details.closest("[data-whale-desktop-settings]");
+      if (!panel) return;
+      panel.querySelectorAll("details.wm-card[open]").forEach(function (other) {
+        if (other !== details) other.open = false;
+      });
+      requestAnimationFrame(function () {
+        summary.scrollIntoView({ block: "nearest", behavior: "smooth" });
+      });
+    });
     return [details, content];
   }
 
@@ -102,6 +116,21 @@
     container.appendChild(status);
   }
 
+  function renderComputerLink(container) {
+    var label = element("label", "wm-row wm-switch");
+    var input = document.createElement("input");
+    input.type = "checkbox";
+    input.checked = value("computer-link", "1") !== "0";
+    input.addEventListener("change", function () {
+      save("computer-link", input.checked ? "1" : "0");
+    });
+    label.appendChild(input);
+    label.appendChild(element("span", "", "启用电脑状态联动"));
+    container.appendChild(label);
+    container.appendChild(element("p", "wm-note", "联动前台应用分类、CPU/内存、电池与电源、网络状态，并触发对应动作和台词。"));
+    container.appendChild(element("p", "wm-note", "仅识别前台程序的进程名分类，不读取窗口标题、键盘输入、文件或网页内容。"));
+  }
+
   function todayKey() {
     var d = new Date();
     return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
@@ -128,7 +157,7 @@
         if (window.__dshWhaleMoeClaimQuest) window.__dshWhaleMoeClaimQuest(slot.id);
         renderPanel();
       });
-      var right = element("div", "wm-actions"); right.style.gridTemplateColumns = "100px 48px 64px";
+      var right = element("div", "wm-quest-controls");
       right.appendChild(bar); right.appendChild(element("span", "wm-note", progress + "/" + def.target)); right.appendChild(claim);
       container.appendChild(row(def.desc, right));
     });
@@ -174,7 +203,7 @@
     });
     container.appendChild(quickWrap);
     container.appendChild(element("p", "wm-note", "点击下方任意动作可预览；全部现有动作资源均已列入。"));
-    var poses = element("div", "wm-actions");
+    var poses = element("div", "wm-actions wm-pose-grid");
     POSES.forEach(function (pose) {
       var button = element("button", "", pose);
       button.title = pose;
@@ -204,8 +233,10 @@
     if (old) old.remove();
     var panel = element("div"); panel.setAttribute("data-whale-desktop-settings", "true"); panel.hidden = !wasOpen;
     var head = element("div", "wm-settings-head");
-    var title = element("div"); title.appendChild(element("strong", "", "鲸鱼娘设置与动作")); title.appendChild(element("span", "", "Desktop v1.0.0")); head.appendChild(title);
-    var close = element("button", "wm-settings-close", "关闭"); close.addEventListener("click", function () { panel.hidden = true; window.whaleDesktop.setMouseInteractive(false); }); head.appendChild(close); panel.appendChild(head);
+    var title = element("div", "wm-settings-title");
+    title.appendChild(element("span", "wm-settings-mark", "🐳"));
+    var titleCopy = element("div"); titleCopy.appendChild(element("strong", "", "鲸鱼娘 · 设置")); titleCopy.appendChild(element("span", "wm-version", "Desktop v2.0.0")); title.appendChild(titleCopy); head.appendChild(title);
+    var close = element("button", "wm-settings-close", "×"); close.title = "关闭设置"; close.setAttribute("aria-label", "关闭设置"); close.addEventListener("click", function () { panel.hidden = true; window.whaleDesktop.setMouseInteractive(false); }); head.appendChild(close); panel.appendChild(head);
     var rawSavedX = localStorage.getItem(PREFIX + "desktopSettingsX");
     var rawSavedY = localStorage.getItem(PREFIX + "desktopSettingsY");
     var savedX = rawSavedX === null ? NaN : Number(rawSavedX);
@@ -245,19 +276,23 @@
     head.addEventListener("pointercancel", finishPanelDrag);
     var body = element("div", "wm-settings-body"); panel.appendChild(body);
 
-    var overview = element("div", "wm-card");
+    var overview = element("div", "wm-card wm-overview");
     var stats = element("div", "wm-stats"); renderStats(stats); overview.appendChild(stats);
     var titleInput = document.createElement("input"); titleInput.type = "text"; titleInput.maxLength = 8; titleInput.value = value("title", "主人"); titleInput.addEventListener("input", function () { save("title", titleInput.value); });
     overview.appendChild(row("如何称呼我", titleInput)); body.appendChild(overview);
 
-    var companion = section("🎛️ 陪伴表现", true); var switches = element("div", "wm-switches"); renderSwitches(switches); companion[1].appendChild(switches); body.appendChild(companion[0]);
-    var weather = section("⛅ 天气", false); renderWeather(weather[1]); body.appendChild(weather[0]);
-    var daily = section("🎯 今日任务", false); renderDaily(daily[1]); body.appendChild(daily[0]);
-    var week = section("📅 本周签到", false); renderWeek(week[1]); body.appendChild(week[0]);
-    var badge = section("🎖️ 称号", false); renderBadge(badge[1]); body.appendChild(badge[0]);
-    var actions = section("🎭 互动与全部动作（" + POSES.length + "）", false); renderActions(actions[1]); body.appendChild(actions[0]);
-    var achievements = section("🏅 成就墙", false); renderAchievements(achievements[1]); body.appendChild(achievements[0]);
-    var reset = section("🗂️ 数据与重置", false);
+    var enabledCount = TOGGLES.filter(function (item) { return value(item[0], item[2] ? "1" : "0") !== "0"; }).length;
+    var companion = section("🎛️ 陪伴表现", true, enabledCount + "/" + TOGGLES.length + " 已启用"); var switches = element("div", "wm-switches"); renderSwitches(switches); companion[1].appendChild(switches); body.appendChild(companion[0]);
+    var computerLinkOn = value("computer-link", "1") !== "0";
+    var computerLink = section("🖥️ 电脑状态联动", false, computerLinkOn ? "已启用" : "已关闭"); renderComputerLink(computerLink[1]); body.appendChild(computerLink[0]);
+    var weather = section("⛅ 天气", false, value("weatherCity", "") || "未设置"); renderWeather(weather[1]); body.appendChild(weather[0]);
+    var daily = section("🎯 今日任务", false, "今日进度"); renderDaily(daily[1]); body.appendChild(daily[0]);
+    var week = section("📅 本周签到", false, "签到记录"); renderWeek(week[1]); body.appendChild(week[0]);
+    var badge = section("🎖️ 称号", false, value("badge", "") || "未佩戴"); renderBadge(badge[1]); body.appendChild(badge[0]);
+    var actions = section("🎭 互动与全部动作", false, POSES.length + " 个动作"); renderActions(actions[1]); body.appendChild(actions[0]);
+    var achievementCount = value("achievements", "").split(",").filter(Boolean).length;
+    var achievements = section("🏅 成就墙", false, achievementCount + "/" + ACHIEVEMENTS.length + " 已解锁"); renderAchievements(achievements[1]); body.appendChild(achievements[0]);
+    var reset = section("🗂️ 数据与重置", false, "位置与养成数据");
     var resetPosition = element("button", "", "重置到默认位置"); resetPosition.addEventListener("click", function () { localStorage.removeItem(PREFIX + "floatX"); localStorage.removeItem(PREFIX + "floatY"); save("float-reset", Date.now()); }); reset[1].appendChild(row("悬浮位置", resetPosition));
     var resetGrowth = element("button", "wm-danger", "重置养成"); resetGrowth.addEventListener("click", function () {
       if (!confirm("确定重置全部养成、任务、签到、成就和游戏记录吗？")) return;
