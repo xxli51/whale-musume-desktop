@@ -559,6 +559,45 @@
   var lastPatSpeechAt = 0;
   var lastBalanceLowAt = 0;
   var IDLE_ACTION_POOL = ["daily-eat", "daily-coffee", "daily-stretch", "daily-pajama", "daily-shower", "cool-shades", "meme-smug", "daily-picnic", "daily-cooking", "daily-fishing", "daily-painting", "daily-gaming", "tail-swing", "meme-music"];
+  var DESKTOP_FALLBACK_ACTIONS = [
+    "abstract", "bold", "meme-broke", "meme-cry", "meme-doge", "meme-doubt", "meme-heart", "meme-kyun", "meme-no",
+    "meme-ojisan", "meme-omg", "meme-peace", "meme-shock", "meme-sike", "meme-smile-pain", "meme-wakuwaku", "meme-worship", "meme-yes",
+    "failure", "running", "success", "thinking", "tool", "work-boss", "work-celebrate", "work-deadline", "work-debug", "work-deploy",
+    "work-idea", "work-meeting", "work-pat", "work-ram", "work-review", "work-slack-phone", "work-slack", "work-sleep",
+    "celebrate", "greet", "night", "sleep", "sweep", "waiting"
+  ];
+  var DESKTOP_ACTION_DIALOGUE = Object.freeze({
+    abstract: ["keyword", "crazy"], bold: ["keyword", "cheer"],
+    "meme-doge": ["keyword", "doge"], "meme-doubt": ["keyword", "doubt"], "meme-kyun": ["keyword", "kyun"],
+    "meme-ojisan": ["keyword", "ojisan"], "meme-omg": ["keyword", "omg"], "meme-peace": ["keyword", "peace"],
+    "meme-sike": ["keyword", "sike"], "meme-smile-pain": ["keyword", "smilepain"],
+    "meme-wakuwaku": ["keyword", "wakuwaku"], "meme-worship": ["keyword", "worship"],
+    failure: ["work", "failure"], running: ["work", "tool"], success: ["work", "success"], thinking: ["work", "thinking"], tool: ["work", "tool"],
+    "work-boss": ["meme", "cake"], "work-celebrate": ["work", "success"], "work-deadline": ["meme", "ddl"],
+    "work-debug": ["context", "bug"], "work-deploy": ["context", "deploy"], "work-idea": ["context", "code"],
+    "work-meeting": ["keyword", "meeting"], "work-pat": ["interact", "pat"], "work-ram": ["work", "long"],
+    "work-review": ["keyword", "review"], "work-slack-phone": ["meme", "slack"], "work-slack": ["meme", "slack"], "work-sleep": ["keyword", "tired"],
+    celebrate: ["work", "success"], night: ["daily", "night"], sleep: ["daily", "night"], sweep: ["daily", "idle"], waiting: ["daily", "idle"]
+  });
+  var COMPUTER_LINK_ACTIONS = Object.freeze({
+    ide: "work-debug", browser: "curious", office: "work-review", media: "meme-music",
+    meeting: "work-meeting", terminal: "tool", design: "daily-painting", game: "daily-gaming",
+    "cpu-high": "work-ram", "memory-high": "work-ram", "battery-low": "work-sleep",
+    plugged: "tail-swing", unplugged: "waiting", offline: "waiting", online: "celebrate"
+  });
+  var computerLinkState = {
+    initialized: false,
+    foregroundCategory: "",
+    online: null,
+    onBattery: null,
+    batteryLow: false,
+    cpuHotSamples: 0,
+    memoryHotSamples: 0,
+    cpuHot: false,
+    memoryHot: false,
+    lastAnyAt: 0,
+    lastTriggered: Object.create(null)
+  };
   function showMood(kind, duration, animate) {
     var rootNode = doc.querySelector("[data-dsh-whale-root]");
     if (!rootNode) return;
@@ -2414,6 +2453,136 @@
     showLine(line);
   }
 
+  function desktopActionLine(pose) {
+    if (core.DIALOGUE.idleAction && core.DIALOGUE.idleAction[pose]) {
+      return core.pickDialogueAvoidRecent("idleAction", pose, 0, Math.random, recentLines);
+    }
+    if (pose === "greet") {
+      return core.pickDialogueAvoidRecent("greet", core.greetBucket(new Date().getHours()), 0, Math.random, recentLines);
+    }
+    var route = DESKTOP_ACTION_DIALOGUE[pose];
+    if (!route) return core.pickDialogueAvoidRecent("daily", "idle", 0, Math.random, recentLines);
+    return core.pickDialogueAvoidRecent(route[0], route[1], 0, Math.random, recentLines);
+  }
+
+  function showRandomIdleAction() {
+    var pool = root.__DSH_WHALE_DESKTOP__ ? IDLE_ACTION_POOL.concat(DESKTOP_FALLBACK_ACTIONS) : IDLE_ACTION_POOL;
+    if (memory.lastIdleActionPose && pool.length > 1) {
+      pool = pool.filter(function (pose) { return pose !== memory.lastIdleActionPose; });
+    }
+    var pose = pool[Math.floor(Math.random() * pool.length)];
+    memory.lastIdleActionPose = pose;
+    showMood(pose, 4200 + Math.floor(Math.random() * 1600), true);
+    if (!readPref("chat") || !bubbleFree()) return;
+    var line = desktopActionLine(pose);
+    if (line) showChatLine(line);
+  }
+
+  function onDesktopSystemState(event) {
+    if (!root.__DSH_WHALE_DESKTOP__) return;
+    var state = event && event.detail ? event.detail : {};
+    var now = Date.now();
+    var idleSeconds = Number(state.idleSeconds);
+    if (Number.isFinite(idleSeconds) && idleSeconds >= 0) {
+      memory.lastInteractionAt = now - Math.min(idleSeconds, 86400) * 1000;
+    }
+    if (state.kind === "lock" || state.kind === "suspend") {
+      showMood("sleep", 60000, true);
+      if (readPref("chat") && bubbleFree()) {
+        var sleepLine = core.pickDialogueAvoidRecent("daily", "night", 0, Math.random, recentLines);
+        if (sleepLine) showChatLine(sleepLine);
+      }
+    } else if (state.kind === "unlock" || state.kind === "resume") {
+      memory.lastInteractionAt = now;
+      showMood("greet", 5200, true);
+      if (readPref("chat") && bubbleFree()) {
+        var greetLine = core.pickDialogueAvoidRecent("greet", core.greetBucket(new Date(now).getHours()), 0, Math.random, recentLines);
+        if (greetLine) showChatLine(greetLine);
+      }
+    } else if (state.kind === "sample" && idleSeconds < 180 && isNight(now) && now - (memory.lastSystemNightAt || 0) >= 3 * 3600000) {
+      memory.lastSystemNightAt = now;
+      showMood("night", 5200, true);
+      if (readPref("chat") && bubbleFree()) {
+        var nightLine = core.pickDialogueAvoidRecent("daily", "night", 0, Math.random, recentLines);
+        if (nightLine) showChatLine(nightLine);
+      }
+    }
+    schedule();
+  }
+
+  function triggerComputerLink(eventKey, now, urgent) {
+    var pose = COMPUTER_LINK_ACTIONS[eventKey];
+    if (!pose || doc.hidden || !readPref("computer-link") || !readPref("pet") || !readPref("chat")) return false;
+    if (BUSY_STATES[memory.state.state] || !bubbleFree()) return false;
+    var perEventGap = /^(offline|online|plugged|unplugged)$/.test(eventKey) ? 60000 : 15 * 60000;
+    if (now - (computerLinkState.lastTriggered[eventKey] || 0) < perEventGap) return false;
+    if (!urgent && now - computerLinkState.lastAnyAt < 90000) return false;
+    var line = core.pickDialogueAvoidRecent("computer", eventKey, 0, Math.random, recentLines);
+    if (!line) return false;
+    computerLinkState.lastTriggered[eventKey] = now;
+    computerLinkState.lastAnyAt = now;
+    showMood(pose, 6000, true);
+    showChatLine(line);
+    return true;
+  }
+
+  function onDesktopComputerState(event) {
+    if (!root.__DSH_WHALE_DESKTOP__ || !readPref("computer-link")) return;
+    var sample = event && event.detail ? event.detail : {};
+    var now = Number(sample.at) || Date.now();
+    var category = sample.foreground && sample.foreground.category ? String(sample.foreground.category) : "other";
+    var online = sample.network && typeof sample.network.online === "boolean" ? sample.network.online : null;
+    var onBattery = sample.power && typeof sample.power.onBattery === "boolean" ? sample.power.onBattery : null;
+    var batteryPercent = sample.power && typeof sample.power.percent === "number" ? sample.power.percent : NaN;
+    var charging = sample.power && typeof sample.power.charging === "boolean" ? sample.power.charging : null;
+    var cpu = sample.resource && typeof sample.resource.cpuPercent === "number" ? sample.resource.cpuPercent : NaN;
+    var memoryUsed = sample.resource && typeof sample.resource.memoryPercent === "number" ? sample.resource.memoryPercent : NaN;
+    var candidates = [];
+
+    if (!computerLinkState.initialized) {
+      computerLinkState.initialized = true;
+      computerLinkState.foregroundCategory = category;
+      computerLinkState.online = online;
+      computerLinkState.onBattery = onBattery;
+      if (category !== "other") candidates.push({ key: category, urgent: false });
+    } else {
+      if (online !== null && computerLinkState.online !== null && online !== computerLinkState.online) {
+        candidates.push({ key: online ? "online" : "offline", urgent: true });
+      }
+      if (onBattery !== null && computerLinkState.onBattery !== null && onBattery !== computerLinkState.onBattery) {
+        candidates.push({ key: onBattery ? "unplugged" : "plugged", urgent: true });
+      }
+      if (category !== computerLinkState.foregroundCategory && category !== "other") {
+        candidates.push({ key: category, urgent: false });
+      }
+      computerLinkState.foregroundCategory = category;
+      computerLinkState.online = online;
+      computerLinkState.onBattery = onBattery;
+    }
+
+    var lowNow = Number.isFinite(batteryPercent) && batteryPercent <= 20 && charging !== true && onBattery === true;
+    if (lowNow && !computerLinkState.batteryLow) candidates.unshift({ key: "battery-low", urgent: true });
+    computerLinkState.batteryLow = lowNow || (computerLinkState.batteryLow && Number.isFinite(batteryPercent) && batteryPercent <= 25 && charging !== true);
+
+    computerLinkState.cpuHotSamples = Number.isFinite(cpu) && cpu >= 85 ? computerLinkState.cpuHotSamples + 1 : 0;
+    if (computerLinkState.cpuHot && Number.isFinite(cpu) && cpu < 70) computerLinkState.cpuHot = false;
+    if (!computerLinkState.cpuHot && computerLinkState.cpuHotSamples >= 2) {
+      computerLinkState.cpuHot = true;
+      candidates.push({ key: "cpu-high", urgent: false });
+    }
+    computerLinkState.memoryHotSamples = Number.isFinite(memoryUsed) && memoryUsed >= 85 ? computerLinkState.memoryHotSamples + 1 : 0;
+    if (computerLinkState.memoryHot && Number.isFinite(memoryUsed) && memoryUsed < 75) computerLinkState.memoryHot = false;
+    if (!computerLinkState.memoryHot && computerLinkState.memoryHotSamples >= 2) {
+      computerLinkState.memoryHot = true;
+      candidates.push({ key: "memory-high", urgent: false });
+    }
+
+    for (var i = 0; i < candidates.length; i += 1) {
+      if (triggerComputerLink(candidates[i].key, now, candidates[i].urgent)) break;
+    }
+    schedule();
+  }
+
   function maybeGreet(now) {
     if (now - idleChat.lastGreetAt < GREET_GAP_MS) return false;
     var bucket = core.greetBucket(new Date(now).getHours());
@@ -2524,6 +2693,8 @@
     root.addEventListener("resize", schedule);
     root.addEventListener("storage", schedule);
     root.addEventListener("whale-moe-prefs-change", schedule);
+    root.addEventListener("whale-desktop-system-state", onDesktopSystemState);
+    root.addEventListener("whale-desktop-computer-state", onDesktopComputerState);
     root.addEventListener("visibilitychange", function () {
       if (doc.hidden) {
         if (gameOpen) { gamePausedFlag = true; gamePauseBadge(true, "hidden"); }
@@ -2569,7 +2740,7 @@
                 if (teaseLine) showChatLine(teaseLine);
               }
             } else {
-              showMood(IDLE_ACTION_POOL[Math.floor(Math.random() * IDLE_ACTION_POOL.length)], 4200 + Math.floor(Math.random() * 1600), true);
+              showRandomIdleAction();
             }
           }
         }

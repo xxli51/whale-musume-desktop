@@ -37,7 +37,7 @@ test("repository exposes license and disclaimer notices", () => {
 test("desktop package is self-contained", () => {
   const pkg = JSON.parse(read("package.json"));
   const main = read("main.cjs");
-  assert.equal(pkg.version, "1.0.0");
+  assert.equal(pkg.version, "2.0.0");
   assert.equal(pkg.build.extraResources[0].from, "assets");
   assert.match(main, /path\.join\(__dirname, "assets"\)/);
   assert.doesNotMatch(main, /path\.join\(__dirname, "\.\.", "assets"\)/);
@@ -48,9 +48,87 @@ test("all pose assets and desktop safety fixes are present", () => {
   const poses = readdirSync(generated).filter((name) => /^dsh-whale-state-.*\.webp$/.test(name));
   const presenter = read("assets/dsh-whale-moe.js");
   const settings = read("renderer/settings.js");
+  const settingsCss = read("renderer/settings.css");
+  const desktop = read("renderer/desktop.js");
+  const main = read("main.cjs");
   assert.equal(poses.length, 89);
   assert.match(presenter, /Math\.min\(360, root\.innerWidth, root\.innerHeight\)/);
   assert.match(presenter, /if \(root\.__DSH_WHALE_DESKTOP__\) return;/);
-  assert.match(settings, /Desktop v1\.0\.0/);
+  assert.match(settings, /Desktop v2\.0\.0/);
   assert.match(settings, /desktopSettingsX/);
+  assert.match(settings, /wm-pose-grid/);
+  assert.match(settingsCss, /flex:\s*0 0 auto/);
+  assert.match(settingsCss, /details\.wm-card:not\(\[open\]\)/);
+  assert.match(settingsCss, /\.wm-quest-controls/);
+  assert.match(main, /screen\.getCursorScreenPoint\(\)/);
+  assert.match(main, /function overlayDesktopBounds\(\)/);
+  assert.match(main, /setAlwaysOnTop\(true, "floating"\)/);
+  assert.match(main, /function showOverlayInactive\(\)/);
+  assert.match(main, /overlay\.moveTop\(\)/);
+  assert.match(main, /visibleOnFullScreen: false/);
+  assert.doesNotMatch(main, /setAlwaysOnTop\(true, "screen-saver"\)/);
+  assert.match(desktop, /api\.onCursorProbe/);
+  assert.doesNotMatch(desktop, /addEventListener\("blur"/);
+});
+
+test("every random idle action has matching non-repeating dialogue", async () => {
+  const core = await import("../assets/whale-moe-core.js");
+  const presenter = read("assets/dsh-whale-moe.js");
+  const poolMatch = presenter.match(/var IDLE_ACTION_POOL = \[([^;]+)\];/);
+  assert.ok(poolMatch, "IDLE_ACTION_POOL must remain discoverable");
+  const actions = [...poolMatch[1].matchAll(/"([^"]+)"/g)].map((match) => match[1]);
+  actions.push("wink");
+  for (const action of actions) {
+    const lines = core.default.DIALOGUE.idleAction[action];
+    assert.ok(Array.isArray(lines), `${action} requires an idleAction dialogue bank`);
+    assert.ok(lines.length >= 4, `${action} requires several dialogue variants`);
+  }
+  assert.match(presenter, /pickDialogueAvoidRecent\("idleAction", pose/);
+  assert.match(presenter, /pose !== memory\.lastIdleActionPose/);
+});
+
+test("desktop uses safe system monitoring and fallbacks for unavailable signals", async () => {
+  const core = await import("../assets/whale-moe-core.js");
+  const main = read("main.cjs");
+  const preload = read("preload.cjs");
+  const desktop = read("renderer/desktop.js");
+  const presenter = read("assets/dsh-whale-moe.js");
+  assert.match(main, /powerMonitor\.getSystemIdleTime\(\)/);
+  assert.match(main, /powerMonitor\.on\("lock-screen"/);
+  assert.match(main, /powerMonitor\.on\("resume"/);
+  assert.match(preload, /onSystemState/);
+  assert.match(desktop, /whale-desktop-system-state/);
+  assert.match(presenter, /IDLE_ACTION_POOL\.concat\(DESKTOP_FALLBACK_ACTIONS\)/);
+  assert.match(presenter, /state\.kind === "unlock"/);
+  for (const pose of ["meme-broke", "meme-cry", "meme-heart", "meme-no", "meme-shock", "meme-yes"]) {
+    assert.ok(core.default.DIALOGUE.idleAction[pose]?.length >= 4, `${pose} needs fallback dialogue`);
+  }
+});
+
+test("computer status linkage is private, switchable, and fully voiced", async () => {
+  const core = await import("../assets/whale-moe-core.js");
+  const main = read("main.cjs");
+  const preload = read("preload.cjs");
+  const desktop = read("renderer/desktop.js");
+  const settings = read("renderer/settings.js");
+  const presenter = read("assets/dsh-whale-moe.js");
+  assert.match(main, /classifyForegroundProcess/);
+  assert.match(main, /os\.cpus\(\)/);
+  assert.match(main, /os\.freemem\(\)/);
+  assert.match(main, /Win32_Battery/);
+  assert.match(main, /net\.isOnline\(\)/);
+  assert.match(main, /whale:set-computer-link-enabled/);
+  assert.doesNotMatch(main, /GetWindowText/);
+  assert.match(preload, /onComputerState/);
+  assert.match(desktop, /whale-desktop-computer-state/);
+  assert.match(settings, /电脑状态联动/);
+  assert.match(settings, /computer-link/);
+  assert.match(presenter, /COMPUTER_LINK_ACTIONS/);
+  assert.match(presenter, /cpuHotSamples >= 2/);
+  for (const event of [
+    "ide", "browser", "office", "media", "meeting", "terminal", "design", "game",
+    "cpu-high", "memory-high", "battery-low", "plugged", "unplugged", "offline", "online"
+  ]) {
+    assert.ok(core.default.DIALOGUE.computer[event]?.length >= 3, `${event} needs computer-link dialogue`);
+  }
 });
