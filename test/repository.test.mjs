@@ -53,7 +53,7 @@ test("all pose assets and desktop safety fixes are present", () => {
   const main = read("main.cjs");
   assert.equal(poses.length, 89);
   assert.match(presenter, /Math\.min\(360, root\.innerWidth, root\.innerHeight\)/);
-  assert.match(presenter, /if \(root\.__DSH_WHALE_DESKTOP__\) return;/);
+  assert.doesNotMatch(presenter, /__DSH_WHALE_DESKTOP__/);
   assert.match(settings, /Desktop v2\.1\.0/);
   assert.match(settings, /desktopSettingsX/);
   assert.match(settings, /wm-pose-grid/);
@@ -69,6 +69,31 @@ test("all pose assets and desktop safety fixes are present", () => {
   assert.match(main, /visibleOnFullScreen: false/);
   assert.match(desktop, /api\.onCursorProbe/);
   assert.doesNotMatch(desktop, /addEventListener\("blur"/);
+});
+
+test("standalone presenter has no DSH host data or DOM linkage", async () => {
+  const core = await import("../assets/whale-moe-core.js");
+  const presenter = read("assets/dsh-whale-moe.js");
+  const desktop = read("renderer/desktop.js");
+  const settings = read("renderer/settings.js");
+  for (const legacyLink of [
+    /dsh\.balance/,
+    /dsh-whale-balance-low/,
+    /data-slot=/,
+    /data-phase=/,
+    /data-status=/,
+    /data-running/,
+    /dshLogCluster/,
+    /MutationObserver/,
+  ]) {
+    assert.doesNotMatch(presenter, legacyLink);
+  }
+  assert.doesNotMatch(desktop, /__DSH_WHALE_DESKTOP__/);
+  assert.doesNotMatch(settings, /关键词感知/);
+  assert.match(presenter, /IDLE_ACTION_POOL\.concat\(DESKTOP_FALLBACK_ACTIONS\)/);
+  assert.match(settings, /var POSES = \[/);
+  assert.deepEqual(core.default.QUEST_POOL.map((quest) => quest.metric).sort(), ["feed", "pat", "signin"]);
+  assert.equal(core.default.POSES.balanceLow, "balance-low");
 });
 
 test("every random idle action has matching non-repeating dialogue", async () => {

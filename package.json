@@ -1,6 +1,6 @@
 {
   "name": "whale-musume-desktop",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "private": true,
   "description": "鲸鱼娘 Windows 桌面宠物",
   "author": "Lex.Xander",
@@ -18,8 +18,8 @@
     "start": "electron .",
     "test": "node --test test/repository.test.mjs",
     "qa:display": "electron tools/display-diagnostic.cjs",
-    "build": "electron-builder --win nsis",
-    "build:portable": "electron-builder --win portable"
+    "build": "set ELECTRON_BUILDER_BINARIES_MIRROR=https://npmmirror.com/mirrors/electron-builder-binaries/&& set ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/&& electron-builder --win nsis",
+    "build:portable": "set ELECTRON_BUILDER_BINARIES_MIRROR=https://npmmirror.com/mirrors/electron-builder-binaries/&& set ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/&& electron-builder --win portable"
   },
   "devDependencies": {
     "electron": "43.4.1",

@@ -450,21 +450,6 @@
     { id: "day1", icon: "💞", name: "一日之缘", desc: "鲸鱼娘陪伴满 1 天" },
     { id: "day7", icon: "💎", name: "一周相伴", desc: "鲸鱼娘陪伴满 7 天" },
     { id: "day30", icon: "🏛️", name: "三十日契约", desc: "鲸鱼娘陪伴满 30 天" },
-    { id: "first-tool", icon: "🛠️", name: "开工啦", desc: "第一次看到工具运行" },
-    { id: "tools-10", icon: "🔧", name: "工具十连", desc: "累计看到 10 次工具运行" },
-    { id: "tools-50", icon: "🏭", name: "工具五十连", desc: "累计看到 50 次工具运行" },
-    { id: "tools-100", icon: "🛰️", name: "工具百连", desc: "累计看到 100 次工具运行" },
-    { id: "first-code", icon: "💻", name: "代码初体验", desc: "第一次看到代码块/终端" },
-    { id: "code-20", icon: "📟", name: "代码狂人", desc: "累计看到 20 个代码块/终端" },
-    { id: "first-success", icon: "✅", name: "旗开得胜", desc: "第一次任务完成" },
-    { id: "success-10", icon: "🏆", name: "任务十连", desc: "累计 10 次任务完成" },
-    { id: "first-failure", icon: "🩹", name: "初次翻车", desc: "第一次任务报错" },
-    { id: "fail-10", icon: "🚑", name: "翻车十连", desc: "累计 10 次任务报错" },
-    { id: "messages-100", icon: "💌", name: "会话百条", desc: "累计看到 100 条会话消息" },
-    { id: "messages-500", icon: "📚", name: "消息五百条", desc: "累计看到 500 条会话消息" },
-    { id: "keyword-master", icon: "🔍", name: "关键词大师", desc: "关键词互动 10 次" },
-    { id: "night-work", icon: "🦉", name: "深夜赶工", desc: "深夜 22:00–6:00 工具仍在运行" },
-    { id: "balance-low", icon: "🪙", name: "余额告急", desc: "触发一次余额不足提醒" },
     { id: "game-first", icon: "🫧", name: "初次开玩", desc: "第一次结算一局小游戏" },
     { id: "game-win", icon: "👑", name: "泡泡之王", desc: "单局戳泡泡得分达到 300" },
     { id: "game-combo10", icon: "🔥", name: "连击达人", desc: "单局最高连击达到 10" },
@@ -557,11 +542,13 @@
 
   var QUEST_POOL = Object.freeze([
     Object.freeze({ id: "signin-1", desc: "今日签到", metric: "signin", target: 1, reward: Object.freeze({ affinity: 6, mood: 1 }), always: true }),
-    Object.freeze({ id: "messages-5", desc: "看 5 条会话消息", metric: "messages", target: 5, reward: Object.freeze({ affinity: 8, mood: 2 }) }),
-    Object.freeze({ id: "success-1", desc: "完成一次工作交付", metric: "success", target: 1, reward: Object.freeze({ affinity: 8, mood: 2 }) }),
     Object.freeze({ id: "pat-3", desc: "摸头 3 次", metric: "pat", target: 3, reward: Object.freeze({ affinity: 8, mood: 2 }) }),
-    Object.freeze({ id: "tool-3", desc: "看 3 次工具运行", metric: "tool", target: 3, reward: Object.freeze({ affinity: 8, mood: 2 }) }),
-    Object.freeze({ id: "feed-1", desc: "投喂一次小点心", metric: "feed", target: 1, reward: Object.freeze({ affinity: 6, mood: 2 }) })
+    Object.freeze({ id: "feed-1", desc: "投喂一次小点心", metric: "feed", target: 1, reward: Object.freeze({ affinity: 6, mood: 2 }) }),
+    Object.freeze({ id: "praise-1", desc: "夸夸鲸鱼娘", metric: "praise", target: 1, reward: Object.freeze({ affinity: 6, mood: 2 }) }),
+    Object.freeze({ id: "game-1", desc: "玩一局小游戏", metric: "game", target: 1, reward: Object.freeze({ affinity: 8, mood: 3 }) }),
+    Object.freeze({ id: "game-win-1", desc: "赢一局小游戏", metric: "game-win", target: 1, reward: Object.freeze({ affinity: 10, mood: 4 }) }),
+    Object.freeze({ id: "belly-1", desc: "戳肚子 1 次", metric: "belly", target: 1, reward: Object.freeze({ affinity: 4, mood: 2 }) }),
+    Object.freeze({ id: "tail-1", desc: "摸尾巴 1 次", metric: "tail", target: 1, reward: Object.freeze({ affinity: 4, mood: 2 }) })
   ]);
 
   var BOND = Object.freeze({
@@ -578,7 +565,9 @@
 
   function refreshQuests(prev, now, rng) {
     var today = dayKey(now);
-    if (prev && prev.date === today && Array.isArray(prev.slots) && prev.slots.length === 3) return prev;
+    var validPrev = prev && prev.date === today && Array.isArray(prev.slots) && prev.slots.length === 3
+      && prev.slots.every(function (slot) { return !!questDef(slot.id); });
+    if (validPrev) return prev;
     var picks = [];
     var pool = QUEST_POOL.slice();
     for (var i = 0; i < pool.length; i += 1) {

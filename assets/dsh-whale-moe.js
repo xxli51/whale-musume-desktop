@@ -1,6 +1,6 @@
-/* dsh-whale-moe v3 — mascot-only presenter (no theme pack dependency).
-   Rules: own nodes only, no business-DOM mutation, no text reading,
-   one MutationObserver (120ms debounce), no ambient rAF.
+/* dsh-whale-moe v3 — standalone desktop mascot presenter.
+   The dsh-prefixed DOM/CSS/resource names are retained for animation compatibility;
+   the presenter does not inspect or react to DSH host-page state or data.
    Activation: always on; toggled off via its own gear menu
    (localStorage "whale-moe:pet" = "0"). */
 (function (root) {
@@ -9,9 +9,7 @@
 
   var core = root.DshWhaleMoeCore;
   var doc = root.document;
-  var VIEW_ATTR = "data-dsh-whale-view";
   var ASSET_ROOT = root.__DSH_WHALE_ASSET_ROOT__ || "/assets/generated/";
-  var CALIBRATION_URL = root.__DSH_WHALE_CALIBRATION_URL__ || "/assets/peek-calibration.json";
   var POSE_VERSION = "?v=6";
   var DEBOUNCE_MS = 120;
   var PARTICLE_MAX = 30;
@@ -23,26 +21,6 @@
     { key: "particles", label: "粒子效果" }
   ];
 
-  var VIEW_SELECTORS = Object.freeze({
-    settings: '[role="dialog"], [data-slot="settings.header"]',
-    workbench: '[data-slot="conversation.chat.node"], [data-phase="session"]'
-  });
-
-  /* Structural signal banks: presence-only detection, never reads text.
-     data-running / data-state="ongoing" are the real DSH terminal/turn
-     indicators (from the web-frontend bundle). data-state="running" is NOT
-     a live DSH state — historical step cards keep it forever and would pin
-     the mascot as permanently busy. The data-status variants stay only for
-     test fixtures and older builds. */
-  var SIGNAL_BANKS = Object.freeze({
-    thinking: ['[aria-busy="true"]', '[data-status="pending"]', '[data-state="loading"]', '[data-slot="conversation.chat.node"] [class*="stream" i]'],
-    tool: ['[data-role="tool"]', '[data-tool="true"]', '[data-tool-card="true"]', '[data-status="running"]', '[data-running]', '[data-state="ongoing"]', '[data-state="running"]'],
-    error: ['[data-state="error"]:not([class*="turnErrorDot"])', '[data-status="error"]', '[aria-invalid="true"]'],
-    success: ['[data-state="success"]', '[data-status="success"]'],
-    code: ['pre', '[data-slot="terminal"]', '[data-role="log"]', '[data-terminal]'],
-    chat: ['[data-slot="conversation.chat.node"]']
-  });
-
   function readPref(key) {
     try { return root.localStorage.getItem("whale-moe:" + key) !== "0"; } catch (e) { return true; }
   }
@@ -50,7 +28,7 @@
     try { root.localStorage.setItem("whale-moe:" + key, value ? "1" : "0"); } catch (e) { /* storage unavailable */ }
   }
 
-  var MODES = Object.freeze({ auto: 1, bar: 1, side: 1, float: 1, mini: 1 });
+  var MODES = Object.freeze({ float: 1, mini: 1 });
   function readMode() {
     try {
       var value = root.localStorage.getItem("whale-moe:mode");
@@ -74,49 +52,6 @@
       root.localStorage.setItem("whale-moe:floatX", String(Math.round(x)));
       root.localStorage.setItem("whale-moe:floatY", String(Math.round(y)));
     } catch (e) { /* storage unavailable */ }
-  }
-
-  function isVisible(node) {
-    if (!node) return false;
-    if (typeof node.getBoundingClientRect !== "function") return true;
-    var rect = node.getBoundingClientRect();
-    if (rect.width <= 1 && rect.height <= 1) return false;
-    if (node.ownerDocument && node.ownerDocument.defaultView && typeof node.ownerDocument.defaultView.getComputedStyle === "function") {
-      var style = node.ownerDocument.defaultView.getComputedStyle(node);
-      if (style.display === "none" || style.visibility === "hidden" || style.opacity === "0") return false;
-    }
-    return true;
-  }
-
-  function firstVisible(selector) {
-    var nodes = doc.querySelectorAll(selector);
-    for (var i = 0; i < nodes.length; i += 1) if (isVisible(nodes[i])) return nodes[i];
-    return null;
-  }
-  function anyVisible(selectors) {
-    for (var i = 0; i < selectors.length; i += 1) if (firstVisible(selectors[i])) return true;
-    return false;
-  }
-  function countVisible(selectors) {
-    var seen = new Set();
-    for (var i = 0; i < selectors.length; i += 1) {
-      var nodes = doc.querySelectorAll(selectors[i]);
-      for (var j = 0; j < nodes.length; j += 1) if (isVisible(nodes[j])) seen.add(nodes[j]);
-    }
-    return seen.size;
-  }
-
-  function detectView() {
-    if (firstVisible(VIEW_SELECTORS.settings)) return "settings";
-    if (firstVisible(VIEW_SELECTORS.workbench)) return "workbench";
-    return "home";
-  }
-
-  function findComposerSurface() {
-    var card = firstVisible('[data-composer-card="true"]');
-    if (card) return card;
-    var textarea = firstVisible('[data-slot="conversation.composer.bar"] textarea');
-    return textarea && textarea.closest ? textarea.closest("form, [class]") : null;
   }
 
   /* ---------- own layers ---------- */
@@ -565,7 +500,7 @@
     var items = [
       { label: "投喂小点心", action: function () { var out = applyGrowth({ type: "feed" }, Date.now(), 0); applyQuestSignal("feed", 1); burst("🍰"); showMood("eat", 3000); var line = say("interact", "feed"); if (line) showLine(line); if (out.unlocks.length) announceUnlocks(out.unlocks); } },
       { label: "戳一下", action: function () { applyGrowth({ type: "poke" }, Date.now(), 0); burst("💢"); showMood("angry", 3000); var line = say("interact", "poke"); if (line) showLine(line); } },
-      { label: "夸夸 鲸鱼娘", action: function () { applyGrowth({ type: "praise" }, Date.now(), 0); burst("✨"); showMood("tail-swing", 3000, true); var line = say("interact", "praise"); if (line) showLine(line); } }
+      { label: "夸夸 鲸鱼娘", action: function () { applyGrowth({ type: "praise" }, Date.now(), 0); applyQuestSignal("praise", 1); burst("✨"); showMood("tail-swing", 3000, true); var line = say("interact", "praise"); if (line) showLine(line); } }
     ];
     if (readPref("game")) {
       items.push({ label: "小游戏：戳泡泡", action: function () { openGame(); } });
@@ -574,19 +509,7 @@
     items.push(
       { label: "回到原位", action: function () { try { root.localStorage.removeItem("whale-moe:floatX"); root.localStorage.removeItem("whale-moe:floatY"); } catch (e) { /* ignore */ } reconcile(); } },
       { label: "打开看板娘设置", action: function () {
-        if (root.__DSH_WHALE_DESKTOP__) {
-          root.dispatchEvent(new CustomEvent("whale-desktop-open-settings"));
-          return;
-        }
-        /* DSH 新版设置入口是纯图标按钮（无文本），旧版是文本“设置”按钮：
-           按结构 slot → settings.trigger 宿主按钮 → 文本兜底的顺序查找。 */
-        var btn = doc.querySelector('[data-slot="sidebar.settings"] button');
-        if (!btn) {
-          var trigger = doc.querySelector('[data-slot="settings.trigger"]');
-          btn = trigger && trigger.closest ? trigger.closest("button") : null;
-        }
-        if (!btn) btn = [...doc.querySelectorAll("button")].find(function (n) { return (n.textContent || "").trim() === "设置"; });
-        if (btn) btn.click();
+        root.dispatchEvent(new CustomEvent("whale-desktop-open-settings"));
       } },
       { label: "关闭菜单", action: function () { menu.remove(); } }
     );
@@ -616,7 +539,6 @@
   var lastTripleAt = 0;
   var lastPatProcessedAt = 0;
   var lastPatSpeechAt = 0;
-  var lastBalanceLowAt = 0;
   var IDLE_ACTION_POOL = ["daily-eat", "daily-coffee", "daily-stretch", "daily-pajama", "daily-shower", "cool-shades", "meme-smug", "daily-picnic", "daily-cooking", "daily-fishing", "daily-painting", "daily-gaming", "tail-swing", "meme-music"];
   var DESKTOP_FALLBACK_ACTIONS = [
     "abstract", "bold", "meme-broke", "meme-cry", "meme-doge", "meme-doubt", "meme-heart", "meme-kyun", "meme-no",
@@ -700,6 +622,7 @@
 
   function bellyReact(now) {
     applyGrowth({ type: "belly" }, now, 0);
+    applyQuestSignal("belly", 1);
     showMood("react-belly", 2600, true);
     emojiBurst(["💫", "✨"]);
     var line = say("interact", "belly");
@@ -709,6 +632,7 @@
 
   function tailReact(now) {
     applyGrowth({ type: "tail" }, now, 0);
+    applyQuestSignal("tail", 1);
     showMood("react-tail", 2600, true);
     emojiBurst(["🌀", "💨"]);
     var line = say("interact", "tail");
@@ -954,7 +878,6 @@
   function openGame() {
     if (!readPref("game")) return;
     if (gameOpen) return;
-    if (detectView() === "settings") return; /* 看板娘在设置页隐藏，无入口;此处防御 */
     if (catchOpen) closeCatchGame();
     loadGameStats();
     gameState = core.gameNewState(Date.now(), Math.random);
@@ -1066,10 +989,13 @@
       if (rewardAllowed) applyGrowth({ type: "high-score" }, Date.now(), 0);
     }
     saveGameStats();
+    applyQuestSignal("game", 1);
+    if (result.grade === "win") applyQuestSignal("game-win", 1);
     var unlocks = core.evaluateGameAchievements(growth ? growth.achievements : [], gameStats);
     if (unlocks.length) {
       growth.achievements = growth.achievements.concat(unlocks);
       saveGrowth();
+      try { root.dispatchEvent(new CustomEvent("whale-moe-prefs-change", { detail: { key: "growth", value: String(Date.now()) } })); } catch (e) { /* ignore */ }
       announceUnlocks(unlocks);
     }
     if (rewardAllowed) {
@@ -1238,7 +1164,6 @@
   function openCatchGame() {
     if (!readPref("game")) return;
     if (catchOpen) return;
-    if (detectView() === "settings") return;
     if (gameOpen) closeGame();
     loadGameStats();
     catchState = core.catchNewState(Date.now(), Math.random);
@@ -1259,9 +1184,6 @@
 
   var growth = null;
   var dialogueCounters = { daily: {}, work: {}, interact: {}, keyword: {}, bond: {}, context: {}, meme: {} };
-  var keywordScanTimer = null;
-  var lastChatCount = 0;
-  var lastCodeCount = 0;
 
   function loadGrowth() {
     try {
@@ -1302,53 +1224,16 @@
     if (unlocks.length) {
       growth.achievements = growth.achievements.concat(unlocks);
       saveGrowth();
+      try { root.dispatchEvent(new CustomEvent("whale-moe-prefs-change", { detail: { key: "growth", value: String(Date.now()) } })); } catch (e) { /* ignore */ }
       announceUnlocks(unlocks);
     }
   }
 
-  var usageStats = null;
-  var USAGE_TIERS = Object.freeze({
-    "first-tool": { key: "tools", min: 1 },
-    "tools-10": { key: "tools", min: 10 },
-    "tools-50": { key: "tools", min: 50 },
-    "tools-100": { key: "tools", min: 100 },
-    "first-code": { key: "code", min: 1 },
-    "code-20": { key: "code", min: 20 },
-    "first-success": { key: "successes", min: 1 },
-    "success-10": { key: "successes", min: 10 },
-    "first-failure": { key: "failures", min: 1 },
-    "fail-10": { key: "failures", min: 10 },
-    "messages-100": { key: "messages", min: 100 },
-    "messages-500": { key: "messages", min: 500 },
-    "keyword-master": { key: "keywords", min: 10 }
-  });
-  function loadUsageStats() {
-    try {
-      usageStats = JSON.parse(root.localStorage.getItem("whale-moe:usageStats") || "null") || { tools: 0, code: 0, successes: 0, failures: 0, messages: 0, keywords: 0 };
-    } catch (e) { usageStats = { tools: 0, code: 0, successes: 0, failures: 0, messages: 0, keywords: 0 }; }
-  }
-  function saveUsageStats() {
-    try { root.localStorage.setItem("whale-moe:usageStats", JSON.stringify(usageStats)); } catch (e) { /* ignore */ }
-  }
-  function addUsageStat(key, amount) {
-    if (!usageStats) loadUsageStats();
-    usageStats[key] = (usageStats[key] || 0) + amount;
-    saveUsageStats();
-    var unlocks = [];
-    for (var id in USAGE_TIERS) {
-      var tier = USAGE_TIERS[id];
-      if (usageStats[tier.key] >= tier.min && (!growth || growth.achievements.indexOf(id) === -1)) unlocks.push(id);
-    }
-    if (unlocks.length) {
-      if (growth) growth.achievements = growth.achievements.concat(unlocks);
-      saveGrowth();
-      announceUnlocks(unlocks);
-    }
-  }
   function applyGrowth(event, now, pats) {
     var out = core.computeGrowth(growth, event, now, pats);
     growth = out.growth;
     saveGrowth();
+    try { root.dispatchEvent(new CustomEvent("whale-moe-prefs-change", { detail: { key: "growth", value: String(Date.now()) } })); } catch (e) { /* ignore */ }
     if (out.leveledUp) onBondLevelUp();
     return out;
   }
@@ -1417,6 +1302,7 @@
     if (unlocks.length) {
       growth.achievements = growth.achievements.concat(unlocks);
       saveGrowth();
+      try { root.dispatchEvent(new CustomEvent("whale-moe-prefs-change", { detail: { key: "growth", value: String(Date.now()) } })); } catch (e) { /* ignore */ }
       announceUnlocks(unlocks);
     }
     burst("🎯");
@@ -1438,6 +1324,7 @@
       if (unlocks.length) {
         growth.achievements = growth.achievements.concat(unlocks);
         saveGrowth();
+        try { root.dispatchEvent(new CustomEvent("whale-moe-prefs-change", { detail: { key: "growth", value: String(Date.now()) } })); } catch (e) { /* ignore */ }
         announceUnlocks(unlocks);
       }
     }
@@ -1472,9 +1359,6 @@
     if (line && !BUSY_STATES[memory.state.state] && readPref("chat")) showLine(localizeLine(line));
     if (!BUSY_STATES[memory.state.state]) showMood("levelup", 4200, true);
   }
-  function keywordsEnabled() {
-    try { return root.localStorage.getItem("whale-moe:keywords") === "1"; } catch (e) { return false; }
-  }
   function title() {
     try { var t = root.localStorage.getItem("whale-moe:title"); return t && t.trim() ? t.trim() : "主人"; } catch (e) { return "主人"; }
   }
@@ -1491,15 +1375,6 @@
   var STATE_HOLD_MS = Object.freeze({ success: 3000, failure: 3500, curious: 2500, tool: 1200, thinking: 1200 });
   var STATE_CHIP = Object.freeze({ thinking: "思考中", tool: "工作中", success: "完成", failure: "出错", curious: "好奇" });
   var BUSY_STATES = Object.freeze({ thinking: 1, tool: 1, success: 1, failure: 1 });
-
-  function holdSignals(signals, now) {
-    if (!signals.error && !signals.tool && !signals.thinking && now < memory.stateHoldUntil) {
-      if (memory.lastEventState === "failure") signals.error = true;
-      else if (memory.lastEventState === "success") signals.successAt = now;
-      else if (memory.lastEventState === "curious") signals.curiousAt = now;
-    }
-    return signals;
-  }
 
   function blinkOnce() {
     var rootNode = doc.querySelector("[data-dsh-whale-root]");
@@ -1526,14 +1401,6 @@
     view: "home",
     viewChangedAt: -Infinity,
     lastInteractionAt: Date.now(),
-    toolWasActive: false,
-    toolSeenAt: 0,
-    toolGoneAt: 0,
-    toolRawSeen: false,
-    thinkingSeenAt: 0,
-    thinkingGoneAt: 0,
-    thinkingRawSeen: false,
-    lastSuccessAt: -Infinity,
     state: { state: "idle", lastSpeechAt: -Infinity },
     idleTick: 0,
     idlePoseIndex: 0,
@@ -1555,122 +1422,26 @@
     lastPoseSrc: "",
     lastLine: "",
     bubbleHideAt: 0,
-    errorBaseline: null,
     failed: false
   };
 
-  function errorVisible() {
-    memory.lastErrorMatches = [];
-    var baseline = memory.errorBaseline;
-    var firstPass = baseline === null;
-    if (firstPass) baseline = memory.errorBaseline = [];
-    for (var i = 0; i < SIGNAL_BANKS.error.length; i += 1) {
-      var nodes = doc.querySelectorAll(SIGNAL_BANKS.error[i]);
-      for (var j = 0; j < nodes.length; j += 1) {
-        var n = nodes[j];
-        /* Historical DSH log clusters carry data-state="error" for a failed
-           step that already finished; they are records, not live failures. */
-        if (typeof n.closest === "function" && n.closest('[class*="dshLogCluster"]')) continue;
-        /* First pass: seed every pre-existing error node as history.
-           Any node created after this pass is live and keeps the failure
-           state for as long as it remains visible. */
-        if (firstPass) { baseline.push(n); continue; }
-        if (baseline.indexOf(n) !== -1) continue;
-        if (!isVisible(n)) continue;
-        var meaningful = n.getAttribute("role") === "alert"
-          || n.getAttribute("aria-invalid") === "true"
-          || (n.textContent || "").trim().length > 0;
-        if (!meaningful) continue;
-        memory.lastErrorMatches.push({
-          sel: SIGNAL_BANKS.error[i],
-          tag: n.tagName,
-          cls: String(n.className).slice(0, 120),
-          txt: (n.textContent || "").trim().slice(0, 80),
-          role: n.getAttribute("role"),
-          ariaInvalid: n.getAttribute("aria-invalid")
-        });
-        return true;
-      }
-    }
-    return false;
-  }
-
-  function toolVisible() {
-    for (var i = 0; i < SIGNAL_BANKS.tool.length; i += 1) {
-      var nodes = doc.querySelectorAll(SIGNAL_BANKS.tool[i]);
-      for (var j = 0; j < nodes.length; j += 1) {
-        var n = nodes[j];
-        /* 历史步骤卡片会永久带着 data-state="running"；会话消息流内的
-           视为历史，消息流之外的运行标记才代表当前正在工作。 */
-        if (SIGNAL_BANKS.tool[i] === '[data-state="running"]') {
-          if (typeof n.closest === "function" && n.closest('[data-slot="conversation.chat.node"]')) continue;
-        }
-        if (isVisible(n)) return true;
-      }
-    }
-    return false;
-  }
-
   function collectSignals() {
-    var now = Date.now();
-    var view = detectView();
-    var rawTool = toolVisible();
-    var rawThinking = anyVisible(SIGNAL_BANKS.thinking);
-    /* 消抖：信号必须连续存在 300ms 才算数；消失后按场景保持——
-       主页 4s、工作台 8s。工作台的工具面板在任务间会短暂空白，
-       拉长保持时间让工作姿势在整段工作期间钉住，不再反复切换。 */
-    var goneHold = view === "workbench" ? 8000 : 4000;
-    var wasRawTool = memory.toolRawSeen;
-    if (rawTool) {
-      if (!memory.toolSeenAt) memory.toolSeenAt = now;
-      memory.toolRawSeen = true;
-    } else {
-      memory.toolSeenAt = 0;
-      /* 只在下沿记录“开始消失的时刻”，中间回来又消失则重新起算 */
-      if (wasRawTool || !memory.toolGoneAt) memory.toolGoneAt = now;
-      memory.toolRawSeen = false;
-    }
-    var wasRawThinking = memory.thinkingRawSeen;
-    if (rawThinking) {
-      if (!memory.thinkingSeenAt) memory.thinkingSeenAt = now;
-      memory.thinkingRawSeen = true;
-    } else {
-      memory.thinkingSeenAt = 0;
-      if (wasRawThinking || !memory.thinkingGoneAt) memory.thinkingGoneAt = now;
-      memory.thinkingRawSeen = false;
-    }
-    /* 关键：信号短暂消失又回来时，seenAt 会归零重算。不能因此把
-       active 直接打回 false —— 只要没离开满 goneHold，就一直钉在工作态。 */
-    var toolActive = rawTool
-      ? (now - memory.toolSeenAt >= 300 || (memory.toolGoneAt !== 0 && now - memory.toolGoneAt < goneHold))
-      : memory.toolGoneAt !== 0 && now - memory.toolGoneAt < goneHold;
-    var thinkingActive = rawThinking
-      ? (now - memory.thinkingSeenAt >= 300 || (memory.thinkingGoneAt !== 0 && now - memory.thinkingGoneAt < goneHold))
-      : memory.thinkingGoneAt !== 0 && now - memory.thinkingGoneAt < goneHold;
-    var errorActive = errorVisible();
-    memory.lastErrorActive = errorActive;
-    if (view === "workbench" && memory.toolWasActive && !toolActive && !errorActive) memory.lastSuccessAt = now;
-    memory.toolWasActive = toolActive;
-    var dense = countVisible(SIGNAL_BANKS.code) >= 3;
-    /* Workbench uses exactly two moods: busy (tool/thinking/success/failure)
-       vs calm (idle rotation). The old "waiting" sweat pose no longer fires. */
     return {
-      view: view,
+      view: "home",
       waiting: false,
-      thinking: thinkingActive,
-      tool: toolActive,
-      successAt: anyVisible(SIGNAL_BANKS.success) ? now : memory.lastSuccessAt,
-      error: errorActive,
-      curiousAt: memory.viewChangedAt,
+      thinking: false,
+      tool: false,
+      successAt: -Infinity,
+      error: false,
+      curiousAt: -Infinity,
       lastInteraction: memory.lastInteractionAt,
-      denseCode: dense
+      denseCode: false
     };
   }
 
   function render(computed) {
     if (!readPref("pet") || !computed || computed.state === "hidden") {
       removeRoot();
-      if (doc.body) doc.body.removeAttribute(VIEW_ATTR);
       root.__dshWhaleMoeDebug = { state: "hidden", pose: null, line: "", view: memory.view };
       return;
     }
@@ -1692,8 +1463,7 @@
       if (moodActive && moodAllowed) {
         layout.src = ASSET_ROOT + "dsh-whale-state-" + memory.moodPose + ".webp";
       }
-      if (layout.anchor) placeAnchored(rootNode, layout);
-      else placeAt(rootNode, layout.x, layout.y, layout.w, layout.h);
+      placeAt(rootNode, layout.x, layout.y, layout.w, layout.h);
       rootNode.style.width = layout.w + "px";
       rootNode.style.height = layout.h + "px";
       frame.style.width = layout.w + "px";
@@ -1733,21 +1503,7 @@
     }
     if (memory.celebrationVisible) memory.celebrationVisible = false;
 
-    /* speech: only meaningful workbench events speak */
-    var eventStates = { failure: 1, success: 1, tool: 1, thinking: 1, curious: 1 };
-    if (computed.speak && readPref("chat") && view === "workbench" && eventStates[computed.state] && !typingTimer) {
-      typeBubble(bubbleText, computed.line);
-      bubble.hidden = false;
-      memory.bubbleHideAt = Date.now() + 4500;
-      if (!motionReduced() && computed.line !== memory.lastLine) {
-        bubble.classList.remove("dsh-whale-pop");
-        void bubble.offsetWidth;
-        bubble.classList.add("dsh-whale-pop");
-      }
-    } else {
-      /* keep the current manual line until its expiry; never force-hide here,
-         otherwise showLine() lines flicker for a single frame */
-    }
+    /* Manual desktop dialogue remains visible until its expiry. */
     if (!bubble.hidden && Date.now() > memory.bubbleHideAt && !typingTimer && !nextTimer) {
       if (!memory.bubbleOutTimer) {
         bubble.classList.add("dsh-whale-out");
@@ -1759,61 +1515,9 @@
       }
     }
 
-    /* error shake + success sparkle + ADV attention burst + growth/dialogue, only on state change */
-    if (computed.state !== memory.state.state) {
-      if (STATE_HOLD_MS[computed.state]) {
-        memory.lastEventState = computed.state;
-        memory.stateHoldUntil = Date.now() + STATE_HOLD_MS[computed.state];
-      }
-      if (STATE_CHIP[computed.state]) showChip(STATE_CHIP[computed.state], BUSY_STATES[computed.state] === 1);
-      if (computed.state === "failure") {
-        memory.failureStreak += 1;
-        addUsageStat("failures", 1);
-        applyQuestSignal("failure", 1);
-        applyGrowth({ type: "failure" }, Date.now(), 0);
-        burst("！");
-        if (view === "workbench") {
-          var fLine = say("work", memory.failureStreak >= 3 ? "gentle" : "failure");
-          if (fLine) showLine(fLine);
-        }
-        if (!motionReduced()) {
-          rootNode.classList.remove("dsh-whale-shake");
-          void rootNode.offsetWidth;
-          rootNode.classList.add("dsh-whale-shake");
-          rootNode.addEventListener("animationend", function handler() { rootNode.classList.remove("dsh-whale-shake"); rootNode.removeEventListener("animationend", handler); });
-        }
-      }
-      if (computed.state === "success") {
-        memory.failureStreak = 0;
-        addUsageStat("successes", 1);
-        applyQuestSignal("success", 1);
-        applyGrowth({ type: "success" }, Date.now(), 0);
-        burst("★");
-        spawnParticles(12, Date.now());
-        if (view === "workbench") {
-          var sLine = say("work", "success");
-          if (sLine) showLine(sLine);
-        }
-      }
-      if (computed.state === "tool" || computed.state === "thinking") {
-        addUsageStat("tools", 1);
-        applyQuestSignal("tool", 1);
-        if (isNight(Date.now()) && growth && growth.achievements.indexOf("night-work") === -1) {
-          growth.achievements.push("night-work");
-          saveGrowth();
-          announceUnlocks(["night-work"]);
-        }
-        burst("…");
-        if (view === "workbench") {
-          var tLine = say("work", computed.state === "tool" ? "tool" : "thinking");
-          if (tLine) showLine(tLine);
-        }
-      }
-    }
-
     memory.state = computed;
     memory.lastLine = computed.line;
-    root.__dshWhaleMoeDebug = { state: computed.state, pose: computed.pose, line: computed.line, view: view, mode: readMode(), layout: layout.kind, failed: memory.failed, errorMatches: memory.lastErrorMatches, errorActive: memory.lastErrorActive, lastEventState: memory.lastEventState, stateHoldUntil: memory.stateHoldUntil, holdLeft: Math.max(0, memory.stateHoldUntil - Date.now()), moodPose: memory.moodPose, moodUntil: memory.moodUntil, moodAnimate: memory.moodAnimate, layers: { active: layerState.active, loaded: layerState.loaded, gen: layerState.gen, pendingSwap: layerState.pendingSwap, pendingSince: layerState.pendingSince }, toolWasActive: memory.toolWasActive, lastSuccessAt: memory.lastSuccessAt, toolGoneAt: memory.toolGoneAt, toolSeenAt: memory.toolSeenAt, at: Date.now(), idleChat: { nextAt: idleChat.nextAt, lastGreetAt: idleChat.lastGreetAt, lastGreetBucket: idleChat.lastGreetBucket }, weather: weatherSummary() };
+    root.__dshWhaleMoeDebug = { state: computed.state, pose: computed.pose, line: computed.line, view: view, mode: readMode(), layout: layout.kind, failed: memory.failed, lastEventState: memory.lastEventState, stateHoldUntil: memory.stateHoldUntil, holdLeft: Math.max(0, memory.stateHoldUntil - Date.now()), moodPose: memory.moodPose, moodUntil: memory.moodUntil, moodAnimate: memory.moodAnimate, layers: { active: layerState.active, loaded: layerState.loaded, gen: layerState.gen, pendingSwap: layerState.pendingSwap, pendingSince: layerState.pendingSince }, at: Date.now(), idleChat: { nextAt: idleChat.nextAt, lastGreetAt: idleChat.lastGreetAt, lastGreetBucket: idleChat.lastGreetBucket }, weather: weatherSummary() };
   }
 
   /* 待机 base 稳定为 idle-cute；情绪动作只由随机低频的 showMood 覆盖。
@@ -1828,63 +1532,11 @@
     return computed.pose;
   }
 
-  function peekSize(id, fallbackW, fallbackH) {
-    var cal = root.__dshWhalePeekCalibration || {};
-    var c = cal[id];
-    if (!c || !c.bboxW || !c.bboxH || !c.w) return { w: fallbackW, h: fallbackH };
-    var w = Math.round(fallbackH * (c.bboxW / c.bboxH));
-    if (w < 24) w = 24;
-    return { w: w, h: fallbackH, padLeftRatio: c.padLeft / c.w };
-  }
-
   function resolveLayout(view, computed) {
     var vw = root.innerWidth;
     var vh = root.innerHeight;
-    if (view === "settings") return { hidden: true, src: "", kind: "peek", w: 0, h: 0 };
     var mode = readMode();
-    var effective = mode === "auto" ? (view === "home" ? "bar" : "side") : mode;
-    var dense = computed.mode === "mini";
-
-    if (effective === "bar") {
-      var composer = findComposerSurface();
-      if (!composer || !isVisible(composer)) return { hidden: true, src: "", kind: "bar", w: 0, h: 0 };
-      var crect = composer.getBoundingClientRect();
-      var barSize = peekSize("home-peek", 128, 104);
-      return {
-        hidden: false, kind: "bar", anchor: composer,
-        w: barSize.w, h: barSize.h,
-        src: ASSET_ROOT + "dsh-whale-home-peek.webp",
-        left: crect.right - barSize.w - 6,
-        top: crect.top - barSize.h + 16
-      };
-    }
-
-    if (effective === "side") {
-      var sidebar = firstVisible('[data-slot="sidebar"] > *') || firstVisible('[data-slot="sidebar"]') || firstVisible('[data-slot="sidebar.workspaces"]');
-      if (!sidebar || !isVisible(sidebar)) return { hidden: true, src: "", kind: "side", w: 0, h: 0 };
-      var srect = sidebar.getBoundingClientRect();
-      /* 忙闲两态：工作区有任务在跑 → 完整“工作中”立绘；空闲 → 探头 */
-      var busy = BUSY_STATES[computed.state] === 1;
-      if (view === "workbench" && busy) {
-        return {
-          hidden: false, kind: "side", anchor: sidebar,
-          w: 112, h: 112, padLeftRatio: 0.5,
-          src: ASSET_ROOT + "dsh-whale-state-" + statePose(computed, view) + ".webp",
-          left: srect.right - 56 - 8,
-          top: srect.bottom - 112 - 96
-        };
-      }
-      var sideSize = peekSize("workbench-peek", 148, 112);
-      return {
-        hidden: false, kind: "side", anchor: sidebar,
-        w: sideSize.w, h: sideSize.h,
-        src: ASSET_ROOT + "dsh-whale-workbench-peek.webp",
-        left: srect.right - Math.round(sideSize.w * (sideSize.padLeftRatio || 0.5)) - 8,
-        top: srect.bottom - sideSize.h - 96
-      };
-    }
-
-    if (effective === "float") {
+    if (mode === "float") {
       var saved = readFloatPos();
       var fw = 200;
       var fh = 200;
@@ -1918,17 +1570,6 @@
     return Math.max(min, Math.min(max, value));
   }
 
-  function placeAnchored(rootNode, layout) {
-    var rect = layout.anchor.getBoundingClientRect();
-    var left = layout.left !== undefined ? layout.left : rect.right - layout.w - 10;
-    var top = layout.top !== undefined ? layout.top : rect.top;
-    left = clamp(left, 8, root.innerWidth - layout.w - 8);
-    top = clamp(top, 8, root.innerHeight - layout.h - 8);
-    rootNode.style.display = "block";
-    rootNode.style.left = Math.round(left) + "px";
-    rootNode.style.top = Math.round(top) + "px";
-  }
-
   function placeAt(rootNode, x, y, width, height) {
     rootNode.style.display = "block";
     rootNode.style.left = Math.round(clamp(x, 8, root.innerWidth - width - 8)) + "px";
@@ -1946,15 +1587,13 @@
         if (root.console && root.console.warn) root.console.warn("[dsh-whale-moe] presenter disabled after error:", error);
       }
       root.__dshWhaleMoeDebug = { state: "hidden", pose: null, line: "", view: memory.view, failed: true, error: String(error) };
-      if (observer) observer.disconnect();
       removeRoot();
-      if (doc.body) doc.body.removeAttribute(VIEW_ATTR);
     }
   }
 
   function reconcile() {
     if (!doc.body) return;
-    var view = detectView();
+    var view = "home";
     var now = Date.now();
     if (!growth) loadGrowth();
     syncCompanionAchievements(now);
@@ -1967,72 +1606,17 @@
     }
     if (isNight(now)) doc.body.setAttribute("data-dsh-whale-night", "true");
     else doc.body.removeAttribute("data-dsh-whale-night");
-    var codeNow = countVisible(SIGNAL_BANKS.code);
-    if (codeNow > lastCodeCount) { addUsageStat("code", codeNow - lastCodeCount); applyQuestSignal("code", codeNow - lastCodeCount); }
-    lastCodeCount = codeNow;
-    var chatNow = countVisible(SIGNAL_BANKS.chat);
-    if (chatNow > lastChatCount) {
-      addUsageStat("messages", chatNow - lastChatCount);
-      applyQuestSignal("messages", chatNow - lastChatCount);
-      if (keywordsEnabled()) scheduleKeywordScan();
-    }
-    lastChatCount = chatNow;
     if (view !== memory.view) {
       memory.view = view;
       memory.viewChangedAt = now;
     }
-    var signals = holdSignals(collectSignals(), now);
+    var signals = collectSignals();
     var computed = core.computeState(memory.state, signals, now, Math.random);
     render(computed);
     weatherFxReconcile(computed);
     if (readPref("pet")) idleChatTick(now);
-    if (readPref("pet")) {
-      if (doc.body) doc.body.setAttribute(VIEW_ATTR, view);
-      doc.documentElement.setAttribute(VIEW_ATTR, view);
-    }
   }
 
-  var KEYWORD_POSES = Object.freeze({
-    kyun: "meme-kyun", omg: "meme-omg", doge: "meme-doge", sike: "meme-sike",
-    worship: "meme-worship", peace: "meme-peace", doubt: "meme-doubt",
-    wakuwaku: "meme-wakuwaku", smilepain: "meme-smile-pain", ojisan: "meme-ojisan",
-    deploy: "work-deploy", meeting: "work-meeting", review: "work-review",
-    bugtalk: "work-debug", ddl: "work-deadline", cake: "work-boss",
-    slack: "work-slack-phone", crazy: "abstract", cheer: "bold", flag: "bold",
-    tired: "work-sleep"
-  });
-
-  function scheduleKeywordScan() {
-    root.__dshWhaleMoeKeywordScans = (root.__dshWhaleMoeKeywordScans || 0) + 1;
-    if (keywordScanTimer) root.clearTimeout(keywordScanTimer);
-    keywordScanTimer = root.setTimeout(function () {
-      keywordScanTimer = null;
-      root.__dshWhaleMoeKeywordRuns = (root.__dshWhaleMoeKeywordRuns || 0) + 1;
-      var nodes = doc.querySelectorAll('[data-slot="conversation.chat.node"]');
-      for (var i = nodes.length - 1; i >= 0; i -= 1) {
-        var text = (nodes[i].textContent || "").slice(0, 2000);
-        if (!text) continue;
-        var id = core.matchKeyword(text, keywordsEnabled());
-        root.__dshWhaleMoeKeywordMatched = id;
-        if (!id) continue;
-        var line = say("keyword", id);
-        root.__dshWhaleMoeKeywordLine = line;
-        if (KEYWORD_POSES[id]) showMood(KEYWORD_POSES[id], 3000, true);
-        if (line) {
-          addUsageStat("keywords", 1);
-          applyQuestSignal("keyword", 1);
-          showLine(line);
-        }
-        if (id === "thanks") {
-          var out = applyGrowth({ type: "thanks" }, Date.now(), 0);
-          if (out.unlocks.length) burst("🏅");
-        }
-        break;
-      }
-    }, 500);
-  }
-
-  var observer = null;
   var scheduled = false;
   function schedule() {
     root.__dshWhaleMoeScheduleCalls = (root.__dshWhaleMoeScheduleCalls || 0) + 1;
@@ -2270,9 +1854,6 @@
     weatherFxState.viewport = viewport;
   }
   function weatherFxViewport() {
-    if (!root.__DSH_WHALE_DESKTOP__) {
-      return { left: 0, top: 0, width: root.innerWidth, height: root.innerHeight };
-    }
     var size = Math.max(1, Math.min(360, root.innerWidth, root.innerHeight));
     var pet = doc.querySelector("[data-dsh-whale-root]");
     var rect = pet && pet.getBoundingClientRect ? pet.getBoundingClientRect() : null;
@@ -2286,7 +1867,7 @@
     };
   }
   function weatherFxPlaceLayer() {
-    if (!root.__DSH_WHALE_DESKTOP__ || !weatherFxState.canvas) return;
+    if (!weatherFxState.canvas) return;
     var viewport = weatherFxViewport();
     if (viewport.width !== weatherFxState.viewport.width || viewport.height !== weatherFxState.viewport.height) {
       weatherFxSize();
@@ -2321,23 +1902,7 @@
     var dpr = weatherFxState.dpr;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, w, h);
-    /* 桌面透明覆盖层不绘制整块色温蒙版；天气由角色姿势及
-       雨、雪、风粒子表达，避免改变其他应用的屏幕颜色。 */
-    if (root.__DSH_WHALE_DESKTOP__) return;
-    var tint = spec.tint || "";
-    if (tint === "dim") {
-      ctx.fillStyle = "rgba(120,130,150," + (spec.opacity || 0.05) + ")";
-      ctx.fillRect(0, 0, w, h);
-    } else if (tint === "warm") {
-      ctx.fillStyle = "rgba(255,190,110," + (spec.opacity || 0.05) + ")";
-      ctx.fillRect(0, 0, w, h);
-    } else if (tint === "frost") {
-      var grad = ctx.createRadialGradient(w / 2, h / 2, Math.min(w, h) / 4, w / 2, h / 2, Math.max(w, h) / 2);
-      grad.addColorStop(0, "rgba(200,220,255,0)");
-      grad.addColorStop(1, "rgba(200,220,255," + (spec.opacity || 0.1) + ")");
-      ctx.fillStyle = grad;
-      ctx.fillRect(0, 0, w, h);
-    }
+    /* Keep the transparent desktop overlay free of full-screen tint blocks. */
   }
   function weatherFxDrawMotion(spec, ts, dim) {
     var ctx = weatherFxState.ctx;
@@ -2379,18 +1944,6 @@
         ctx.moveTo(p.x, p.y);
         ctx.lineTo(p.x - (p.length || 60), p.y + 2);
         ctx.stroke();
-      } else if (kind === "fog" || kind === "hot") {
-        if (root.__DSH_WHALE_DESKTOP__) continue;
-        p.x += p.speed / 60;
-        if (p.x > w + 200) { p.x = -200; p.y = Math.random() * h; }
-        var gradX = p.x;
-        var grad = ctx.createLinearGradient(gradX - 160, 0, gradX + 160, 0);
-        var color = kind === "hot" ? "255,220,160" : "225,230,240";
-        grad.addColorStop(0, "rgba(" + color + ",0)");
-        grad.addColorStop(0.5, "rgba(" + color + "," + (p.opacity * busyDim) + ")");
-        grad.addColorStop(1, "rgba(" + color + ",0)");
-        ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, w, h);
       }
     }
   }
@@ -2416,12 +1969,6 @@
         if (now >= weatherFxState.nextFlashAt && now >= weatherFxState.flashUntil) {
           weatherFxState.flashUntil = now + 140;
           weatherFxState.nextFlashAt = now + spec.params.flash.minMs + Math.random() * (spec.params.flash.maxMs - spec.params.flash.minMs);
-        }
-        if (now < weatherFxState.flashUntil && !root.__DSH_WHALE_DESKTOP__) {
-          var ctx = weatherFxState.ctx;
-          ctx.setTransform(weatherFxState.dpr, 0, 0, weatherFxState.dpr, 0, 0);
-          ctx.fillStyle = "rgba(255,255,255," + (spec.params.flash.opacity * dim) + ")";
-          ctx.fillRect(0, 0, weatherFxState.viewport.width, weatherFxState.viewport.height);
         }
       }
     }
@@ -2469,7 +2016,7 @@
     get particles() { return weatherFxState.particles.length; }
   };
 
-  /* ---------- idle chat scheduler (5-8 min, context-aware) ---------- */
+  /* ---------- idle chat scheduler (5-8 min) ---------- */
   var IDLE_CHAT_MIN = 5 * 60000;
   var IDLE_CHAT_MAX = 8 * 60000;
   var GREET_GAP_MS = 3 * 3600000;
@@ -2483,16 +2030,6 @@
     if (!line) return;
     recentLines.push(line);
     if (recentLines.length > 12) recentLines.shift();
-  }
-
-  function latestTaskTopic() {
-    try {
-      var nodes = doc.querySelectorAll('[data-slot="conversation.chat.node"]');
-      if (!nodes.length) return "general";
-      var last = nodes[nodes.length - 1];
-      var text = (last.textContent || "").slice(0, 1200);
-      return core.classifyTask(text);
-    } catch (e) { return "general"; }
   }
 
   function bubbleFree() {
@@ -2521,7 +2058,7 @@
   }
 
   function showRandomIdleAction() {
-    var pool = root.__DSH_WHALE_DESKTOP__ ? IDLE_ACTION_POOL.concat(DESKTOP_FALLBACK_ACTIONS) : IDLE_ACTION_POOL;
+    var pool = IDLE_ACTION_POOL.concat(DESKTOP_FALLBACK_ACTIONS);
     if (memory.lastIdleActionPose && pool.length > 1) {
       pool = pool.filter(function (pose) { return pose !== memory.lastIdleActionPose; });
     }
@@ -2534,7 +2071,6 @@
   }
 
   function onDesktopSystemState(event) {
-    if (!root.__DSH_WHALE_DESKTOP__) return;
     var state = event && event.detail ? event.detail : {};
     var now = Date.now();
     var idleSeconds = Number(state.idleSeconds);
@@ -2582,7 +2118,7 @@
   }
 
   function onDesktopComputerState(event) {
-    if (!root.__DSH_WHALE_DESKTOP__ || !readPref("computer-link")) return;
+    if (!readPref("computer-link")) return;
     var sample = event && event.detail ? event.detail : {};
     var now = Number(sample.at) || Date.now();
     var category = sample.foreground && sample.foreground.category ? String(sample.foreground.category) : "other";
@@ -2653,8 +2189,7 @@
 
   function idleChatTick(now) {
     var city = readWeather("weatherCity").trim();
-    var view = detectView();
-    if (view === "settings" || memory.state.state !== "idle" || !readPref("chat") || !bubbleFree() || !readPref("pet")) return;
+    if (memory.state.state !== "idle" || !readPref("chat") || !bubbleFree() || !readPref("pet")) return;
     if (now < idleChat.nextAt) return;
 
     idleChat.nextAt = now + IDLE_CHAT_MIN + Math.floor(Math.random() * (IDLE_CHAT_MAX - IDLE_CHAT_MIN));
@@ -2687,8 +2222,7 @@
       });
     }
     if (!line) {
-      var topic = latestTaskTopic();
-      line = core.pickDialogueAvoidRecent("context", topic, 0, Math.random, recentLines);
+      line = core.pickDialogueAvoidRecent("daily", "idle", 0, Math.random, recentLines);
     }
     if (!line && growth && growth.level >= 3 && Math.random() < 0.25) {
       var tier = core.moodTier(growth.mood);
@@ -2724,6 +2258,7 @@
       if (pokeLine) showLine(pokeLine);
     } else if (action === "praise") {
       applyGrowth({ type: "praise" }, Date.now(), 0);
+      applyQuestSignal("praise", 1);
       burst("✨");
       showMood("tail-swing", 3000, true);
       var praiseLine = say("interact", "praise");
@@ -2757,12 +2292,7 @@
       } else {
         schedule();
       }
-    });    try {
-      fetch(CALIBRATION_URL).then(function (r) { return r.json(); }).then(function (json) {
-        root.__dshWhalePeekCalibration = json;
-        schedule();
-      }).catch(function () { /* fallback sizes */ });
-    } catch (e) { /* fetch unavailable */ }
+    });
     if (!root.__dshWhaleMoeIdleTimer && !motionReduced()) {
       root.__dshWhaleMoeIdleTimer = root.setInterval(function () {
         var now = Date.now();
@@ -2787,8 +2317,7 @@
           if (!memory.nextIdleActionAt) memory.nextIdleActionAt = now + 35000 + Math.floor(Math.random() * 25000);
           if (now >= memory.nextIdleActionAt) {
             memory.nextIdleActionAt = now + 35000 + Math.floor(Math.random() * 25000);
-            var teasingView = detectView() !== "workbench";
-            if (teasingView && Math.random() < core.TEASE_CHANCE * 4) {
+            if (Math.random() < core.TEASE_CHANCE * 4) {
               showMood("teasing", 3200, true);
               if (readPref("chat")) {
                 var teaseLine = say("interact", "tease");
@@ -2799,27 +2328,9 @@
             }
           }
         }
-        /* 工作状态保持 running 姿势稳定，不再随机切工作小剧场；
-           低余额提示也只在不忙时露脸，免得打断工作态。 */
-        try {
-          var low = root.localStorage.getItem("dsh.balance.low") === "1";
-          if (low && !BUSY_STATES[memory.state.state] && now - lastBalanceLowAt > 60000) {
-            lastBalanceLowAt = now;
-            showMood("balance-low", 5000, true);
-          }
-        } catch (e) { /* ignore */ }
         schedule();
       }, 3000);
     }
-    root.addEventListener("dsh-whale-balance-low", function () {
-      lastBalanceLowAt = Date.now();
-      if (!BUSY_STATES[memory.state.state]) showMood("balance-low", 5000, true);
-      if (growth && growth.achievements.indexOf("balance-low") === -1) {
-        growth.achievements.push("balance-low");
-        saveGrowth();
-        announceUnlocks(["balance-low"]);
-      }
-    });
     var gazePending = false;
     root.addEventListener("pointermove", function (event) {
       if (gazePending || motionReduced()) return;
@@ -2844,12 +2355,6 @@
 
     function init() {
       safeReconcile();
-      observer = new root.MutationObserver(schedule);
-      observer.observe(doc.documentElement, {
-        attributes: true,
-        childList: true,
-        subtree: true
-      });
     }
     if (doc.readyState === "loading") doc.addEventListener("DOMContentLoaded", init, { once: true });
     else init();
