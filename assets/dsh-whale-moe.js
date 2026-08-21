@@ -12,7 +12,7 @@
   var VIEW_ATTR = "data-dsh-whale-view";
   var ASSET_ROOT = root.__DSH_WHALE_ASSET_ROOT__ || "/assets/generated/";
   var CALIBRATION_URL = root.__DSH_WHALE_CALIBRATION_URL__ || "/assets/peek-calibration.json";
-  var POSE_VERSION = "?v=5";
+  var POSE_VERSION = "?v=6";
   var DEBOUNCE_MS = 120;
   var PARTICLE_MAX = 30;
   var HEART_CHARS = ["♥", "✿", "☆", "♪"];
@@ -122,6 +122,7 @@
   /* ---------- own layers ---------- */
 
   function removeRoot() {
+    stopIdleBlink();
     var nodes = doc.querySelectorAll("[data-dsh-whale-root]");
     for (var i = 0; i < nodes.length; i += 1) nodes[i].remove();
     var particles = doc.querySelectorAll("[data-dsh-whale-particle]");
@@ -153,10 +154,68 @@
   }
 
   var layerState = { active: "a", loaded: { a: "", b: "" }, gen: 0, pendingSwap: "", pendingSince: 0 };
+  var IDLE_BLINK_DELAYS = Object.freeze([190, 110, 130, 110, 120, 500]);
+  var idleBlinkState = { requested: false, timer: null, frame: 0, preloaded: false };
+
+  function idleBlinkFrameSrc(index) {
+    return ASSET_ROOT + "dsh-whale-idle-blink-" + String(index + 1).padStart(2, "0") + ".webp" + POSE_VERSION;
+  }
+
+  function isStaticIdleSrc(src) {
+    return !!src && src.indexOf("dsh-whale-state-idle-cute.webp") !== -1;
+  }
+
+  function stopIdleBlink() {
+    idleBlinkState.requested = false;
+    idleBlinkState.frame = 0;
+    if (idleBlinkState.timer) {
+      root.clearTimeout(idleBlinkState.timer);
+      idleBlinkState.timer = null;
+    }
+    var rootNode = doc.querySelector("[data-dsh-whale-root]");
+    var active = rootNode && rootNode.querySelector("[data-dsh-whale-layer].dsh-whale-active");
+    if (active && layerState.loaded[layerState.active] === idleBlinkFrameSrc(0)) {
+      active.setAttribute("src", idleBlinkFrameSrc(0));
+    }
+  }
+
+  function startIdleBlink() {
+    idleBlinkState.requested = true;
+    if (!idleBlinkState.preloaded && typeof root.Image === "function") {
+      idleBlinkState.preloaded = true;
+      for (var p = 0; p < IDLE_BLINK_DELAYS.length; p += 1) {
+        var preload = new root.Image();
+        preload.src = idleBlinkFrameSrc(p);
+      }
+    }
+    if (idleBlinkState.timer) return;
+
+    function tick() {
+      idleBlinkState.timer = null;
+      if (!idleBlinkState.requested) return;
+      var rootNode = doc.querySelector("[data-dsh-whale-root]");
+      var active = rootNode && rootNode.querySelector("[data-dsh-whale-layer].dsh-whale-active");
+      var ready = active && !layerState.pendingSwap && layerState.loaded[layerState.active] === idleBlinkFrameSrc(0);
+      if (ready) {
+        var index = idleBlinkState.frame;
+        active.setAttribute("src", idleBlinkFrameSrc(index));
+        rootNode.setAttribute("data-dsh-whale-idle-frame", String(index + 1));
+        idleBlinkState.frame = (index + 1) % IDLE_BLINK_DELAYS.length;
+        idleBlinkState.timer = root.setTimeout(tick, IDLE_BLINK_DELAYS[index]);
+      } else {
+        idleBlinkState.timer = root.setTimeout(tick, 80);
+      }
+    }
+    tick();
+  }
 
   function setPose(src, animate, soft) {
     var rootNode = doc.querySelector("[data-dsh-whale-root]");
     if (!rootNode) return;
+    var idleRequested = isStaticIdleSrc(src);
+    if (idleRequested) src = idleBlinkFrameSrc(0);
+    if (idleRequested) startIdleBlink();
+    else stopIdleBlink();
     if (src && src.indexOf("?") === -1) src += POSE_VERSION;
     var nextName = layerState.active === "a" ? "b" : "a";
     var current = rootNode.querySelector('[data-dsh-whale-layer="' + layerState.active + '"]');
@@ -1445,12 +1504,8 @@
   function blinkOnce() {
     var rootNode = doc.querySelector("[data-dsh-whale-root]");
     if (!rootNode || motionReduced() || memory.state.state !== "idle") return;
-    var layer = rootNode.querySelector("[data-dsh-whale-layer].dsh-whale-active");
-    if (!layer) return;
-    layer.style.transition = "opacity 120ms ease";
-    layer.style.opacity = "0.94";
-    root.setTimeout(function () { layer.style.opacity = ""; }, 140);
-    root.setTimeout(function () { layer.style.transition = ""; }, 400);
+    stopIdleBlink();
+    startIdleBlink();
   }
   root.DshWhaleMoeBlink = blinkOnce;
   root.DshWhaleMoeMood = showMood;

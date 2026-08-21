@@ -28,7 +28,10 @@
 
   loadStyle(api.assets + "dsh-whale-moe.css");
   loadScript(api.assets + "whale-moe-core.js")
-    .then(function () { return loadScript(api.assets + "dsh-whale-moe.js"); })
+    .then(function () {
+      window.dispatchEvent(new CustomEvent("whale-moe-core-ready"));
+      return loadScript(api.assets + "dsh-whale-moe.js");
+    })
     .catch(function (error) { console.error("鲸鱼娘资源加载失败", error); });
 
   var interactive = false;
