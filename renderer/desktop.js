@@ -4,9 +4,7 @@
   var api = window.whaleDesktop;
   if (!api || !api.assets || !api.generated) return;
 
-  window.__DSH_WHALE_DESKTOP__ = true;
   window.__DSH_WHALE_ASSET_ROOT__ = api.generated;
-  window.__DSH_WHALE_CALIBRATION_URL__ = api.calibration;
   localStorage.setItem("whale-moe:mode", "float");
 
   function loadStyle(url) {

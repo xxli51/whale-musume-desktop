@@ -5,16 +5,14 @@
   var TOGGLES = [
     ["pet", "鲸鱼娘", true], ["chat", "台词气泡", true],
     ["particles", "粒子效果", true], ["game", "小游戏", true],
-    ["keywords", "关键词感知", false], ["idle-nudge", "摸鱼提醒", true],
+    ["idle-nudge", "摸鱼提醒", true],
     ["night", "深夜模式", true], ["weatherFx", "天气特效", true]
   ];
   var POSES = ["abstract","achievement","afk","angry","balance-low","blush","bold","celebrate","cool-shades","curious","daily-coffee","daily-cooking","daily-done","daily-eat","daily-fishing","daily-gaming","daily-melt","daily-painting","daily-pajama","daily-picnic","daily-shower","daily-stretch","eat","failure","festival-christmas","festival-halloween","festival-mid-autumn","festival-spring","game-cheat","game-happy","game-lose","game-think","game-win","greet","idle-cute","levelup","meme-broke","meme-cry","meme-doge","meme-doubt","meme-heart","meme-kyun","meme-music","meme-no","meme-ojisan","meme-omg","meme-peace","meme-shock","meme-sike","meme-smile-pain","meme-smug","meme-wakuwaku","meme-worship","meme-yes","night","pick-up","react-belly","react-head","react-tail","running","sleep","star","success","sweep","tail-swing","teasing","thinking","tool","valentine","waiting","weather-cold","weather-rain-happy","weather-snow","weather-thunder","weather-umbrella","wink","work-boss","work-celebrate","work-deadline","work-debug","work-deploy","work-idea","work-meeting","work-pat","work-ram","work-review","work-slack-phone","work-slack","work-sleep"];
   var ACHIEVEMENTS = [
     ["first-pat","🫳","初次摸头"],["ten-pats","🖐️","摸头十连"],["hundred-pats","💯","摸头百连"],["first-feed","🍰","投喂成功"],["first-triple","🎉","三连击"],["thanks","💬","嘴甜"],
     ["lv5","⭐","五级"],["lv10","👑","十级"],["signin3","📅","常客"],["signin7","🗓️","一周之约"],["night-owl","🌙","深夜陪伴"],["comeback","👋","欢迎回来"],
-    ["day1","💞","一日之缘"],["day7","💎","一周相伴"],["day30","🏛️","三十日契约"],["first-tool","🛠️","开工啦"],["tools-10","🔧","工具十连"],["tools-50","🏭","工具五十连"],["tools-100","🛰️","工具百连"],
-    ["first-code","💻","代码初体验"],["code-20","📟","代码狂人"],["first-success","✅","旗开得胜"],["success-10","🏆","任务十连"],["first-failure","🩹","初次翻车"],["fail-10","🚑","翻车十连"],
-    ["messages-100","💌","会话百条"],["messages-500","📚","消息五百条"],["keyword-master","🔍","关键词大师"],["night-work","🦉","深夜赶工"],["balance-low","🪙","余额告急"],
+    ["day1","💞","一日之缘"],["day7","💎","一周相伴"],["day30","🏛️","三十日契约"],
     ["game-first","🫧","初次开玩"],["game-win","👑","泡泡之王"],["game-combo10","🔥","连击达人"],["game-highscore","🏆","纪录刷新"],["quest-first","🎯","任务初体验"],["quest-all","🎟️","一日全勤"],["week-signin7","🏆","周常满勤"],
     ["bond-action","🌟","新动作解锁"],["bond-badge","🎖️","称号首解锁"]
   ];
@@ -235,7 +233,7 @@
     var head = element("div", "wm-settings-head");
     var title = element("div", "wm-settings-title");
     title.appendChild(element("span", "wm-settings-mark", "🐳"));
-    var titleCopy = element("div"); titleCopy.appendChild(element("strong", "", "鲸鱼娘 · 设置")); titleCopy.appendChild(element("span", "wm-version", "Desktop v2.1.0")); title.appendChild(titleCopy); head.appendChild(title);
+    var titleCopy = element("div"); titleCopy.appendChild(element("strong", "", "鲸鱼娘 · 设置")); titleCopy.appendChild(element("span", "wm-version", "Desktop v2.1.1")); title.appendChild(titleCopy); head.appendChild(title);
     var close = element("button", "wm-settings-close", "×"); close.title = "关闭设置"; close.setAttribute("aria-label", "关闭设置"); close.addEventListener("click", function () { panel.hidden = true; window.whaleDesktop.setMouseInteractive(false); }); head.appendChild(close); panel.appendChild(head);
     var rawSavedX = localStorage.getItem(PREFIX + "desktopSettingsX");
     var rawSavedY = localStorage.getItem(PREFIX + "desktopSettingsY");

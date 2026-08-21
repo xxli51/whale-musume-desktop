@@ -143,8 +143,7 @@ function createOverlay() {
       sandbox: true,
       additionalArguments: [
         `--whale-assets=${asDirectoryUrl(assets)}`,
-        `--whale-generated=${asDirectoryUrl(path.join(assets, "generated"))}`,
-        `--whale-calibration=${pathToFileURL(path.join(assets, "peek-calibration.json")).href}`
+        `--whale-generated=${asDirectoryUrl(path.join(assets, "generated"))}`
       ]
     }
   });

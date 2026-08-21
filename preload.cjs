@@ -9,7 +9,6 @@ function argument(name) {
 contextBridge.exposeInMainWorld("whaleDesktop", Object.freeze({
   assets: argument("whale-assets"),
   generated: argument("whale-generated"),
-  calibration: argument("whale-calibration"),
   setMouseInteractive(interactive) {
     ipcRenderer.send("whale:set-mouse-interactive", Boolean(interactive));
   },
