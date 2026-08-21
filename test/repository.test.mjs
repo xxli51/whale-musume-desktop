@@ -37,7 +37,7 @@ test("repository exposes license and disclaimer notices", () => {
 test("desktop package is self-contained", () => {
   const pkg = JSON.parse(read("package.json"));
   const main = read("main.cjs");
-  assert.equal(pkg.version, "2.0.0");
+  assert.equal(pkg.version, "2.1.0");
   assert.equal(pkg.build.extraResources[0].from, "assets");
   assert.match(main, /path\.join\(__dirname, "assets"\)/);
   assert.doesNotMatch(main, /path\.join\(__dirname, "\.\.", "assets"\)/);
@@ -54,7 +54,7 @@ test("all pose assets and desktop safety fixes are present", () => {
   assert.equal(poses.length, 89);
   assert.match(presenter, /Math\.min\(360, root\.innerWidth, root\.innerHeight\)/);
   assert.match(presenter, /if \(root\.__DSH_WHALE_DESKTOP__\) return;/);
-  assert.match(settings, /Desktop v2\.0\.0/);
+  assert.match(settings, /Desktop v2\.1\.0/);
   assert.match(settings, /desktopSettingsX/);
   assert.match(settings, /wm-pose-grid/);
   assert.match(settingsCss, /flex:\s*0 0 auto/);
@@ -62,11 +62,11 @@ test("all pose assets and desktop safety fixes are present", () => {
   assert.match(settingsCss, /\.wm-quest-controls/);
   assert.match(main, /screen\.getCursorScreenPoint\(\)/);
   assert.match(main, /function overlayDesktopBounds\(\)/);
-  assert.match(main, /setAlwaysOnTop\(true, "floating"\)/);
+  assert.match(main, /setAlwaysOnTop\(true, "screen-saver"\)/);
   assert.match(main, /function showOverlayInactive\(\)/);
   assert.match(main, /overlay\.moveTop\(\)/);
+  assert.match(main, /setInterval\(reinforceOverlayTopmost, 3000\)/);
   assert.match(main, /visibleOnFullScreen: false/);
-  assert.doesNotMatch(main, /setAlwaysOnTop\(true, "screen-saver"\)/);
   assert.match(desktop, /api\.onCursorProbe/);
   assert.doesNotMatch(desktop, /addEventListener\("blur"/);
 });

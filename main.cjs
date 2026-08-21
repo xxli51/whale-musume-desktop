@@ -12,6 +12,7 @@ let cursorProbeTimer = null;
 let systemStateTimer = null;
 let computerStateTimer = null;
 let topmostTimers = [];
+let topmostWatchdogTimer = null;
 let computerLinkEnabled = true;
 let previousCpuTimes = null;
 let foregroundQueryRunning = false;
@@ -84,6 +85,10 @@ function fitVirtualDesktop() {
 function clearTopmostTimers() {
   topmostTimers.forEach((timer) => clearTimeout(timer));
   topmostTimers = [];
+  if (topmostWatchdogTimer) {
+    clearInterval(topmostWatchdogTimer);
+    topmostWatchdogTimer = null;
+  }
 }
 
 function reinforceOverlayTopmost() {
@@ -91,7 +96,9 @@ function reinforceOverlayTopmost() {
   // Windows can briefly lose the TOPMOST z-order when the first transparent,
   // click-through window is shown while another app is taking foreground.
   // Reasserting the same non-fullscreen level fixes that race without focus.
-  overlay.setAlwaysOnTop(true, "floating");
+  // Transparent click-through windows can lose TOPMOST during a later
+  // Windows z-order change; use the strongest Electron level available.
+  overlay.setAlwaysOnTop(true, "screen-saver");
   overlay.moveTop();
 }
 
@@ -103,6 +110,7 @@ function showOverlayInactive() {
   [120, 800, 2200].forEach((delay) => {
     topmostTimers.push(setTimeout(reinforceOverlayTopmost, delay));
   });
+  topmostWatchdogTimer = setInterval(reinforceOverlayTopmost, 3000);
 }
 
 function createOverlay() {
@@ -143,7 +151,7 @@ function createOverlay() {
 
   overlay.setMaximumSize(desktop.width, desktop.height);
   overlay.setBounds(desktop, false);
-  overlay.setAlwaysOnTop(true, "floating");
+  overlay.setAlwaysOnTop(true, "screen-saver");
   overlay.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: false });
   overlay.setIgnoreMouseEvents(true, { forward: true });
   overlay.loadFile(path.join(__dirname, "renderer", "index.html"));
