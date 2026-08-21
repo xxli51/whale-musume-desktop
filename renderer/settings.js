@@ -235,7 +235,7 @@
     var head = element("div", "wm-settings-head");
     var title = element("div", "wm-settings-title");
     title.appendChild(element("span", "wm-settings-mark", "🐳"));
-    var titleCopy = element("div"); titleCopy.appendChild(element("strong", "", "鲸鱼娘 · 设置")); titleCopy.appendChild(element("span", "wm-version", "Desktop v2.0.0")); title.appendChild(titleCopy); head.appendChild(title);
+    var titleCopy = element("div"); titleCopy.appendChild(element("strong", "", "鲸鱼娘 · 设置")); titleCopy.appendChild(element("span", "wm-version", "Desktop v2.1.0")); title.appendChild(titleCopy); head.appendChild(title);
     var close = element("button", "wm-settings-close", "×"); close.title = "关闭设置"; close.setAttribute("aria-label", "关闭设置"); close.addEventListener("click", function () { panel.hidden = true; window.whaleDesktop.setMouseInteractive(false); }); head.appendChild(close); panel.appendChild(head);
     var rawSavedX = localStorage.getItem(PREFIX + "desktopSettingsX");
     var rawSavedY = localStorage.getItem(PREFIX + "desktopSettingsY");
@@ -311,6 +311,10 @@
   }
 
   document.addEventListener("DOMContentLoaded", renderPanel, { once: true });
+  window.addEventListener("whale-moe-core-ready", function () {
+    var panel = document.querySelector("[data-whale-desktop-settings]");
+    if (panel) renderPanel();
+  });
   window.addEventListener("whale-desktop-open-settings", openSettings);
   window.addEventListener("whale-moe-prefs-change", function () {
     var panel = document.querySelector("[data-whale-desktop-settings]");

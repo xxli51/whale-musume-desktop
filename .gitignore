@@ -6,3 +6,9 @@ dist-next/
 .DS_Store
 Thumbs.db
 build/*-check.png
+.idea
+.github
+
+_build_idle_blink.py
+
+_make_blink_frame.py
