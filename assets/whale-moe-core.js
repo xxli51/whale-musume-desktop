@@ -1205,6 +1205,12 @@
         "嘿，收到鲸鱼娘的秘密信号了吗？回答错误也不重发😝",
         "眨一下是可爱，眨两下就是主人今天运气爆棚啦😉"
       ],
+      "daily-done": [
+        "今日任务全清！鲸鱼娘给主人颁一朵小红花🌺",
+        "全部搞定啦！今天的勤奋值已经爆表了哦🎉",
+        "任务板空空如也，鲸鱼娘替主人骄傲三秒钟✨",
+        "完美收工！剩下的时间就用来摸鱼吧，鲸鱼娘批准了🐟"
+      ],
       "meme-broke": [
         "钱包轻得能起飞，鲸鱼娘先陪主人吃一顿空气大餐💸",
         "余额正在表演消失术，主人别慌，鲸鱼娘的陪伴免费🪙",
@@ -1938,6 +1944,103 @@
     return pool[(Math.abs(counter | 0) + Math.floor(r * 97)) % pool.length];
   }
 
+  /* ================= weighted idle pose picker ================= */
+
+  /* 时段池：night 从 17:30（1050 分钟）起生效，下班即进入居家模式 */
+  var HOURLY_POSES = Object.freeze({
+    morning:   ["daily-coffee", "daily-stretch"],
+    forenoon:  ["daily-coffee", "daily-painting"],
+    noon:      ["daily-eat", "daily-cooking"],
+    afternoon: ["daily-stretch", "daily-fishing", "daily-picnic"],
+    night:     ["daily-pajama", "daily-shower", "daily-cooking"]
+  });
+
+  /* 休闲加成只在周五下午（摸鱼时段），周六周日不加班不需要 */
+  var FRIDAY_POSES = Object.freeze(["daily-picnic", "daily-fishing", "daily-gaming"]);
+
+  var MOOD_HIGH_POSES = Object.freeze(["meme-smug", "meme-wakuwaku", "meme-heart", "meme-kyun", "bold"]);
+  var MOOD_LOW_POSES = Object.freeze(["meme-cry", "meme-smile-pain", "meme-broke"]);
+  var MOOD_MID_POSES = Object.freeze(["abstract", "meme-doge", "meme-ojisan", "meme-peace"]);
+
+  var GENERAL_POOL = Object.freeze([
+    "work-boss", "work-celebrate", "work-deadline", "work-deploy", "work-idea",
+    "sweep", "meme-doubt", "meme-no", "meme-omg", "meme-shock",
+    "meme-sike", "meme-worship", "meme-yes", "meme-music",
+    "cool-shades", "tail-swing"
+  ]);
+
+  /**
+   * Pure weighted idle pose selector.
+   * @param {object} growth  - current growth state (needs .mood)
+   * @param {number} now     - timestamp ms
+   * @param {function} rng   - Math.random-like
+   * @returns {string} pose asset name
+   */
+  function pickIdlePose(growth, now, rng) {
+    var r = typeof rng === "function" ? rng : Math.random;
+    var d = new Date(typeof now === "number" ? now : Date.now());
+    var hour = d.getHours();
+    var minutes = hour * 60 + d.getMinutes();
+    var day = d.getDay(); /* 0=Sun, 6=Sat */
+    /* 休闲加成只在周五下午 12:00-18:00（摸鱼时段） */
+    var isFridayAfternoon = day === 5 && hour >= 12 && hour < 18;
+    /* 独立时段划分：17:30（1050 分钟）起进入夜间居家模式，不复用 greetBucket */
+    var bucket;
+    if (minutes >= 1050 || hour < 6) bucket = "night";
+    else if (hour < 9) bucket = "morning";
+    else if (hour < 12) bucket = "forenoon";
+    else if (hour < 14) bucket = "noon";
+    else bucket = "afternoon";
+    var mood = growth && typeof growth.mood === "number" ? growth.mood : 70;
+    var tier = moodTier(mood);
+
+    /* Build weighted candidate list: [pose, weight] pairs */
+    var candidates = [];
+
+    /* 1. Hourly pool — high weight if matches current bucket, low otherwise */
+    var hourlyMatch = HOURLY_POSES[bucket] || [];
+    for (var i = 0; i < hourlyMatch.length; i++) {
+      candidates.push([hourlyMatch[i], 30]);
+    }
+    /* Non-matching hourly poses get a small chance */
+    for (var bk in HOURLY_POSES) {
+      if (bk === bucket) continue;
+      var arr = HOURLY_POSES[bk];
+      for (var j = 0; j < arr.length; j++) {
+        candidates.push([arr[j], 2]);
+      }
+    }
+
+    /* Friday afternoon bonus: 周五下午摸鱼加成（12:00-18:00） */
+    if (isFridayAfternoon) {
+      for (var w = 0; w < FRIDAY_POSES.length; w++) {
+        candidates.push([FRIDAY_POSES[w], 25]);
+      }
+    }
+
+    /* 2. Mood pool — tier-specific poses get high weight */
+    var moodPool = tier === "high" ? MOOD_HIGH_POSES : (tier === "low" ? MOOD_LOW_POSES : MOOD_MID_POSES);
+    for (var m = 0; m < moodPool.length; m++) {
+      candidates.push([moodPool[m], 20]);
+    }
+
+    /* 3. General pool — always available as filler */
+    for (var g = 0; g < GENERAL_POOL.length; g++) {
+      candidates.push([GENERAL_POOL[g], 8]);
+    }
+
+    /* Weighted random selection */
+    var totalWeight = 0;
+    for (var c = 0; c < candidates.length; c++) totalWeight += candidates[c][1];
+    var roll = r() * totalWeight;
+    var cumulative = 0;
+    for (var s = 0; s < candidates.length; s++) {
+      cumulative += candidates[s][1];
+      if (roll < cumulative) return candidates[s][0];
+    }
+    return candidates[candidates.length - 1][0];
+  }
+
   return Object.freeze({
     PACK_ID: PACK_ID,
     AFK_MS: AFK_MS,
@@ -1988,6 +2091,7 @@
     computeWeekSignin: computeWeekSignin,
     bondUnlocks: bondUnlocks,
     moodTier: moodTier,
-    evaluateQuestAchievements: evaluateQuestAchievements
+    evaluateQuestAchievements: evaluateQuestAchievements,
+    pickIdlePose: pickIdlePose
   });
 });

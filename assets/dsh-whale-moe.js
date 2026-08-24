@@ -553,11 +553,15 @@
     "meme-ojisan": ["keyword", "ojisan"], "meme-omg": ["keyword", "omg"], "meme-peace": ["keyword", "peace"],
     "meme-sike": ["keyword", "sike"], "meme-smile-pain": ["keyword", "smilepain"],
     "meme-wakuwaku": ["keyword", "wakuwaku"], "meme-worship": ["keyword", "worship"],
+    "meme-broke": ["idleAction", "meme-broke"], "meme-cry": ["idleAction", "meme-cry"],
+    "meme-heart": ["idleAction", "meme-heart"], "meme-no": ["idleAction", "meme-no"],
+    "meme-shock": ["idleAction", "meme-shock"], "meme-yes": ["idleAction", "meme-yes"],
     failure: ["work", "failure"], running: ["work", "tool"], success: ["work", "success"], thinking: ["work", "thinking"], tool: ["work", "tool"],
     "work-boss": ["meme", "cake"], "work-celebrate": ["work", "success"], "work-deadline": ["meme", "ddl"],
     "work-debug": ["context", "bug"], "work-deploy": ["context", "deploy"], "work-idea": ["context", "code"],
     "work-meeting": ["keyword", "meeting"], "work-pat": ["interact", "pat"], "work-ram": ["work", "long"],
     "work-review": ["keyword", "review"], "work-slack-phone": ["meme", "slack"], "work-slack": ["meme", "slack"], "work-sleep": ["keyword", "tired"],
+    "daily-done": ["idleAction", "daily-done"],
     celebrate: ["work", "success"], night: ["daily", "night"], sleep: ["daily", "night"], sweep: ["daily", "idle"], waiting: ["daily", "idle"]
   });
   var COMPUTER_LINK_ACTIONS = Object.freeze({
@@ -999,8 +1003,7 @@
       announceUnlocks(unlocks);
     }
     if (rewardAllowed) {
-      var out = applyGrowth({ type: core.gameReward(result.grade) }, Date.now(), 0);
-      if (out.leveledUp) onBondLevelUp();
+      applyGrowth({ type: core.gameReward(result.grade) }, Date.now(), 0);
     }
     showMood(result.grade === "win" ? "game-win" : (result.grade === "draw" ? "game-happy" : "game-lose"), 3400, true);
     if (panel) {
@@ -1233,8 +1236,8 @@
     var out = core.computeGrowth(growth, event, now, pats);
     growth = out.growth;
     saveGrowth();
-    try { root.dispatchEvent(new CustomEvent("whale-moe-prefs-change", { detail: { key: "growth", value: String(Date.now()) } })); } catch (e) { /* ignore */ }
     if (out.leveledUp) onBondLevelUp();
+    try { root.dispatchEvent(new CustomEvent("whale-moe-prefs-change", { detail: { key: "growth", value: String(Date.now()) } })); } catch (e) { /* ignore */ }
     return out;
   }
   function say(bank, event) {
@@ -1308,7 +1311,8 @@
     burst("🎯");
     if (!BUSY_STATES[memory.state.state]) showMood("daily-done", 3200, true);
     if (!BUSY_STATES[memory.state.state] && readPref("chat") && bubbleFree()) {
-      showChatLine(core.pickDialogue("daily", "signin", 0, Math.random));
+      var doneLine = core.pickDialogueAvoidRecent("idleAction", "daily-done", 0, Math.random, recentLines);
+      if (doneLine) showChatLine(doneLine);
     }
     root.dispatchEvent(new CustomEvent("whale-moe-prefs-change", { detail: { key: "quests", value: 1 } }));
     return true;
@@ -1318,6 +1322,7 @@
     var out = core.computeWeekSignin(weekSignin, dayKeyOf(now), now);
     weekSignin = out.weekSignin;
     saveWeekSignin();
+    try { root.dispatchEvent(new CustomEvent("whale-moe-prefs-change", { detail: { key: "growth", value: String(Date.now()) } })); } catch (e) { /* ignore */ }
     if (out.milestoneHit === "7") {
       applyGrowth({ type: "weekly" }, now, 0);
       var unlocks = core.evaluateQuestAchievements(growth, quests, weekSignin);
@@ -2058,11 +2063,13 @@
   }
 
   function showRandomIdleAction() {
-    var pool = IDLE_ACTION_POOL.concat(DESKTOP_FALLBACK_ACTIONS);
-    if (memory.lastIdleActionPose && pool.length > 1) {
-      pool = pool.filter(function (pose) { return pose !== memory.lastIdleActionPose; });
+    var pose = core.pickIdlePose(growth, Date.now(), Math.random);
+    /* avoid immediate repeat */
+    if (pose === memory.lastIdleActionPose) {
+      var fallback = IDLE_ACTION_POOL.concat(DESKTOP_FALLBACK_ACTIONS);
+      fallback = fallback.filter(function (p) { return p !== pose; });
+      if (fallback.length) pose = fallback[Math.floor(Math.random() * fallback.length)];
     }
-    var pose = pool[Math.floor(Math.random() * pool.length)];
     memory.lastIdleActionPose = pose;
     showMood(pose, 4200 + Math.floor(Math.random() * 1600), true);
     if (!readPref("chat") || !bubbleFree()) return;

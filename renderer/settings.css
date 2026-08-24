@@ -214,6 +214,23 @@ details.wm-card:not([open]) > .wm-card-content { display: none !important; }
 .wm-pose-grid::-webkit-scrollbar { width: 7px; }
 .wm-pose-grid::-webkit-scrollbar-thumb { background: #555b63; border-radius: 8px; }
 
+.wm-pose-group-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 16px 0 2px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--wm-line-soft);
+}
+.wm-pose-group-head:first-of-type {
+  margin-top: 4px;
+  padding-top: 0;
+  border-top: 0;
+}
+.wm-pose-group-title { color: #dce2e8; font-size: 13px; font-weight: 600; }
+.wm-pose-group-count { color: var(--wm-muted); font-size: 11px; flex: 0 0 auto; }
+
 .wm-switch { position: relative; min-height: 49px; padding-right: 48px; cursor: pointer; }
 .wm-switch input {
   position: absolute;
