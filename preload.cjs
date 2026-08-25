@@ -30,6 +30,15 @@ contextBridge.exposeInMainWorld("whaleDesktop", Object.freeze({
   setComputerLinkEnabled(enabled) {
     ipcRenderer.send("whale:set-computer-link-enabled", Boolean(enabled));
   },
+  setQuietActive(active) {
+    ipcRenderer.send("whale:set-quiet-active", Boolean(active));
+  },
+  reportError(details) {
+    ipcRenderer.send("whale:renderer-error", {
+      message: String(details && details.message || "").slice(0, 1000),
+      stack: String(details && details.stack || "").slice(0, 8000)
+    });
+  },
   onComputerState(callback) {
     ipcRenderer.on("whale:computer-state", (_event, state) => callback(state));
   }

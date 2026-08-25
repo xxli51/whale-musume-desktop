@@ -38,6 +38,8 @@
 [data-dsh-whale-root][data-dsh-whale-mode="float"] [data-dsh-whale-frame] {
   cursor: grab;
 }
+body[data-whale-quiet] [data-dsh-whale-root] [data-dsh-whale-frame],
+body[data-whale-quiet] [data-dsh-whale-root] [data-dsh-whale-layer] { animation: none !important; }
 [data-dsh-whale-root][data-dsh-whale-mode="float"] [data-dsh-whale-frame]:active {
   cursor: grabbing;
 }
@@ -403,6 +405,11 @@
   transform-origin: 50% 14%;
   transform: translateY(3px) rotate(var(--wm-drag-angle, 0deg));
   transition: transform 120ms ease-out;
+}
+
+/* 自主走动的位移与专用逐帧动画均由 JS 驱动。 */
+[data-dsh-whale-root][data-dsh-whale-walking="true"] [data-dsh-whale-frame] {
+  cursor: default;
 }
 
 /* ===== 12 种特效 ===== */

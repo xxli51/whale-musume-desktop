@@ -30,7 +30,18 @@
       window.dispatchEvent(new CustomEvent("whale-moe-core-ready"));
       return loadScript(api.assets + "dsh-whale-moe.js");
     })
-    .catch(function (error) { console.error("鲸鱼娘资源加载失败", error); });
+    .catch(function (error) {
+      console.error("鲸鱼娘资源加载失败", error);
+      api.reportError({ message: "鲸鱼娘资源加载失败：" + error.message, stack: error.stack });
+    });
+
+  window.addEventListener("error", function (event) {
+    api.reportError({ message: event.message, stack: event.error && event.error.stack });
+  });
+  window.addEventListener("unhandledrejection", function (event) {
+    var reason = event.reason;
+    api.reportError({ message: reason && reason.message ? reason.message : String(reason), stack: reason && reason.stack });
+  });
 
   var interactive = false;
   function updateMouseModeAt(clientX, clientY) {
@@ -63,9 +74,15 @@
   function syncComputerLinkPreference() {
     api.setComputerLinkEnabled(localStorage.getItem("whale-moe:computer-link") !== "0");
   }
+  function syncQuietPreference() {
+    api.setQuietActive(localStorage.getItem("whale-moe:quiet-active") === "1");
+  }
+  syncQuietPreference();
   syncComputerLinkPreference();
   window.addEventListener("whale-moe-prefs-change", function (event) {
-    if (event.detail && event.detail.key === "computer-link") syncComputerLinkPreference();
+    if (!event.detail) return;
+    if (event.detail.key === "computer-link") syncComputerLinkPreference();
+    if (event.detail.key === "quiet-active") syncQuietPreference();
   });
   api.onResetPosition(function () {
     localStorage.removeItem("whale-moe:floatX");
