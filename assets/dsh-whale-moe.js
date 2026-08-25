@@ -9,6 +9,7 @@
 
   var core = root.DshWhaleMoeCore;
   var doc = root.document;
+  var storage = root.WhaleStorage;
   var ASSET_ROOT = root.__DSH_WHALE_ASSET_ROOT__ || "/assets/generated/";
   var POSE_VERSION = "?v=6";
   var DEBOUNCE_MS = 120;
@@ -22,24 +23,38 @@
   ];
 
   function readPref(key) {
-    try { return root.localStorage.getItem("whale-moe:" + key) !== "0"; } catch (e) { return true; }
+    try { return storage.get(key, "1") !== "0"; } catch (e) { return true; }
   }
   function writePref(key, value) {
-    try { root.localStorage.setItem("whale-moe:" + key, value ? "1" : "0"); } catch (e) { /* storage unavailable */ }
+    try { storage.set(key, value ? "1" : "0"); } catch (e) { /* storage unavailable */ }
+  }
+  function readNumber(key, fallback, min, max) {
+    try {
+      var raw = storage.get(key, null);
+      var value = raw === null ? fallback : Number(raw);
+      if (!Number.isFinite(value)) value = fallback;
+      return Math.max(min, Math.min(max, value));
+    } catch (e) { return fallback; }
+  }
+  function quietActive() {
+    try { return storage.get("quiet-active", "0") === "1"; } catch (e) { return false; }
+  }
+  function positionLocked() {
+    try { return storage.get("positionLocked", "0") === "1"; } catch (e) { return false; }
   }
 
   var MODES = Object.freeze({ float: 1, mini: 1 });
   function readMode() {
     try {
-      var value = root.localStorage.getItem("whale-moe:mode");
+      var value = storage.get("mode", null);
       if (value === null) return "float";
       return MODES[value] ? value : "float";
     } catch (e) { return "float"; }
   }
   function readFloatPos() {
     try {
-      var rawX = root.localStorage.getItem("whale-moe:floatX");
-      var rawY = root.localStorage.getItem("whale-moe:floatY");
+      var rawX = storage.get("floatX", null);
+      var rawY = storage.get("floatY", null);
       if (rawX === null || rawY === null) return null;
       var x = Number(rawX);
       var y = Number(rawY);
@@ -49,14 +64,15 @@
   }
   function writeFloatPos(x, y) {
     try {
-      root.localStorage.setItem("whale-moe:floatX", String(Math.round(x)));
-      root.localStorage.setItem("whale-moe:floatY", String(Math.round(y)));
+      storage.set("floatX", Math.round(x));
+      storage.set("floatY", Math.round(y));
     } catch (e) { /* storage unavailable */ }
   }
 
   /* ---------- own layers ---------- */
 
   function removeRoot() {
+    stopAutoWalk(false);
     stopIdleBlink();
     var nodes = doc.querySelectorAll("[data-dsh-whale-root]");
     for (var i = 0; i < nodes.length; i += 1) nodes[i].remove();
@@ -89,11 +105,10 @@
   }
 
   var layerState = { active: "a", loaded: { a: "", b: "" }, gen: 0, pendingSwap: "", pendingSince: 0 };
-  var IDLE_BLINK_DELAYS = Object.freeze([190, 110, 130, 110, 120, 500]);
-  var idleBlinkState = { requested: false, timer: null, frame: 0, preloaded: false };
+  var idleBlinkPreloaded = false;
 
-  function idleBlinkFrameSrc(index) {
-    return ASSET_ROOT + "dsh-whale-idle-blink-" + String(index + 1).padStart(2, "0") + ".webp" + POSE_VERSION;
+  function idleBlinkSrc() {
+    return ASSET_ROOT + "dsh-whale-idle-blink.webp" + POSE_VERSION;
   }
 
   function isStaticIdleSrc(src) {
@@ -101,54 +116,22 @@
   }
 
   function stopIdleBlink() {
-    idleBlinkState.requested = false;
-    idleBlinkState.frame = 0;
-    if (idleBlinkState.timer) {
-      root.clearTimeout(idleBlinkState.timer);
-      idleBlinkState.timer = null;
-    }
     var rootNode = doc.querySelector("[data-dsh-whale-root]");
-    var active = rootNode && rootNode.querySelector("[data-dsh-whale-layer].dsh-whale-active");
-    if (active && layerState.loaded[layerState.active] === idleBlinkFrameSrc(0)) {
-      active.setAttribute("src", idleBlinkFrameSrc(0));
-    }
+    if (rootNode) rootNode.removeAttribute("data-dsh-whale-idle-frame");
   }
 
   function startIdleBlink() {
-    idleBlinkState.requested = true;
-    if (!idleBlinkState.preloaded && typeof root.Image === "function") {
-      idleBlinkState.preloaded = true;
-      for (var p = 0; p < IDLE_BLINK_DELAYS.length; p += 1) {
-        var preload = new root.Image();
-        preload.src = idleBlinkFrameSrc(p);
-      }
-    }
-    if (idleBlinkState.timer) return;
-
-    function tick() {
-      idleBlinkState.timer = null;
-      if (!idleBlinkState.requested) return;
-      var rootNode = doc.querySelector("[data-dsh-whale-root]");
-      var active = rootNode && rootNode.querySelector("[data-dsh-whale-layer].dsh-whale-active");
-      var ready = active && !layerState.pendingSwap && layerState.loaded[layerState.active] === idleBlinkFrameSrc(0);
-      if (ready) {
-        var index = idleBlinkState.frame;
-        active.setAttribute("src", idleBlinkFrameSrc(index));
-        rootNode.setAttribute("data-dsh-whale-idle-frame", String(index + 1));
-        idleBlinkState.frame = (index + 1) % IDLE_BLINK_DELAYS.length;
-        idleBlinkState.timer = root.setTimeout(tick, IDLE_BLINK_DELAYS[index]);
-      } else {
-        idleBlinkState.timer = root.setTimeout(tick, 80);
-      }
-    }
-    tick();
+    if (idleBlinkPreloaded || typeof root.Image !== "function") return;
+    idleBlinkPreloaded = true;
+    var preload = new root.Image();
+    preload.src = idleBlinkSrc();
   }
 
   function setPose(src, animate, soft) {
     var rootNode = doc.querySelector("[data-dsh-whale-root]");
     if (!rootNode) return;
     var idleRequested = isStaticIdleSrc(src);
-    if (idleRequested) src = idleBlinkFrameSrc(0);
+    if (idleRequested) src = idleBlinkSrc();
     if (idleRequested) startIdleBlink();
     else stopIdleBlink();
     if (src && src.indexOf("?") === -1) src += POSE_VERSION;
@@ -417,7 +400,7 @@
     });
     frame.addEventListener("pointerdown", function (event) {
       pressStartedAt = Date.now();
-      if (readMode() === "float" && event.button === 0) startDrag(event, rootNode);
+      if (readMode() === "float" && event.button === 0 && !positionLocked()) startDrag(event, rootNode);
     });
     frame.addEventListener("contextmenu", function (event) {
       event.preventDefault();
@@ -429,7 +412,131 @@
   }
 
   var dragState = null;
+  var autoWalkAssetsPreloaded = false;
+  var autoWalkState = { active: false, raf: 0, x: 0, y: 0, nextAt: 0, direction: "right" };
+
+  function autoWalkSrc(direction) {
+    var side = direction === "left" ? "left" : "right";
+    return ASSET_ROOT + "dsh-whale-walk-" + side + ".webp" + POSE_VERSION;
+  }
+
+  function preloadAutoWalkFrames() {
+    if (autoWalkAssetsPreloaded || typeof root.Image !== "function") return;
+    autoWalkAssetsPreloaded = true;
+    for (var sideIndex = 0; sideIndex < 2; sideIndex += 1) {
+      var side = sideIndex === 0 ? "left" : "right";
+      var image = new root.Image();
+      image.src = autoWalkSrc(side);
+    }
+  }
+
+  function showAutoWalkAnimation(node) {
+    if (!node || !autoWalkState.active) return;
+    var src = autoWalkSrc(autoWalkState.direction);
+    if (layerState.loaded[layerState.active] === src) return;
+    var active = node.querySelector('[data-dsh-whale-layer="' + layerState.active + '"]');
+    if (!active) return;
+    active.setAttribute("src", src);
+    active.classList.add("dsh-whale-active");
+    layerState.loaded[layerState.active] = src;
+  }
+
+  function autoWalkBlocked(now) {
+    var settings = doc.querySelector("[data-whale-desktop-settings]");
+    var prefs = doc.querySelector("[data-dsh-whale-prefs]");
+    return readMode() !== "float"
+      || !readPref("auto-walk")
+      || quietActive()
+      || positionLocked()
+      || doc.hidden
+      || dragState
+      || gameOpen
+      || catchOpen
+      || (!autoWalkState.active && memory.moodUntil > now)
+      || (settings && !settings.hidden)
+      || (prefs && !prefs.hidden)
+      || !!doc.querySelector("[data-dsh-whale-context]");
+  }
+
+  function stopAutoWalk(persist) {
+    if (autoWalkState.raf) root.cancelAnimationFrame(autoWalkState.raf);
+    autoWalkState.raf = 0;
+    if (!autoWalkState.active) return;
+    autoWalkState.active = false;
+    var node = doc.querySelector("[data-dsh-whale-root]");
+    if (node) {
+      node.removeAttribute("data-dsh-whale-walking");
+      node.removeAttribute("data-dsh-whale-walk-direction");
+      if (persist !== false) writeFloatPos(autoWalkState.x, autoWalkState.y);
+    }
+    autoWalkState.nextAt = Date.now() + 8000 + Math.floor(Math.random() * 17000);
+    resumeDeferredMood();
+    schedule();
+  }
+
+  function startAutoWalk(now, node) {
+    if (!node || autoWalkState.active || autoWalkBlocked(now)) return false;
+    var rect = node.getBoundingClientRect();
+    var minX = 8;
+    var maxX = Math.max(minX, root.innerWidth - rect.width - 8);
+    var minY = 8;
+    var maxY = Math.max(minY, root.innerHeight - rect.height - 8);
+    var fromX = clamp(rect.left, minX, maxX);
+    var fromY = clamp(rect.top, minY, maxY);
+    var direction = Math.random() < 0.5 ? -1 : 1;
+    var distance = 100 + Math.random() * Math.min(260, Math.max(100, root.innerWidth * 0.24));
+    var toX = clamp(fromX + direction * distance, minX, maxX);
+    if (Math.abs(toX - fromX) < 70) toX = clamp(fromX - direction * distance, minX, maxX);
+    var toY = clamp(fromY + (Math.random() - 0.5) * 90, minY, maxY);
+    if (Math.hypot(toX - fromX, toY - fromY) < 60) {
+      autoWalkState.nextAt = now + 20000;
+      return false;
+    }
+    var duration = 2600 + Math.random() * 2200;
+    autoWalkState.active = true;
+    autoWalkState.x = fromX;
+    autoWalkState.y = fromY;
+    autoWalkState.direction = toX < fromX ? "left" : "right";
+    node.setAttribute("data-dsh-whale-walking", "true");
+    node.setAttribute("data-dsh-whale-walk-direction", autoWalkState.direction);
+    stopIdleBlink();
+    layerState.gen += 1;
+    layerState.pendingSwap = "";
+    layerState.pendingSince = 0;
+    showAutoWalkAnimation(node);
+    schedule();
+    var startTimestamp = null;
+    function step(timestamp) {
+      if (!autoWalkState.active) return;
+      if (autoWalkBlocked(Date.now())) { stopAutoWalk(true); return; }
+      if (startTimestamp === null) startTimestamp = timestamp;
+      var progress = Math.max(0, Math.min(1, (timestamp - startTimestamp) / duration));
+      var eased = progress < 0.5 ? 2 * progress * progress : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+      autoWalkState.x = fromX + (toX - fromX) * eased;
+      autoWalkState.y = fromY + (toY - fromY) * eased;
+      node.style.left = Math.round(autoWalkState.x) + "px";
+      node.style.top = Math.round(autoWalkState.y) + "px";
+      if (progress >= 1) { stopAutoWalk(true); return; }
+      autoWalkState.raf = root.requestAnimationFrame(step);
+    }
+    autoWalkState.raf = root.requestAnimationFrame(step);
+    return true;
+  }
+
+  function maybeAutoWalk(now, node) {
+    if (autoWalkState.active) {
+      if (autoWalkBlocked(now)) stopAutoWalk(true);
+      return;
+    }
+    if (!autoWalkState.nextAt) autoWalkState.nextAt = now + 4000 + Math.floor(Math.random() * 8000);
+    if (now >= autoWalkState.nextAt) {
+      if (!startAutoWalk(now, node)) autoWalkState.nextAt = now + 3000 + Math.floor(Math.random() * 6000);
+    }
+  }
+
   function startDrag(event, rootNode) {
+    if (positionLocked()) return;
+    stopAutoWalk(true);
     event.preventDefault();
     dragState = {
       node: rootNode,
@@ -498,7 +605,7 @@
     var menu = doc.createElement("div");
     menu.setAttribute("data-dsh-whale-context", "true");
     var items = [
-      { label: "投喂小点心", action: function () { var out = applyGrowth({ type: "feed" }, Date.now(), 0); applyQuestSignal("feed", 1); burst("🍰"); showMood("eat", 3000); var line = say("interact", "feed"); if (line) showLine(line); if (out.unlocks.length) announceUnlocks(out.unlocks); } },
+      { label: "投喂小点心", action: feedMascot },
       { label: "戳一下", action: function () { applyGrowth({ type: "poke" }, Date.now(), 0); burst("💢"); showMood("angry", 3000); var line = say("interact", "poke"); if (line) showLine(line); } },
       { label: "夸夸 鲸鱼娘", action: function () { applyGrowth({ type: "praise" }, Date.now(), 0); applyQuestSignal("praise", 1); burst("✨"); showMood("tail-swing", 3000, true); var line = say("interact", "praise"); if (line) showLine(line); } }
     ];
@@ -583,21 +690,51 @@
     lastAnyAt: 0,
     lastTriggered: Object.create(null)
   };
+  function feedMascot() {
+    var out = applyGrowth({ type: "feed" }, Date.now(), 0);
+    applyQuestSignal("feed", 1);
+    burst(out.wasFull ? "💭" : "🍰");
+    showMood(out.wasFull ? "daily-eat" : "eat", 3000, true);
+    var line = out.wasFull ? "已经吃得圆滚滚啦，晚一点再投喂吧～" : say("interact", "feed");
+    if (line) showLine(line);
+    if (out.unlocks.length) announceUnlocks(out.unlocks);
+  }
   function showMood(kind, duration, animate) {
     var rootNode = doc.querySelector("[data-dsh-whale-root]");
     if (!rootNode) return;
+    var moodDuration = duration || 3000;
     memory.moodPose = kind;
-    memory.moodUntil = Date.now() + (duration || 3000);
     memory.moodAnimate = animate === true;
-    schedule();
     if (moodTimer) { root.clearTimeout(moodTimer); moodTimer = null; }
+    if (autoWalkState.active) {
+      /* Scene-driven reactions must never replace the directional walk cycle.
+         Keep the newest reaction queued and give it its full duration once the
+         walk finishes. Direct pointer/keyboard interaction stops walking first. */
+      memory.moodUntil = 0;
+      memory.pendingMoodDuration = moodDuration;
+      schedule();
+      return;
+    }
+    startMoodTimer(moodDuration);
+  }
+
+  function startMoodTimer(duration) {
+    memory.pendingMoodDuration = 0;
+    memory.moodUntil = Date.now() + duration;
+    schedule();
     moodTimer = root.setTimeout(function () {
       moodTimer = null;
       memory.moodPose = "";
       memory.moodUntil = 0;
       memory.moodAnimate = false;
+      memory.pendingMoodDuration = 0;
       schedule();
-    }, duration || 3000);
+    }, duration);
+  }
+
+  function resumeDeferredMood() {
+    if (!memory || !memory.moodPose || memory.pendingMoodDuration <= 0) return;
+    startMoodTimer(memory.pendingMoodDuration);
   }
 
   function fxAt(x, y, kind) {
@@ -1198,7 +1335,7 @@
       growth = {
         mood: Number(root.localStorage.getItem("whale-moe:mood")) || core.DEFAULT_GROWTH.mood,
         affinity: Number(root.localStorage.getItem("whale-moe:affinity")) || 0,
-        satiety: Number(root.localStorage.getItem("whale-moe:satiety")) || core.DEFAULT_GROWTH.satiety,
+        satiety: root.localStorage.getItem("whale-moe:satiety") === null ? core.DEFAULT_GROWTH.satiety : Number(root.localStorage.getItem("whale-moe:satiety")),
         lastSignin: root.localStorage.getItem("whale-moe:lastSignin") || "",
         signinStreak: Number(root.localStorage.getItem("whale-moe:signinStreak")) || 0,
         achievements: (root.localStorage.getItem("whale-moe:achievements") || "").split(",").filter(Boolean),
@@ -1415,11 +1552,13 @@
     nextIdleActionAt: 0,
     failureStreak: 0,
     lastGrowthTick: 0,
+    lastHungryAt: 0,
     stateHoldUntil: 0,
     lastEventState: "",
     moodPose: "",
     moodUntil: 0,
     moodAnimate: false,
+    pendingMoodDuration: 0,
     celebrationVisible: false,
     currentTypingLine: "",
     pendingLine: "",
@@ -1459,21 +1598,24 @@
     /* layout routing */
     var layout = resolveLayout(view, computed);
     var moodActive = memory.moodUntil > Date.now() && !!memory.moodPose;
+    var walking = autoWalkState.active && layout && layout.kind === "float";
     /* 工作态优先级最高：只要在忙，情绪姿势一律让位给 running，
        只有点击互动专用的 work-pat/work-ram 可以短暂覆盖。 */
     var moodAllowed = BUSY_STATES[computed.state] !== 1 || memory.moodPose === "work-pat" || memory.moodPose === "work-ram";
+    var moodApplied = moodActive && moodAllowed && !walking;
     if (!layout || layout.hidden) {
       rootNode.style.display = "none";
     } else {
-      if (moodActive && moodAllowed) {
+      if (moodApplied) {
         layout.src = ASSET_ROOT + "dsh-whale-state-" + memory.moodPose + ".webp";
       }
       placeAt(rootNode, layout.x, layout.y, layout.w, layout.h);
+      rootNode.style.opacity = String(readNumber("displayOpacity", 100, 30, 100) / 100);
       rootNode.style.width = layout.w + "px";
       rootNode.style.height = layout.h + "px";
       frame.style.width = layout.w + "px";
       frame.style.height = layout.h + "px";
-      frame.style.cursor = layout.kind === "float" ? "grab" : "pointer";
+      frame.style.cursor = layout.kind === "float" && !positionLocked() ? "grab" : "pointer";
       rootNode.setAttribute("data-dsh-whale-mode", layout.kind);
       if (layout.kind === "mini") rootNode.setAttribute("data-dsh-whale-dense", "true");
       else rootNode.removeAttribute("data-dsh-whale-dense");
@@ -1488,7 +1630,7 @@
         if (idleChip) idleChip.remove();
       }
     }
-    if (!layout.hidden) setPose(layout.src, true, moodActive ? memory.moodAnimate : true);
+    if (!layout.hidden) setPose(layout.src, true, moodApplied ? memory.moodAnimate : true);
 
     /* celebration override: 3 quick pats — type once, then keep the finished
        bubble stable so repeated renders/reconciles can never re-jump it */
@@ -1522,7 +1664,7 @@
 
     memory.state = computed;
     memory.lastLine = computed.line;
-    root.__dshWhaleMoeDebug = { state: computed.state, pose: computed.pose, line: computed.line, view: view, mode: readMode(), layout: layout.kind, failed: memory.failed, lastEventState: memory.lastEventState, stateHoldUntil: memory.stateHoldUntil, holdLeft: Math.max(0, memory.stateHoldUntil - Date.now()), moodPose: memory.moodPose, moodUntil: memory.moodUntil, moodAnimate: memory.moodAnimate, layers: { active: layerState.active, loaded: layerState.loaded, gen: layerState.gen, pendingSwap: layerState.pendingSwap, pendingSince: layerState.pendingSince }, at: Date.now(), idleChat: { nextAt: idleChat.nextAt, lastGreetAt: idleChat.lastGreetAt, lastGreetBucket: idleChat.lastGreetBucket }, weather: weatherSummary() };
+    root.__dshWhaleMoeDebug = { state: computed.state, pose: computed.pose, line: computed.line, view: view, mode: readMode(), layout: layout.kind, walking: walking, failed: memory.failed, lastEventState: memory.lastEventState, stateHoldUntil: memory.stateHoldUntil, holdLeft: Math.max(0, memory.stateHoldUntil - Date.now()), moodPose: memory.moodPose, moodUntil: memory.moodUntil, moodAnimate: memory.moodAnimate, pendingMoodDuration: memory.pendingMoodDuration, layers: { active: layerState.active, loaded: layerState.loaded, gen: layerState.gen, pendingSwap: layerState.pendingSwap, pendingSince: layerState.pendingSince }, at: Date.now(), idleChat: { nextAt: idleChat.nextAt, lastGreetAt: idleChat.lastGreetAt, lastGreetBucket: idleChat.lastGreetBucket }, weather: weatherSummary() };
   }
 
   /* 待机 base 稳定为 idle-cute；情绪动作只由随机低频的 showMood 覆盖。
@@ -1543,18 +1685,23 @@
     var mode = readMode();
     if (mode === "float") {
       var saved = readFloatPos();
-      var fw = 200;
-      var fh = 200;
+      var scale = readNumber("displayScale", 100, 60, 160) / 100;
+      var fw = Math.round(200 * scale);
+      var fh = Math.round(200 * scale);
       /* during an active drag, keep the live pointer position; never snap back */
       var fx = saved ? saved.x : vw - fw - 20;
       var fy = saved ? saved.y : vh - fh - 20;
+      if (autoWalkState.active) {
+        fx = autoWalkState.x;
+        fy = autoWalkState.y;
+      }
       if (dragState && dragState.node) {
         fx = parseFloat(dragState.node.style.left) || fx;
         fy = parseFloat(dragState.node.style.top) || fy;
       }
       return {
         hidden: false, kind: "float", w: fw, h: fh,
-        src: ASSET_ROOT + "dsh-whale-state-" + statePose(computed, view) + ".webp",
+        src: autoWalkState.active ? autoWalkSrc(autoWalkState.direction) : ASSET_ROOT + "dsh-whale-state-" + statePose(computed, view) + ".webp",
         x: clamp(fx, 8, vw - fw - 8),
         y: clamp(fy, 8, vh - fh - 8)
       };
@@ -1608,6 +1755,11 @@
       var deltaMin = (now - memory.lastGrowthTick) / 60000;
       memory.lastGrowthTick = now;
       applyGrowth({ type: "tick", deltaMin: deltaMin }, now, 0);
+    }
+    if (growth.satiety <= 25 && now - memory.lastHungryAt >= 45 * 60000 && !quietActive()) {
+      memory.lastHungryAt = now;
+      showMood("balance-low", 6000, true);
+      if (readPref("chat") && bubbleFree()) showChatLine(growth.satiety <= 10 ? "肚子咕咕叫啦……可以投喂一点小点心吗？🍰" : "能量有点低，鲸鱼娘想吃点东西啦～");
     }
     if (isNight(now)) doc.body.setAttribute("data-dsh-whale-night", "true");
     else doc.body.removeAttribute("data-dsh-whale-night");
@@ -2063,6 +2215,7 @@
   }
 
   function showRandomIdleAction() {
+    if (quietActive()) return;
     var pose = core.pickIdlePose(growth, Date.now(), Math.random);
     /* avoid immediate repeat */
     if (pose === memory.lastIdleActionPose) {
@@ -2090,14 +2243,14 @@
         var sleepLine = core.pickDialogueAvoidRecent("daily", "night", 0, Math.random, recentLines);
         if (sleepLine) showChatLine(sleepLine);
       }
-    } else if (state.kind === "unlock" || state.kind === "resume") {
+    } else if ((state.kind === "unlock" || state.kind === "resume") && !quietActive()) {
       memory.lastInteractionAt = now;
       showMood("greet", 5200, true);
       if (readPref("chat") && bubbleFree()) {
         var greetLine = core.pickDialogueAvoidRecent("greet", core.greetBucket(new Date(now).getHours()), 0, Math.random, recentLines);
         if (greetLine) showChatLine(greetLine);
       }
-    } else if (state.kind === "sample" && idleSeconds < 180 && isNight(now) && now - (memory.lastSystemNightAt || 0) >= 3 * 3600000) {
+    } else if (state.kind === "sample" && idleSeconds < 180 && isNight(now) && !quietActive() && now - (memory.lastSystemNightAt || 0) >= 3 * 3600000) {
       memory.lastSystemNightAt = now;
       showMood("night", 5200, true);
       if (readPref("chat") && bubbleFree()) {
@@ -2110,7 +2263,7 @@
 
   function triggerComputerLink(eventKey, now, urgent) {
     var pose = COMPUTER_LINK_ACTIONS[eventKey];
-    if (!pose || doc.hidden || !readPref("computer-link") || !readPref("pet") || !readPref("chat")) return false;
+    if (!pose || doc.hidden || quietActive() || !readPref("computer-link") || !readPref("pet") || !readPref("chat")) return false;
     if (BUSY_STATES[memory.state.state] || !bubbleFree()) return false;
     var perEventGap = /^(offline|online|plugged|unplugged)$/.test(eventKey) ? 60000 : 15 * 60000;
     if (now - (computerLinkState.lastTriggered[eventKey] || 0) < perEventGap) return false;
@@ -2195,6 +2348,7 @@
   }
 
   function idleChatTick(now) {
+    if (quietActive()) return;
     var city = readWeather("weatherCity").trim();
     if (memory.state.state !== "idle" || !readPref("chat") || !bubbleFree() || !readPref("pet")) return;
     if (now < idleChat.nextAt) return;
@@ -2250,13 +2404,7 @@
   root.__dshWhaleMoeApplyBadge = applyBadge;
   root.__dshWhaleMoeDesktopAction = function (action) {
     if (action === "feed") {
-      var feedOut = applyGrowth({ type: "feed" }, Date.now(), 0);
-      applyQuestSignal("feed", 1);
-      burst("🍰");
-      showMood("eat", 3000);
-      var feedLine = say("interact", "feed");
-      if (feedLine) showLine(feedLine);
-      if (feedOut.unlocks.length) announceUnlocks(feedOut.unlocks);
+      feedMascot();
     } else if (action === "poke") {
       applyGrowth({ type: "poke" }, Date.now(), 0);
       burst("💢");
@@ -2278,13 +2426,76 @@
   };
 
   function onUserActivity() {
+    stopAutoWalk(true);
+    autoWalkState.nextAt = Date.now() + 3000 + Math.floor(Math.random() * 7000);
     memory.lastInteractionAt = Date.now();
     schedule();
+  }
+
+  function onCompanionReminder(event) {
+    var detail = event && event.detail ? event.detail : {};
+    if (!detail.line || !readPref("pet")) return;
+    showMood(detail.pose || "daily-stretch", 6500, true);
+    if (readPref("chat")) showChatLine(String(detail.line));
+    schedule();
+  }
+
+  function stopIdleLoop() {
+    if (!root.__dshWhaleMoeIdleTimer) return;
+    root.clearTimeout(root.__dshWhaleMoeIdleTimer);
+    root.__dshWhaleMoeIdleTimer = null;
+  }
+
+  function runIdleLoop() {
+    var now = Date.now();
+    var node = doc.querySelector("[data-dsh-whale-root]");
+    maybeAutoWalk(now, node);
+    if (node && memory.state.state === "idle" && !quietActive()) {
+      /* 微动作：随机 18-28s 一次，幅度轻 */
+      if (!memory.nextIdleMicroAt) memory.nextIdleMicroAt = now + 18000 + Math.floor(Math.random() * 10000);
+      if (now >= memory.nextIdleMicroAt) {
+        memory.nextIdleMicroAt = now + 18000 + Math.floor(Math.random() * 10000);
+        var motionNode = node.querySelector("[data-dsh-whale-motion]");
+        if (motionNode && !layerState.pendingSwap) {
+          var cls = Math.random() < 0.5 ? "dsh-whale-hop" : "dsh-whale-squint";
+          motionNode.classList.remove("dsh-whale-hop", "dsh-whale-squint");
+          void motionNode.offsetWidth;
+          motionNode.classList.add(cls);
+          root.setTimeout(function () { motionNode.classList.remove("dsh-whale-hop", "dsh-whale-squint"); }, 900);
+        }
+      }
+      /* 大动作：随机 35-60s 一次，无固定顺序，每张停留 4.2-5.8s。 */
+      if (!memory.nextIdleActionAt) memory.nextIdleActionAt = now + 35000 + Math.floor(Math.random() * 25000);
+      if (now >= memory.nextIdleActionAt) {
+        memory.nextIdleActionAt = now + 35000 + Math.floor(Math.random() * 25000);
+        if (Math.random() < core.TEASE_CHANCE * 4) {
+          showMood("teasing", 3200, true);
+          if (readPref("chat")) {
+            var teaseLine = say("interact", "tease");
+            if (teaseLine) showChatLine(teaseLine);
+          }
+        } else {
+          showRandomIdleAction();
+        }
+      }
+    }
+    schedule();
+  }
+
+  function scheduleIdleLoop(delay) {
+    stopIdleLoop();
+    if (doc.hidden || motionReduced()) return;
+    root.__dshWhaleMoeIdleTimer = root.setTimeout(function () {
+      root.__dshWhaleMoeIdleTimer = null;
+      runIdleLoop();
+      scheduleIdleLoop(3000);
+    }, Math.max(0, Number(delay) || 0));
   }
 
   function start() {
     if (root.__dshWhaleMoeStarted) return;
     root.__dshWhaleMoeStarted = true;
+    preloadAutoWalkFrames();
     root.addEventListener("pointerdown", onUserActivity, true);
     root.addEventListener("keydown", onUserActivity, true);
     root.addEventListener("resize", schedule);
@@ -2292,52 +2503,29 @@
     root.addEventListener("whale-moe-prefs-change", schedule);
     root.addEventListener("whale-desktop-system-state", onDesktopSystemState);
     root.addEventListener("whale-desktop-computer-state", onDesktopComputerState);
+    root.addEventListener("whale-desktop-companion-reminder", onCompanionReminder);
     root.addEventListener("visibilitychange", function () {
       if (doc.hidden) {
-        if (gameOpen) { gamePausedFlag = true; gamePauseBadge(true, "hidden"); }
+        if (gameOpen) {
+          gamePausedFlag = true;
+          gamePauseBadge(true, "hidden");
+          if (gameTimer) { root.clearInterval(gameTimer); gameTimer = null; }
+        }
+        if (catchOpen && catchTimer) { root.clearInterval(catchTimer); catchTimer = null; }
         weatherFxStop();
+        stopIdleLoop();
       } else {
+        if (gameOpen && !gameTimer) {
+          gamePausedFlag = false;
+          gamePauseBadge(false);
+          gameTimer = root.setInterval(gameTickLoop, 250);
+        }
+        if (catchOpen && !catchTimer) catchTimer = root.setInterval(catchTickLoop, 100);
         schedule();
+        scheduleIdleLoop(3000);
       }
     });
-    if (!root.__dshWhaleMoeIdleTimer && !motionReduced()) {
-      root.__dshWhaleMoeIdleTimer = root.setInterval(function () {
-        var now = Date.now();
-        var node = doc.querySelector("[data-dsh-whale-root]");
-        if (node && memory.state.state === "idle") {
-          /* 微动作：随机 18-28s 一次，幅度轻 */
-          if (!memory.nextIdleMicroAt) memory.nextIdleMicroAt = now + 18000 + Math.floor(Math.random() * 10000);
-          if (now >= memory.nextIdleMicroAt) {
-            memory.nextIdleMicroAt = now + 18000 + Math.floor(Math.random() * 10000);
-            var motionNode = node.querySelector("[data-dsh-whale-motion]");
-            if (motionNode && !layerState.pendingSwap) {
-              var cls = Math.random() < 0.5 ? "dsh-whale-hop" : "dsh-whale-squint";
-              motionNode.classList.remove("dsh-whale-hop", "dsh-whale-squint");
-              void motionNode.offsetWidth;
-              motionNode.classList.add(cls);
-              root.setTimeout(function () { motionNode.classList.remove("dsh-whale-hop", "dsh-whale-squint"); }, 900);
-            }
-          }
-          /* 大动作：随机 35-60s 一次，无固定顺序，每张停留 4.2-5.8s。
-             D7: 复活低频毒舌(teasing)——仅非工作台视图、待机态、按
-             TEASE_CHANCE 概率触发，不进入状态机，工作态稳定规则不受影响。 */
-          if (!memory.nextIdleActionAt) memory.nextIdleActionAt = now + 35000 + Math.floor(Math.random() * 25000);
-          if (now >= memory.nextIdleActionAt) {
-            memory.nextIdleActionAt = now + 35000 + Math.floor(Math.random() * 25000);
-            if (Math.random() < core.TEASE_CHANCE * 4) {
-              showMood("teasing", 3200, true);
-              if (readPref("chat")) {
-                var teaseLine = say("interact", "tease");
-                if (teaseLine) showChatLine(teaseLine);
-              }
-            } else {
-              showRandomIdleAction();
-            }
-          }
-        }
-        schedule();
-      }, 3000);
-    }
+    scheduleIdleLoop(3000);
     var gazePending = false;
     root.addEventListener("pointermove", function (event) {
       if (gazePending || motionReduced()) return;

@@ -1,86 +1,17 @@
 (function () {
   "use strict";
 
-  var PREFIX = "whale-moe:";
-  var TOGGLES = [
-    ["pet", "鲸鱼娘", true], ["chat", "台词气泡", true],
-    ["particles", "粒子效果", true], ["game", "小游戏", true],
-    ["idle-nudge", "摸鱼提醒", true],
-    ["night", "深夜模式", true], ["weatherFx", "天气特效", true]
-  ];
-  var POSE_GROUPS = Object.freeze([
-    {
-      title: "🧭 状态机基础",
-      note: "核心状态机自动切换：待机/等待/思考/工作/成功/出错/好奇/发呆",
-      poses: ["idle-cute", "waiting", "thinking", "running", "success", "failure", "curious", "afk"]
-    },
-    {
-      title: "🤝 互动反馈",
-      note: "摸头/戳肚子/摸尾巴/夸夸/投喂/三连击等互动即时反应；wink 在 Lv3 解锁后进入待机池",
-      poses: ["react-head", "react-belly", "react-tail", "blush", "angry", "eat", "star", "tail-swing", "teasing", "achievement", "levelup", "pick-up", "daily-done", "wink"]
-    },
-    {
-      title: "🎮 小游戏",
-      note: "戳泡泡 / 接点心游戏中的表情",
-      poses: ["game-think", "game-cheat", "game-happy", "game-win", "game-lose"]
-    },
-    {
-      title: "🌙 系统事件",
-      note: "锁屏/挂起/解锁/深夜时段自动触发",
-      poses: ["sleep", "greet", "night"]
-    },
-    {
-      title: "🖥️ 电脑状态联动",
-      note: "前台应用分类、CPU/内存、电量、网络变化时触发（设置里开启「电脑状态联动」）",
-      poses: ["work-debug", "work-review", "work-meeting", "daily-painting", "daily-gaming", "work-ram", "work-sleep", "work-pat", "work-slack", "work-slack-phone", "celebrate"]
-    },
-    {
-      title: "🌦️ 天气特效",
-      note: "配置城市后按实时天气触发（雨/雪/冷/雷/热）",
-      poses: ["weather-rain-happy", "weather-umbrella", "weather-snow", "weather-cold", "weather-thunder", "daily-melt"]
-    },
-    {
-      title: "🎉 节日限定",
-      note: "春节/中秋/万圣/圣诞/情人节当天自动触发",
-      poses: ["festival-spring", "festival-mid-autumn", "festival-halloween", "festival-christmas", "valentine"]
-    },
-    {
-      title: "🕐 待机随机 · 时段",
-      note: "35-60 秒一次的待机小动作，按时段加权（17:30 后进入居家模式；周五下午有野餐/钓鱼/游戏加成）",
-      poses: ["daily-coffee", "daily-stretch", "daily-eat", "daily-cooking", "daily-fishing", "daily-picnic", "daily-shower", "daily-pajama"]
-    },
-    {
-      title: "😊 待机随机 · 心情",
-      note: "按心情值分档：高心情偏开心梗，低心情偏委屈梗",
-      poses: ["meme-smug", "meme-wakuwaku", "meme-heart", "meme-kyun", "bold", "meme-cry", "meme-smile-pain", "meme-broke", "abstract", "meme-doge", "meme-ojisan", "meme-peace"]
-    },
-    {
-      title: "🎲 待机随机 · 通用",
-      note: "随机池兜底，工作梗/玩梗混排",
-      poses: ["work-boss", "work-celebrate", "work-deadline", "work-deploy", "work-idea", "sweep", "meme-doubt", "meme-no", "meme-omg", "meme-shock", "meme-sike", "meme-worship", "meme-yes", "cool-shades", "meme-music", "tool"]
-    },
-    {
-      title: "⚠️ 未接线",
-      note: "资产存在但暂无自动触发路径，仅可手动预览",
-      poses: ["balance-low"]
-    }
-  ]);
-  var ACHIEVEMENTS = [
-    ["first-pat","🫳","初次摸头"],["ten-pats","🖐️","摸头十连"],["hundred-pats","💯","摸头百连"],["first-feed","🍰","投喂成功"],["first-triple","🎉","三连击"],["thanks","💬","嘴甜"],
-    ["lv5","⭐","五级"],["lv10","👑","十级"],["signin3","📅","常客"],["signin7","🗓️","一周之约"],["night-owl","🌙","深夜陪伴"],["comeback","👋","欢迎回来"],
-    ["day1","💞","一日之缘"],["day7","💎","一周相伴"],["day30","🏛️","三十日契约"],
-    ["game-first","🫧","初次开玩"],["game-win","👑","泡泡之王"],["game-combo10","🔥","连击达人"],["game-highscore","🏆","纪录刷新"],["quest-first","🎯","任务初体验"],["quest-all","🎟️","一日全勤"],["week-signin7","🏆","周常满勤"],
-    ["bond-action","🌟","新动作解锁"],["bond-badge","🎖️","称号首解锁"]
-  ];
+  var storage = window.WhaleStorage;
+  var TOGGLES = window.WhaleSettingsData.TOGGLES;
+  var POSE_GROUPS = window.WhaleSettingsData.POSE_GROUPS;
+  var ACHIEVEMENTS = window.WhaleSettingsData.ACHIEVEMENTS;
 
   function value(key, fallback) {
-    var out = localStorage.getItem(PREFIX + key);
-    return out === null ? fallback : out;
+    return storage ? storage.get(key, fallback) : fallback;
   }
 
   function save(key, next) {
-    localStorage.setItem(PREFIX + key, String(next));
-    window.dispatchEvent(new CustomEvent("whale-moe-prefs-change", { detail: { key: key, value: String(next) } }));
+    storage.set(key, next);
   }
 
   function element(tag, className, text) {
@@ -133,6 +64,7 @@
     var days = since ? Math.max(0, Math.floor((Date.now() - since) / 86400000)) : 0;
     container.appendChild(stat("😊", "心情", value("mood", "70"), "mood"));
     container.appendChild(stat("💗", "好感度", value("affinity", "0"), "affinity"));
+    container.appendChild(stat("🍰", "饱食度", value("satiety", "80"), "satiety"));
     container.appendChild(stat("⭐", "等级", "Lv." + value("level", "1"), "level"));
     container.appendChild(stat("📅", "连续签到", value("signinStreak", "0") + " 天", "signinStreak"));
     container.appendChild(stat("⏳", "陪伴", days + " 天", "companionDays"));
@@ -144,6 +76,7 @@
     var updates = {
       mood: "😊 " + value("mood", "70"),
       affinity: "💗 " + value("affinity", "0"),
+      satiety: "🍰 " + value("satiety", "80"),
       level: "⭐ Lv." + value("level", "1"),
       signinStreak: "📅 " + value("signinStreak", "0") + " 天"
     };
@@ -156,7 +89,6 @@
     }
     /* also refresh achievement count badge and daily quests if visible */
     var achievementCount = value("achievements", "").split(",").filter(Boolean).length;
-    var achMeta = panel.querySelector("details.wm-card summary span.wm-summary-meta");
     /* re-render daily quests section content if it was open */
     var dailyDetails = panel.querySelectorAll("details.wm-card");
     for (var i = 0; i < dailyDetails.length; i += 1) {
@@ -187,6 +119,63 @@
         if (weekContent) { weekContent.innerHTML = ""; renderWeek(weekContent); }
       }
     }
+  }
+
+  function findSection(title) {
+    var panel = document.querySelector("[data-whale-desktop-settings]");
+    if (!panel) return null;
+    var cards = panel.querySelectorAll("details.wm-card");
+    for (var i = 0; i < cards.length; i += 1) {
+      var heading = cards[i].querySelector(".wm-summary-title");
+      if (heading && heading.textContent === title) return cards[i];
+    }
+    return null;
+  }
+
+  function updateSectionMeta(title, text) {
+    var card = findSection(title);
+    var meta = card && card.querySelector(".wm-summary-meta");
+    if (meta) meta.textContent = text;
+  }
+
+  function refreshSection(title, renderer) {
+    var card = findSection(title);
+    if (!card) return;
+    var content = card.querySelector(".wm-card-content");
+    if (!content) return;
+    content.innerHTML = "";
+    renderer(content);
+  }
+
+  function updatePreferenceView(key) {
+    if (key === "growth") { updateStats(); return; }
+    if (key === "quests") { refreshSection("🎯 今日任务", renderDaily); return; }
+    if (key === "badge") {
+      updateSectionMeta("🎖️ 称号", value("badge", "") || "未佩戴");
+      return;
+    }
+    if (TOGGLES.some(function (item) { return item[0] === key; })) {
+      var enabledCount = TOGGLES.filter(function (item) { return value(item[0], item[2] ? "1" : "0") !== "0"; }).length;
+      updateSectionMeta("🎛️ 陪伴表现", enabledCount + "/" + TOGGLES.length + " 已启用");
+      return;
+    }
+    if (key === "reminders") {
+      updateSectionMeta("💧 健康与下班提醒", value("reminders", "1") === "0" ? "已关闭" : "已启用");
+      return;
+    }
+    if (key === "quiet-mode" || key === "quiet-schedule" || key === "quiet-start" || key === "quiet-end" || key === "quiet-active") {
+      updateSectionMeta("🔕 安静模式", value("quiet-active", "0") === "1" ? "已开启" : "可定时");
+      return;
+    }
+    if (key === "displayScale") {
+      updateSectionMeta("🖼️ 显示个性化", value("displayScale", "100") + "%");
+      return;
+    }
+    if (key === "computer-link") {
+      updateSectionMeta("🖥️ 电脑状态联动", value("computer-link", "1") === "0" ? "已关闭" : "已启用");
+      return;
+    }
+    if (key === "weatherCity") updateSectionMeta("⛅ 天气", value("weatherCity", "") || "未设置");
   }
 
   function renderSwitches(container) {
@@ -237,6 +226,140 @@
     container.appendChild(element("p", "wm-note", "仅识别前台程序的进程名分类，不读取窗口标题、键盘输入、文件或网页内容。"));
   }
 
+  function checkboxRow(container, key, labelText, fallback) {
+    var label = element("label", "wm-row wm-switch");
+    var input = document.createElement("input");
+    input.type = "checkbox";
+    input.checked = value(key, fallback ? "1" : "0") !== "0";
+    input.addEventListener("change", function () { save(key, input.checked ? "1" : "0"); });
+    label.appendChild(input);
+    label.appendChild(element("span", "", labelText));
+    container.appendChild(label);
+    return input;
+  }
+
+  function numericInput(key, fallback, min, max, suffix) {
+    var wrap = element("div", "wm-inline-control");
+    var input = document.createElement("input");
+    input.type = "number"; input.min = String(min); input.max = String(max); input.value = value(key, String(fallback));
+    input.addEventListener("change", function () {
+      var next = Math.max(min, Math.min(max, Number(input.value) || fallback));
+      input.value = String(next); save(key, next);
+    });
+    wrap.appendChild(input);
+    if (suffix) wrap.appendChild(element("span", "wm-note", suffix));
+    return wrap;
+  }
+
+  function timeInput(key, fallback) {
+    var input = document.createElement("input");
+    input.type = "time"; input.value = value(key, fallback);
+    input.addEventListener("change", function () { if (input.value) save(key, input.value); });
+    return input;
+  }
+
+  function formatDuration(ms) {
+    var seconds = Math.max(0, Math.ceil((Number(ms) || 0) / 1000));
+    return String(Math.floor(seconds / 60)).padStart(2, "0") + ":" + String(seconds % 60).padStart(2, "0");
+  }
+
+  function updateCompanionStatus(status) {
+    var panel = document.querySelector("[data-whale-desktop-settings]");
+    if (!panel || panel.hidden) return;
+    var pomodoro = status && status.pomodoro ? status.pomodoro : null;
+    if (pomodoro) {
+      var clock = document.querySelector("[data-pomodoro-clock]");
+      var phase = document.querySelector("[data-pomodoro-phase]");
+      var toggle = document.querySelector("[data-pomodoro-toggle]");
+      if (clock) clock.textContent = formatDuration(pomodoro.remainingMs);
+      if (phase) phase.textContent = pomodoro.phase === "break" ? "休息" : "专注";
+      if (toggle) toggle.textContent = pomodoro.running ? "暂停" : "开始";
+    }
+    var quietStatus = document.querySelector("[data-quiet-status]");
+    if (quietStatus && status && typeof status.quiet === "boolean") quietStatus.textContent = status.quiet ? "当前已静音" : "当前正常陪伴";
+  }
+
+  function renderPomodoro(container) {
+    var display = element("div", "wm-pomodoro");
+    var phase = element("span", "wm-pomodoro-phase", "专注"); phase.setAttribute("data-pomodoro-phase", "true");
+    var clock = element("strong", "wm-pomodoro-clock", "25:00"); clock.setAttribute("data-pomodoro-clock", "true");
+    display.appendChild(phase); display.appendChild(clock); container.appendChild(display);
+    container.appendChild(row("专注时长", numericInput("pomodoroWork", 25, 1, 180, "分钟")));
+    container.appendChild(row("休息时长", numericInput("pomodoroBreak", 5, 1, 60, "分钟")));
+    var controls = element("div", "wm-button-row");
+    var toggle = element("button", "wm-primary", "开始"); toggle.setAttribute("data-pomodoro-toggle", "true");
+    toggle.addEventListener("click", function () { if (window.WhaleCompanion) window.WhaleCompanion.togglePomodoro(); });
+    var reset = element("button", "", "重置"); reset.addEventListener("click", function () { if (window.WhaleCompanion) window.WhaleCompanion.resetPomodoro(); });
+    controls.appendChild(toggle); controls.appendChild(reset); container.appendChild(controls);
+    if (window.WhaleCompanion) updateCompanionStatus(window.WhaleCompanion.status());
+  }
+
+  function renderReminders(container) {
+    checkboxRow(container, "reminders", "启用健康与下班提醒", true);
+    container.appendChild(row("久坐提醒", numericInput("postureMinutes", 50, 10, 240, "分钟连续使用")));
+    container.appendChild(row("喝水提醒", numericInput("waterMinutes", 90, 15, 480, "分钟一次")));
+    var drank = element("button", "", "我刚喝水了"); drank.addEventListener("click", function () { if (window.WhaleCompanion) window.WhaleCompanion.markWater(); });
+    container.appendChild(row("补水打卡", drank));
+    checkboxRow(container, "offwork-enabled", "启用下班提醒", true);
+    container.appendChild(row("下班时间", timeInput("offwork-time", "18:00")));
+    container.appendChild(element("p", "wm-note", "检测到连续 2 分钟未操作会重置久坐计时；提醒不会读取键盘内容。"));
+  }
+
+  function renderQuiet(container) {
+    checkboxRow(container, "quiet-mode", "立即开启安静模式", false);
+    checkboxRow(container, "quiet-schedule", "按时段自动安静", false);
+    container.appendChild(row("开始时间", timeInput("quiet-start", "22:00")));
+    container.appendChild(row("结束时间", timeInput("quiet-end", "08:00")));
+    var status = element("div", "wm-status", "当前正常陪伴"); status.setAttribute("data-quiet-status", "true"); container.appendChild(status);
+    container.appendChild(element("p", "wm-note", "安静时暂停随机动作、闲聊、电脑状态及健康提醒；番茄钟结束仍会提示。"));
+  }
+
+  function renderDisplay(container) {
+    var scale = document.createElement("input");
+    scale.type = "range"; scale.min = "60"; scale.max = "160"; scale.step = "5"; scale.value = value("displayScale", "100");
+    var scaleWrap = element("div", "wm-range-control"); var scaleOut = element("span", "", scale.value + "%"); scaleWrap.appendChild(scale); scaleWrap.appendChild(scaleOut);
+    scale.addEventListener("input", function () { scaleOut.textContent = scale.value + "%"; });
+    scale.addEventListener("change", function () { save("displayScale", scale.value); });
+    container.appendChild(row("角色大小", scaleWrap));
+    var opacity = document.createElement("input");
+    opacity.type = "range"; opacity.min = "30"; opacity.max = "100"; opacity.step = "5"; opacity.value = value("displayOpacity", "100");
+    var opacityWrap = element("div", "wm-range-control"); var opacityOut = element("span", "", opacity.value + "%"); opacityWrap.appendChild(opacity); opacityWrap.appendChild(opacityOut);
+    opacity.addEventListener("input", function () { opacityOut.textContent = opacity.value + "%"; });
+    opacity.addEventListener("change", function () { save("displayOpacity", opacity.value); });
+    container.appendChild(row("角色透明度", opacityWrap));
+    checkboxRow(container, "positionLocked", "锁定角色位置", false);
+    container.appendChild(element("p", "wm-note", "缩放后会自动限制在可见桌面范围内；锁定后仍可通过托盘恢复位置。"));
+  }
+
+  function exportSave() {
+    var payload = storage.exportPayload();
+    var blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    var url = URL.createObjectURL(blob);
+    var link = document.createElement("a"); link.href = url; link.download = "WhaleMusume-save-" + todayKey() + ".json"; link.click();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+  }
+
+  function importSave(file) {
+    if (!file || file.size > 1024 * 1024) { alert("存档文件无效或超过 1 MB。"); return; }
+    file.text().then(function (text) {
+      var payload = JSON.parse(text);
+      if (!confirm("导入会覆盖存档中包含的设置和养成数据，确定继续吗？")) return;
+      storage.importPayload(payload);
+      location.reload();
+    }).catch(function (error) { alert("导入失败：" + (error.message || "文件损坏")); });
+  }
+
+  function renderDataTools(container) {
+    var buttons = element("div", "wm-button-row");
+    var exportButton = element("button", "wm-primary", "导出存档"); exportButton.addEventListener("click", exportSave);
+    var importButton = element("button", "", "导入存档");
+    var picker = document.createElement("input"); picker.type = "file"; picker.accept = "application/json,.json"; picker.hidden = true;
+    importButton.addEventListener("click", function () { picker.value = ""; picker.click(); });
+    picker.addEventListener("change", function () { importSave(picker.files && picker.files[0]); });
+    buttons.appendChild(exportButton); buttons.appendChild(importButton); buttons.appendChild(picker); container.appendChild(buttons);
+    container.appendChild(element("p", "wm-note", "导出包含养成与偏好设置，但不会包含天气 API Key。导入前会校验文件格式。"));
+  }
+
   function todayKey() {
     var d = new Date();
     return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDate();
@@ -245,7 +368,7 @@
   function renderDaily(container) {
     var raw = value("quests", "");
     var quests = null;
-    try { quests = raw ? JSON.parse(raw) : null; } catch (_error) { quests = null; }
+    try { quests = raw ? JSON.parse(raw) : null; } catch (_error) {}
     var pool = window.DshWhaleMoeCore ? window.DshWhaleMoeCore.QUEST_POOL : [];
     var slots = quests && quests.date === todayKey() && Array.isArray(quests.slots) ? quests.slots : [];
     if (!slots.length) {
@@ -261,7 +384,7 @@
       claim.disabled = slot.claimed || progress < def.target;
       claim.addEventListener("click", function () {
         if (window.__dshWhaleMoeClaimQuest) window.__dshWhaleMoeClaimQuest(slot.id);
-        renderPanel();
+        refreshSection("🎯 今日任务", renderDaily);
       });
       var right = element("div", "wm-quest-controls");
       right.appendChild(bar); right.appendChild(element("span", "wm-note", progress + "/" + def.target)); right.appendChild(claim);
@@ -271,7 +394,7 @@
 
   function renderWeek(container) {
     var week = null;
-    try { week = JSON.parse(value("weekSignin", "null")); } catch (_error) { week = null; }
+    try { week = JSON.parse(value("weekSignin", "null")); } catch (_error) {}
     var days = week && Array.isArray(week.days) ? week.days.length : 0;
     var grid = element("div", "wm-actions"); grid.style.gridTemplateColumns = "repeat(7, 1fr)";
     ["一","二","三","四","五","六","日"].forEach(function (label, index) {
@@ -348,10 +471,10 @@
     var head = element("div", "wm-settings-head");
     var title = element("div", "wm-settings-title");
     title.appendChild(element("span", "wm-settings-mark", "🐳"));
-    var titleCopy = element("div"); titleCopy.appendChild(element("strong", "", "鲸鱼娘 · 设置")); titleCopy.appendChild(element("span", "wm-version", "Desktop v2.1.1")); title.appendChild(titleCopy); head.appendChild(title);
+    var titleCopy = element("div"); titleCopy.appendChild(element("strong", "", "鲸鱼娘 · 设置")); titleCopy.appendChild(element("span", "wm-version", "Desktop v2.2.0")); title.appendChild(titleCopy); head.appendChild(title);
     var close = element("button", "wm-settings-close", "×"); close.title = "关闭设置"; close.setAttribute("aria-label", "关闭设置"); close.addEventListener("click", function () { panel.hidden = true; window.whaleDesktop.setMouseInteractive(false); }); head.appendChild(close); panel.appendChild(head);
-    var rawSavedX = localStorage.getItem(PREFIX + "desktopSettingsX");
-    var rawSavedY = localStorage.getItem(PREFIX + "desktopSettingsY");
+    var rawSavedX = storage.get("desktopSettingsX", null);
+    var rawSavedY = storage.get("desktopSettingsY", null);
     var savedX = rawSavedX === null ? NaN : Number(rawSavedX);
     var savedY = rawSavedY === null ? NaN : Number(rawSavedY);
     if (Number.isFinite(savedX) && Number.isFinite(savedY)) {
@@ -382,8 +505,8 @@
       if (!panelDrag || panelDrag.pointerId !== event.pointerId) return;
       panelDrag = null;
       if (head.hasPointerCapture(event.pointerId)) head.releasePointerCapture(event.pointerId);
-      localStorage.setItem(PREFIX + "desktopSettingsX", String(Math.round(parseFloat(panel.style.left))));
-      localStorage.setItem(PREFIX + "desktopSettingsY", String(Math.round(parseFloat(panel.style.top))));
+      storage.set("desktopSettingsX", Math.round(parseFloat(panel.style.left)));
+      storage.set("desktopSettingsY", Math.round(parseFloat(panel.style.top)));
     }
     head.addEventListener("pointerup", finishPanelDrag);
     head.addEventListener("pointercancel", finishPanelDrag);
@@ -396,6 +519,10 @@
 
     var enabledCount = TOGGLES.filter(function (item) { return value(item[0], item[2] ? "1" : "0") !== "0"; }).length;
     var companion = section("🎛️ 陪伴表现", true, enabledCount + "/" + TOGGLES.length + " 已启用"); var switches = element("div", "wm-switches"); renderSwitches(switches); companion[1].appendChild(switches); body.appendChild(companion[0]);
+    var pomodoro = section("⏱️ 番茄钟", false, "专注与休息"); renderPomodoro(pomodoro[1]); body.appendChild(pomodoro[0]);
+    var reminders = section("💧 健康与下班提醒", false, value("reminders", "1") === "0" ? "已关闭" : "已启用"); renderReminders(reminders[1]); body.appendChild(reminders[0]);
+    var quiet = section("🔕 安静模式", false, value("quiet-mode", "0") === "1" ? "已开启" : "可定时"); renderQuiet(quiet[1]); body.appendChild(quiet[0]);
+    var display = section("🖼️ 显示个性化", false, value("displayScale", "100") + "%"); renderDisplay(display[1]); body.appendChild(display[0]);
     var computerLinkOn = value("computer-link", "1") !== "0";
     var computerLink = section("🖥️ 电脑状态联动", false, computerLinkOn ? "已启用" : "已关闭"); renderComputerLink(computerLink[1]); body.appendChild(computerLink[0]);
     var weather = section("⛅ 天气", false, value("weatherCity", "") || "未设置"); renderWeather(weather[1]); body.appendChild(weather[0]);
@@ -408,11 +535,16 @@
     var achievementCount = value("achievements", "").split(",").filter(Boolean).length;
     var achievements = section("🏅 成就墙", false, achievementCount + "/" + ACHIEVEMENTS.length + " 已解锁"); renderAchievements(achievements[1]); body.appendChild(achievements[0]);
     var reset = section("🗂️ 数据与重置", false, "位置与养成数据");
-    var resetPosition = element("button", "", "重置到默认位置"); resetPosition.addEventListener("click", function () { localStorage.removeItem(PREFIX + "floatX"); localStorage.removeItem(PREFIX + "floatY"); save("float-reset", Date.now()); }); reset[1].appendChild(row("悬浮位置", resetPosition));
+    renderDataTools(reset[1]);
+    var resetPosition = element("button", "", "重置到默认位置"); resetPosition.addEventListener("click", function () { storage.remove("floatX"); storage.remove("floatY"); save("float-reset", Date.now()); }); reset[1].appendChild(row("悬浮位置", resetPosition));
     var resetGrowth = element("button", "wm-danger", "重置养成"); resetGrowth.addEventListener("click", function () {
       if (!confirm("确定重置全部养成、任务、签到、成就和游戏记录吗？")) return;
-      ["mood","affinity","satiety","lastSignin","signinStreak","achievements","companionSince","level","quests","weekSignin","badge","gameStats"].forEach(function (key) { localStorage.removeItem(PREFIX + key); });
-      save("growth-reset", Date.now()); renderPanel();
+      storage.removeMany(["mood","affinity","satiety","lastSignin","signinStreak","achievements","companionSince","level","quests","weekSignin","badge","gameStats"]);
+      save("growth-reset", Date.now()); updateStats();
+      refreshSection("🎯 今日任务", renderDaily);
+      refreshSection("📅 本周签到", renderWeek);
+      refreshSection("🎖️ 称号", renderBadge);
+      refreshSection("🏅 成就墙", renderAchievements);
     }); reset[1].appendChild(row("养成数据", resetGrowth)); body.appendChild(reset[0]);
 
     document.body.appendChild(panel);
@@ -428,14 +560,16 @@
   document.addEventListener("DOMContentLoaded", renderPanel, { once: true });
   window.addEventListener("whale-moe-core-ready", function () {
     var panel = document.querySelector("[data-whale-desktop-settings]");
-    if (panel) renderPanel();
+    if (!panel) return;
+    refreshSection("🎯 今日任务", renderDaily);
+    refreshSection("🎖️ 称号", renderBadge);
   });
   window.addEventListener("whale-desktop-open-settings", openSettings);
   window.addEventListener("whale-moe-prefs-change", function (event) {
     var panel = document.querySelector("[data-whale-desktop-settings]");
     if (!panel || panel.hidden) return;
     var key = event && event.detail && event.detail.key ? event.detail.key : "";
-    if (key === "growth") { updateStats(); return; }
-    renderPanel();
+    updatePreferenceView(key);
   });
+  window.addEventListener("whale-companion-status", function (event) { updateCompanionStatus(event.detail || {}); });
 })();

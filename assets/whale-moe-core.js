@@ -473,10 +473,12 @@
     var unlocks = [];
     var leveledUp = false;
     var type = event && event.type ? event.type : "";
+    var wasFull = type === "feed" && g.satiety >= 90;
     var deltaMin = event && typeof event.deltaMin === "number" ? event.deltaMin : 0;
 
     if (type === "pat") { deltas.mood += 4; deltas.affinity += 2; }
     else if (type === "poke") { deltas.mood -= 6; }
+    else if (type === "feed" && wasFull) { deltas.satiety += 10; deltas.affinity += 1; }
     else if (type === "feed") { deltas.satiety += 30; deltas.affinity += 5; deltas.mood += 3; }
     else if (type === "triple") { deltas.mood += 10; deltas.affinity += 10; }
     else if (type === "success") { deltas.mood += 3; }
@@ -523,7 +525,7 @@
     if (type === "triple" && g.achievements.indexOf("first-triple") === -1) { g.achievements.push("first-triple"); unlocks.push("first-triple"); }
     if (type === "thanks" && g.achievements.indexOf("thanks") === -1) { g.achievements.push("thanks"); unlocks.push("thanks"); }
 
-    return { growth: g, deltas: deltas, unlocks: unlocks, leveledUp: leveledUp };
+    return { growth: g, deltas: deltas, unlocks: unlocks, leveledUp: leveledUp, wasFull: wasFull };
   }
 
   function evaluateAchievements(growth) {

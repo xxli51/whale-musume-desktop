@@ -1,10 +1,14 @@
 {
   "name": "whale-musume-desktop",
-  "version": "2.1.1",
+  "version": "2.2.0",
   "private": true,
   "description": "鲸鱼娘 Windows 桌面宠物",
   "author": "Lex.Xander",
   "license": "MIT",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "packageManager": "npm@10.9.8",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/xxli51/whale-musume-desktop.git"
@@ -16,14 +20,26 @@
   "main": "main.cjs",
   "scripts": {
     "start": "electron .",
-    "test": "node --test test/repository.test.mjs",
+    "test": "node --test",
+    "test:coverage": "node --test --experimental-test-coverage",
+    "check:syntax": "node tools/check-syntax.cjs",
+    "lint": "eslint .",
+    "format": "prettier --write package.json eslint.config.mjs .prettierrc.json .github/workflows/ci.yml runtime/**/*.cjs renderer/storage.js renderer/settings-data.js test/**/*.mjs tools/check-syntax.cjs",
+    "format:check": "prettier --check package.json eslint.config.mjs .prettierrc.json .github/workflows/ci.yml runtime/**/*.cjs renderer/storage.js renderer/settings-data.js test/**/*.mjs tools/check-syntax.cjs",
+    "audit": "npm audit --registry=https://registry.npmjs.org",
+    "verify": "npm run check:syntax && npm run lint && npm run format:check && npm test && npm run audit",
     "qa:display": "electron tools/display-diagnostic.cjs",
     "build": "set ELECTRON_BUILDER_BINARIES_MIRROR=https://npmmirror.com/mirrors/electron-builder-binaries/&& set ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/&& electron-builder --win nsis",
-    "build:portable": "set ELECTRON_BUILDER_BINARIES_MIRROR=https://npmmirror.com/mirrors/electron-builder-binaries/&& set ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/&& electron-builder --win portable"
+    "build:portable": "set ELECTRON_BUILDER_BINARIES_MIRROR=https://npmmirror.com/mirrors/electron-builder-binaries/&& set ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/&& electron-builder --win portable",
+    "build:dir": "set ELECTRON_BUILDER_BINARIES_MIRROR=https://npmmirror.com/mirrors/electron-builder-binaries/&& set ELECTRON_MIRROR=https://npmmirror.com/mirrors/electron/&& electron-builder --win dir"
   },
   "devDependencies": {
+    "@eslint/js": "10.0.1",
     "electron": "43.4.1",
-    "electron-builder": "26.15.3"
+    "electron-builder": "26.15.3",
+    "eslint": "10.9.1",
+    "globals": "17.11.0",
+    "prettier": "3.9.6"
   },
   "build": {
     "appId": "com.xxli51.whale-musume-desktop",
@@ -35,13 +51,16 @@
     "files": [
       "main.cjs",
       "preload.cjs",
+      "runtime/**/*",
       "renderer/**/*"
     ],
     "extraResources": [
       {
         "from": "assets",
         "to": "assets",
-        "filter": ["**/*"]
+        "filter": [
+          "**/*"
+        ]
       },
       {
         "from": "build/icon.png",
@@ -50,7 +69,9 @@
     ],
     "win": {
       "icon": "build/icon.ico",
-      "target": ["nsis"],
+      "target": [
+        "nsis"
+      ],
       "requestedExecutionLevel": "asInvoker"
     },
     "nsis": {

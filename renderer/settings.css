@@ -135,7 +135,7 @@ details.wm-card:not([open]) > .wm-card-content { display: none !important; }
 .wm-switches,
 .wm-actions,
 .wm-achievements { display: grid; gap: 8px; }
-.wm-stats { grid-template-columns: repeat(5, 1fr); margin-bottom: 8px; }
+.wm-stats { grid-template-columns: repeat(6, 1fr); margin-bottom: 8px; }
 .wm-switches { grid-template-columns: repeat(2, 1fr); column-gap: 24px; }
 .wm-actions { grid-template-columns: repeat(4, 1fr); }
 .wm-achievements { grid-template-columns: repeat(5, 1fr); }
@@ -265,6 +265,18 @@ details.wm-card:not([open]) > .wm-card-content { display: none !important; }
 .wm-note { color: var(--wm-muted); font-size: 11px; }
 .wm-status { min-height: 18px; padding-top: 7px; color: var(--wm-muted); font-size: 12px; }
 .wm-danger { color: #ffb4ac !important; background: rgb(180 35 24 / 12%) !important; border-color: rgb(255 128 118 / 25%) !important; }
+.wm-primary { color: #10231d !important; background: var(--wm-accent) !important; border-color: var(--wm-accent-deep) !important; }
+.wm-inline-control,
+.wm-range-control,
+.wm-button-row { display: flex; align-items: center; gap: 9px; }
+.wm-inline-control input[type="number"] { width: 76px; }
+.wm-range-control input[type="range"] { width: 190px; accent-color: var(--wm-accent-deep); }
+.wm-range-control > span { width: 42px; color: var(--wm-muted); text-align: right; }
+.wm-row input[type="number"],
+.wm-row input[type="time"] { box-sizing: border-box; padding: 7px 10px; color: var(--wm-text); background: #24272c; border: 1px solid #3b4047; border-radius: 9px; }
+.wm-pomodoro { display: grid; margin: 4px 0 10px; place-items: center; }
+.wm-pomodoro-phase { color: var(--wm-muted); font-size: 12px; }
+.wm-pomodoro-clock { color: var(--wm-accent); font-size: 34px; font-variant-numeric: tabular-nums; letter-spacing: 0.05em; }
 .wm-quest-progress { width: 100px; height: 7px; overflow: hidden; background: #363c43; border-radius: 5px; }
 .wm-quest-progress i { display: block; height: 100%; background: var(--wm-accent-deep); }
 

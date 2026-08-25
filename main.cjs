@@ -1,8 +1,10 @@
-const { app, BrowserWindow, Menu, Tray, nativeImage, screen, ipcMain, powerMonitor, net } = require("electron");
+const { app, BrowserWindow, Menu, Tray, nativeImage, screen, ipcMain, powerMonitor, net, shell } = require("electron");
 const os = require("node:os");
 const path = require("node:path");
 const { pathToFileURL } = require("node:url");
 const { execFile } = require("node:child_process");
+const { shouldRunComputerMonitor } = require("./runtime/computer-monitor-policy.cjs");
+const { createDiagnostics } = require("./runtime/diagnostics.cjs");
 
 let overlay = null;
 let tray = null;
@@ -13,9 +15,17 @@ let systemStateTimer = null;
 let computerStateTimer = null;
 let topmostTimers = [];
 let topmostWatchdogTimer = null;
-let computerLinkEnabled = true;
+let computerLinkEnabled = false;
+let computerQuietActive = false;
+let systemPaused = false;
 let previousCpuTimes = null;
 let foregroundQueryRunning = false;
+let foregroundQueryProcess = null;
+let foregroundQueryGeneration = 0;
+let diagnostics = null;
+let rendererRecoveryAttempts = 0;
+let rendererRecoveryWindowAt = 0;
+let lastWindowsQueryErrorAt = 0;
 let cachedForeground = { process: "", category: "other" };
 let cachedBattery = { present: false, percent: null, charging: null };
 let lastBatteryQueryAt = 0;
@@ -91,6 +101,16 @@ function clearTopmostTimers() {
   }
 }
 
+function startTopmostTimers() {
+  if (systemPaused || !overlay || overlay.isDestroyed() || !overlay.isVisible()) return;
+  clearTopmostTimers();
+  reinforceOverlayTopmost();
+  [120, 800, 2200].forEach((delay) => {
+    topmostTimers.push(setTimeout(reinforceOverlayTopmost, delay));
+  });
+  topmostWatchdogTimer = setInterval(reinforceOverlayTopmost, 3000);
+}
+
 function reinforceOverlayTopmost() {
   if (!overlay || overlay.isDestroyed() || !overlay.isVisible()) return;
   // Windows can briefly lose the TOPMOST z-order when the first transparent,
@@ -105,12 +125,19 @@ function reinforceOverlayTopmost() {
 function showOverlayInactive() {
   if (!overlay || overlay.isDestroyed()) return;
   overlay.showInactive();
+  startTopmostTimers();
+  startCursorProbe();
+  startSystemStateSamples();
+  reconcileComputerStateMonitor();
+}
+
+function hideOverlay() {
+  if (!overlay || overlay.isDestroyed()) return;
+  overlay.hide();
   clearTopmostTimers();
-  reinforceOverlayTopmost();
-  [120, 800, 2200].forEach((delay) => {
-    topmostTimers.push(setTimeout(reinforceOverlayTopmost, delay));
-  });
-  topmostWatchdogTimer = setInterval(reinforceOverlayTopmost, 3000);
+  stopCursorProbe();
+  stopSystemStateSamples();
+  reconcileComputerStateMonitor();
 }
 
 function createOverlay() {
@@ -155,16 +182,26 @@ function createOverlay() {
   overlay.setIgnoreMouseEvents(true, { forward: true });
   overlay.loadFile(path.join(__dirname, "renderer", "index.html"));
   overlay.once("ready-to-show", showOverlayInactive);
+  overlay.webContents.on("did-finish-load", () => {
+    logDiagnostic("info", "renderer-loaded", { url: overlay.webContents.getURL() });
+  });
+  overlay.webContents.on("did-fail-load", (_event, code, description, url, isMainFrame) => {
+    if (isMainFrame) logDiagnostic("error", "renderer-load-failed", { code, description, url });
+  });
+  overlay.webContents.on("render-process-gone", (_event, details) => {
+    logDiagnostic("error", "renderer-process-gone", details);
+    recoverRenderer();
+  });
   overlay.on("close", (event) => {
     if (!quitting) {
       event.preventDefault();
-      overlay.hide();
+      hideOverlay();
     }
   });
 }
 
 function startCursorProbe() {
-  if (cursorProbeTimer) clearInterval(cursorProbeTimer);
+  if (cursorProbeTimer || systemPaused || !overlay || overlay.isDestroyed() || !overlay.isVisible()) return;
   cursorProbeTimer = setInterval(() => {
     if (!overlay || overlay.isDestroyed() || !overlay.isVisible() || mouseInteractive) return;
     const cursor = screen.getCursorScreenPoint();
@@ -180,6 +217,12 @@ function startCursorProbe() {
   }, 80);
 }
 
+function stopCursorProbe() {
+  if (!cursorProbeTimer) return;
+  clearInterval(cursorProbeTimer);
+  cursorProbeTimer = null;
+}
+
 function sendSystemState(kind) {
   if (!overlay || overlay.isDestroyed() || overlay.webContents.isDestroyed()) return;
   overlay.webContents.send("whale:system-state", {
@@ -189,13 +232,35 @@ function sendSystemState(kind) {
   });
 }
 
-function startSystemStateMonitor() {
-  if (systemStateTimer) clearInterval(systemStateTimer);
+function startSystemStateSamples() {
+  if (systemStateTimer || systemPaused || !overlay || overlay.isDestroyed() || !overlay.isVisible()) return;
+  sendSystemState("sample");
   systemStateTimer = setInterval(() => sendSystemState("sample"), 5000);
-  powerMonitor.on("lock-screen", () => sendSystemState("lock"));
-  powerMonitor.on("unlock-screen", () => sendSystemState("unlock"));
-  powerMonitor.on("suspend", () => sendSystemState("suspend"));
-  powerMonitor.on("resume", () => sendSystemState("resume"));
+}
+
+function stopSystemStateSamples() {
+  if (!systemStateTimer) return;
+  clearInterval(systemStateTimer);
+  systemStateTimer = null;
+}
+
+function startSystemStateMonitor() {
+  powerMonitor.on("lock-screen", () => {
+    sendSystemState("lock");
+    setSystemPaused(true);
+  });
+  powerMonitor.on("unlock-screen", () => {
+    sendSystemState("unlock");
+    setSystemPaused(false);
+  });
+  powerMonitor.on("suspend", () => {
+    sendSystemState("suspend");
+    setSystemPaused(true);
+  });
+  powerMonitor.on("resume", () => {
+    sendSystemState("resume");
+    setSystemPaused(false);
+  });
 }
 
 function classifyForegroundProcess(processName) {
@@ -226,7 +291,7 @@ function cpuPercent() {
 function queryWindowsStatus(includeBattery, callback) {
   if (process.platform !== "win32") {
     callback(null);
-    return;
+    return null;
   }
   const script = [
     "Add-Type -Namespace WhaleMusume -Name NativeWindow -MemberDefinition '[System.Runtime.InteropServices.DllImport(\"user32.dll\")] public static extern System.IntPtr GetForegroundWindow(); [System.Runtime.InteropServices.DllImport(\"user32.dll\")] public static extern uint GetWindowThreadProcessId(System.IntPtr hWnd, out uint processId);'",
@@ -239,12 +304,17 @@ function queryWindowsStatus(includeBattery, callback) {
       : "$result=[pscustomobject]@{process=$process}",
     "$result | ConvertTo-Json -Compress"
   ].join("; ");
-  execFile(
+  return execFile(
     "powershell.exe",
     ["-NoLogo", "-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden", "-Command", script],
     { windowsHide: true, timeout: 5000, maxBuffer: 64 * 1024 },
     (error, stdout) => {
       if (error || !stdout.trim()) {
+        const now = Date.now();
+        if (error && now - lastWindowsQueryErrorAt >= 5 * 60000) {
+          lastWindowsQueryErrorAt = now;
+          logDiagnostic("warn", "windows-status-query-failed", { message: error.message, code: error.code });
+        }
         callback(null);
         return;
       }
@@ -254,15 +324,18 @@ function queryWindowsStatus(includeBattery, callback) {
 }
 
 function sendComputerState() {
-  if (!computerLinkEnabled || foregroundQueryRunning) return;
+  if (!computerMonitorShouldRun() || foregroundQueryRunning) return;
   foregroundQueryRunning = true;
+  const queryGeneration = ++foregroundQueryGeneration;
   const now = Date.now();
   const includeBattery = now - lastBatteryQueryAt >= 60000;
   const resource = {
     cpuPercent: cpuPercent(),
     memoryPercent: Math.round((1 - os.freemem() / os.totalmem()) * 100)
   };
-  queryWindowsStatus(includeBattery, (details) => {
+  foregroundQueryProcess = queryWindowsStatus(includeBattery, (details) => {
+    if (queryGeneration !== foregroundQueryGeneration) return;
+    foregroundQueryProcess = null;
     foregroundQueryRunning = false;
     if (details && details.process) {
       cachedForeground = {
@@ -280,7 +353,7 @@ function sendComputerState() {
         };
       }
     }
-    if (!computerLinkEnabled || !overlay || overlay.isDestroyed() || overlay.webContents.isDestroyed()) return;
+    if (!computerMonitorShouldRun() || !overlay || overlay.isDestroyed() || overlay.webContents.isDestroyed()) return;
     let onBattery = false;
     try { onBattery = powerMonitor.isOnBatteryPower(); } catch (_error) { /* unsupported platform */ }
     overlay.webContents.send("whale:computer-state", {
@@ -295,14 +368,95 @@ function sendComputerState() {
 
 function setComputerLinkEnabled(enabled) {
   computerLinkEnabled = Boolean(enabled);
+  reconcileComputerStateMonitor();
+}
+
+function logDiagnostic(level, event, details) {
+  if (diagnostics && typeof diagnostics[level] === "function") diagnostics[level](event, details);
+}
+
+function recoverRenderer() {
+  if (quitting || !overlay || overlay.isDestroyed()) return;
+  const now = Date.now();
+  if (now - rendererRecoveryWindowAt > 60000) {
+    rendererRecoveryWindowAt = now;
+    rendererRecoveryAttempts = 0;
+  }
+  rendererRecoveryAttempts += 1;
+  if (rendererRecoveryAttempts > 3) {
+    hideOverlay();
+    logDiagnostic("error", "renderer-recovery-abandoned", { attempts: rendererRecoveryAttempts });
+    return;
+  }
+  const delay = rendererRecoveryAttempts * 1000;
+  setTimeout(() => {
+    if (!quitting && overlay && !overlay.isDestroyed() && !overlay.webContents.isDestroyed()) {
+      overlay.webContents.reload();
+    }
+  }, delay);
+}
+
+function setComputerQuietActive(active) {
+  computerQuietActive = Boolean(active);
+  reconcileComputerStateMonitor();
+}
+
+function setSystemPaused(paused) {
+  systemPaused = Boolean(paused);
+  if (systemPaused) {
+    clearTopmostTimers();
+    stopCursorProbe();
+    stopSystemStateSamples();
+  } else {
+    startTopmostTimers();
+    startCursorProbe();
+    startSystemStateSamples();
+  }
+  reconcileComputerStateMonitor();
+}
+
+function computerMonitorShouldRun() {
+  return shouldRunComputerMonitor({
+    preferenceEnabled: computerLinkEnabled,
+    quietActive: computerQuietActive,
+    systemPaused,
+    overlayVisible: Boolean(overlay && !overlay.isDestroyed() && overlay.isVisible())
+  });
+}
+
+function reconcileComputerStateMonitor() {
+  const shouldRun = computerMonitorShouldRun();
+  if (!shouldRun) {
+    if (computerStateTimer) {
+      clearInterval(computerStateTimer);
+      computerStateTimer = null;
+    }
+    cancelForegroundQuery();
+    previousCpuTimes = null;
+    return;
+  }
+  if (computerStateTimer) return;
+  previousCpuTimes = null;
+  sendComputerState();
+  computerStateTimer = setInterval(sendComputerState, 10000);
+}
+
+function stopComputerStateMonitor() {
   if (computerStateTimer) {
     clearInterval(computerStateTimer);
     computerStateTimer = null;
   }
-  if (!computerLinkEnabled) return;
+  cancelForegroundQuery();
   previousCpuTimes = null;
-  sendComputerState();
-  computerStateTimer = setInterval(sendComputerState, 10000);
+}
+
+function cancelForegroundQuery() {
+  foregroundQueryGeneration += 1;
+  if (foregroundQueryProcess && !foregroundQueryProcess.killed) {
+    try { foregroundQueryProcess.kill(); } catch (_error) { /* process already exited */ }
+  }
+  foregroundQueryProcess = null;
+  foregroundQueryRunning = false;
 }
 
 function refreshTrayMenu() {
@@ -314,7 +468,7 @@ function refreshTrayMenu() {
       label: shown ? "隐藏鲸鱼娘" : "显示鲸鱼娘",
       click: () => {
         if (!overlay) return;
-        if (overlay.isVisible()) overlay.hide();
+        if (overlay.isVisible()) hideOverlay();
         else showOverlayInactive();
         refreshTrayMenu();
       }
@@ -329,6 +483,16 @@ function refreshTrayMenu() {
         if (!overlay) return;
         showOverlayInactive();
         overlay.webContents.send("whale:open-settings");
+      }
+    },
+    { type: "separator" },
+    {
+      label: "打开诊断日志目录",
+      click: () => {
+        const logsPath = app.getPath("logs");
+        shell.openPath(logsPath).then((error) => {
+          if (error) logDiagnostic("warn", "open-logs-failed", { error });
+        });
       }
     },
     { type: "separator" },
@@ -360,7 +524,7 @@ function createTray() {
   tray.setToolTip("鲸鱼娘桌面宠物");
   tray.on("click", () => {
     if (!overlay) return;
-    if (overlay.isVisible()) overlay.hide();
+    if (overlay.isVisible()) hideOverlay();
     else showOverlayInactive();
     refreshTrayMenu();
   });
@@ -377,6 +541,12 @@ if (!hasLock) {
   });
 
   app.whenReady().then(() => {
+    app.setAppLogsPath();
+    diagnostics = createDiagnostics({ directory: app.getPath("logs") });
+    logDiagnostic("info", "app-ready", { version: app.getVersion(), platform: process.platform, arch: process.arch });
+    process.on("uncaughtExceptionMonitor", (error, origin) => logDiagnostic("error", "uncaught-exception", { error: String(error && error.stack || error), origin }));
+    process.on("unhandledRejection", (reason) => logDiagnostic("error", "unhandled-rejection", { reason: String(reason && reason.stack || reason) }));
+    app.on("child-process-gone", (_event, details) => logDiagnostic("error", "child-process-gone", details));
     ipcMain.on("whale:set-mouse-interactive", (_event, interactive) => {
       const next = Boolean(interactive);
       if (!overlay || mouseInteractive === next) return;
@@ -390,11 +560,19 @@ if (!hasLock) {
     ipcMain.on("whale:set-computer-link-enabled", (_event, enabled) => {
       setComputerLinkEnabled(enabled);
     });
+    ipcMain.on("whale:set-quiet-active", (_event, active) => {
+      setComputerQuietActive(active);
+    });
+    ipcMain.on("whale:renderer-error", (event, details) => {
+      if (!overlay || overlay.isDestroyed() || event.sender !== overlay.webContents) return;
+      logDiagnostic("error", "renderer-error", {
+        message: String(details && details.message || "").slice(0, 1000),
+        stack: String(details && details.stack || "").slice(0, 8000)
+      });
+    });
 
     createOverlay();
-    startCursorProbe();
     startSystemStateMonitor();
-    setComputerLinkEnabled(true);
     createTray();
     screen.on("display-metrics-changed", fitVirtualDesktop);
     screen.on("display-added", fitVirtualDesktop);
@@ -408,8 +586,9 @@ app.on("window-all-closed", () => {
 
 app.on("before-quit", () => {
   quitting = true;
-  if (cursorProbeTimer) clearInterval(cursorProbeTimer);
-  if (systemStateTimer) clearInterval(systemStateTimer);
-  if (computerStateTimer) clearInterval(computerStateTimer);
+  logDiagnostic("info", "app-before-quit", null);
+  stopCursorProbe();
+  stopSystemStateSamples();
+  stopComputerStateMonitor();
   clearTopmostTimers();
 });
