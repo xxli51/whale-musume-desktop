@@ -73,6 +73,7 @@
   });
   function syncComputerLinkPreference() {
     api.setComputerLinkEnabled(localStorage.getItem("whale-moe:computer-link") !== "0");
+    api.setWindowPerchEnabled(localStorage.getItem("whale-moe:window-perch") === "1");
   }
   function syncQuietPreference() {
     api.setQuietActive(localStorage.getItem("whale-moe:quiet-active") === "1");
@@ -81,7 +82,7 @@
   syncComputerLinkPreference();
   window.addEventListener("whale-moe-prefs-change", function (event) {
     if (!event.detail) return;
-    if (event.detail.key === "computer-link") syncComputerLinkPreference();
+    if (event.detail.key === "computer-link" || event.detail.key === "window-perch") syncComputerLinkPreference();
     if (event.detail.key === "quiet-active") syncQuietPreference();
   });
   api.onResetPosition(function () {

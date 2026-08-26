@@ -471,7 +471,7 @@
     var head = element("div", "wm-settings-head");
     var title = element("div", "wm-settings-title");
     title.appendChild(element("span", "wm-settings-mark", "🐳"));
-    var titleCopy = element("div"); titleCopy.appendChild(element("strong", "", "鲸鱼娘 · 设置")); titleCopy.appendChild(element("span", "wm-version", "Desktop v2.2.0")); title.appendChild(titleCopy); head.appendChild(title);
+    var titleCopy = element("div"); var panelTitle = element("strong", "", (value("petName", "鲸鱼娘").trim() || "鲸鱼娘") + " · 设置"); panelTitle.setAttribute("data-whale-pet-name", "true"); titleCopy.appendChild(panelTitle); titleCopy.appendChild(element("span", "wm-version", "Desktop v2.3.0")); title.appendChild(titleCopy); head.appendChild(title);
     var close = element("button", "wm-settings-close", "×"); close.title = "关闭设置"; close.setAttribute("aria-label", "关闭设置"); close.addEventListener("click", function () { panel.hidden = true; window.whaleDesktop.setMouseInteractive(false); }); head.appendChild(close); panel.appendChild(head);
     var rawSavedX = storage.get("desktopSettingsX", null);
     var rawSavedY = storage.get("desktopSettingsY", null);
@@ -515,7 +515,12 @@
     var overview = element("div", "wm-card wm-overview");
     var stats = element("div", "wm-stats"); renderStats(stats); overview.appendChild(stats);
     var titleInput = document.createElement("input"); titleInput.type = "text"; titleInput.maxLength = 8; titleInput.value = value("title", "主人"); titleInput.addEventListener("input", function () { save("title", titleInput.value); });
-    overview.appendChild(row("如何称呼我", titleInput)); body.appendChild(overview);
+    overview.appendChild(row("如何称呼我", titleInput));
+    var petNameInput = document.createElement("input"); petNameInput.type = "text"; petNameInput.maxLength = 8; petNameInput.placeholder = "鲸鱼娘"; petNameInput.value = value("petName", "鲸鱼娘"); petNameInput.addEventListener("input", function () {
+      save("petName", petNameInput.value);
+      panelTitle.textContent = (petNameInput.value.trim() || "鲸鱼娘") + " · 设置";
+    });
+    overview.appendChild(row("如何称呼桌宠", petNameInput)); body.appendChild(overview);
 
     var enabledCount = TOGGLES.filter(function (item) { return value(item[0], item[2] ? "1" : "0") !== "0"; }).length;
     var companion = section("🎛️ 陪伴表现", true, enabledCount + "/" + TOGGLES.length + " 已启用"); var switches = element("div", "wm-switches"); renderSwitches(switches); companion[1].appendChild(switches); body.appendChild(companion[0]);

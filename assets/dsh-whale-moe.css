@@ -32,7 +32,8 @@
 
 /* 呼吸感：悬浮态与侧栏探头 */
 [data-dsh-whale-root][data-dsh-whale-mode="float"] [data-dsh-whale-frame],
-[data-dsh-whale-root][data-dsh-whale-mode="side"] [data-dsh-whale-frame] {
+[data-dsh-whale-root][data-dsh-whale-mode="side"] [data-dsh-whale-frame],
+[data-dsh-whale-root][data-dsh-whale-mode="perch"] [data-dsh-whale-frame] {
   animation: wm-breathe 3.4s ease-in-out infinite;
 }
 [data-dsh-whale-root][data-dsh-whale-mode="float"] [data-dsh-whale-frame] {
@@ -42,6 +43,13 @@ body[data-whale-quiet] [data-dsh-whale-root] [data-dsh-whale-frame],
 body[data-whale-quiet] [data-dsh-whale-root] [data-dsh-whale-layer] { animation: none !important; }
 [data-dsh-whale-root][data-dsh-whale-mode="float"] [data-dsh-whale-frame]:active {
   cursor: grabbing;
+}
+[data-dsh-whale-root][data-dsh-whale-mode="perch"] {
+  transition: left 360ms ease-out, top 360ms ease-out, width 240ms ease-out, height 240ms ease-out;
+}
+[data-dsh-whale-root][data-dsh-whale-mode="perch"] [data-dsh-whale-frame] {
+  cursor: pointer;
+  filter: drop-shadow(-5px 7px 8px rgb(0 0 0 / 24%));
 }
 [data-dsh-whale-root][data-dsh-whale-mode="mini"] [data-dsh-whale-gear-mini] {
   display: none;
@@ -387,6 +395,49 @@ body[data-whale-quiet] [data-dsh-whale-root] [data-dsh-whale-layer] { animation:
   50% { transform: translateY(-12px) rotate(180deg) scale(1.04, 0.96); }
   100% { transform: translateY(0) rotate(360deg) scale(1); }
 }
+
+/* 启动入场：复用行走序列，从远处沿纵深方向走近镜头后站定。 */
+[data-dsh-whale-root][data-dsh-whale-entering="true"] [data-dsh-whale-frame] {
+  pointer-events: none;
+  transform-origin: 50% 92%;
+  animation: wm-red-carpet-entrance 2.8s linear both;
+  will-change: transform, opacity, filter;
+}
+[data-dsh-whale-root][data-dsh-whale-entering="true"] [data-dsh-whale-layer] {
+  animation: none;
+}
+@keyframes wm-red-carpet-entrance {
+  0% {
+    opacity: 0.12;
+    filter: blur(3px) drop-shadow(0 1px 2px rgb(0 0 0 / 12%));
+    transform: translateY(-42vh) scale(0.12);
+  }
+  16% {
+    opacity: 0.42;
+    filter: blur(2.2px) drop-shadow(0 2px 3px rgb(0 0 0 / 15%));
+    transform: translateY(-32vh) scale(0.24);
+  }
+  42% {
+    opacity: 0.72;
+    filter: blur(1.2px) drop-shadow(0 3px 5px rgb(0 0 0 / 18%));
+    transform: translateY(-20vh) scale(0.46);
+  }
+  68% {
+    opacity: 0.94;
+    filter: blur(0.4px) drop-shadow(0 5px 7px rgb(0 0 0 / 21%));
+    transform: translateY(-9vh) scale(0.74);
+  }
+  88% {
+    opacity: 1;
+    filter: blur(0) drop-shadow(0 7px 9px rgb(0 0 0 / 24%));
+    transform: translateY(-5px) scale(1.035);
+  }
+  100% {
+    opacity: 1;
+    filter: blur(0) drop-shadow(0 6px 8px rgb(0 0 0 / 22%));
+    transform: translateY(0) scale(1);
+  }
+}
 [data-dsh-whale-root][data-dsh-whale-mode="bar"] [data-dsh-whale-frame] {
   animation: wm-breathe-soft 3.4s ease-in-out infinite, wm-slide-in 0.3s ease-out 1;
 }
@@ -405,6 +456,41 @@ body[data-whale-quiet] [data-dsh-whale-root] [data-dsh-whale-layer] { animation:
   transform-origin: 50% 14%;
   transform: translateY(3px) rotate(var(--wm-drag-angle, 0deg));
   transition: transform 120ms ease-out;
+}
+
+/* 快速释放后的惯性滑行；位移由 JS 驱动，视觉层只负责倾斜与碰撞挤压。 */
+[data-dsh-whale-root].dsh-whale-thrown [data-dsh-whale-frame] {
+  cursor: grab;
+  animation: none;
+}
+[data-dsh-whale-root].dsh-whale-thrown [data-dsh-whale-motion] {
+  transform-origin: 50% 72%;
+  transform: rotate(var(--wm-throw-angle, 0deg));
+  transition: none;
+}
+[data-dsh-whale-root].dsh-whale-bounce[data-dsh-whale-bounce-axis="x"] [data-dsh-whale-motion] {
+  animation: wm-throw-bounce-x 240ms ease-out 1;
+}
+[data-dsh-whale-root].dsh-whale-bounce[data-dsh-whale-bounce-axis="y"] [data-dsh-whale-motion] {
+  animation: wm-throw-bounce-y 240ms ease-out 1;
+}
+[data-dsh-whale-root].dsh-whale-bounce[data-dsh-whale-bounce-axis="both"] [data-dsh-whale-motion] {
+  animation: wm-throw-bounce-both 260ms ease-out 1;
+}
+@keyframes wm-throw-bounce-x {
+  0% { transform: rotate(var(--wm-throw-angle, 0deg)) scaleX(0.78) scaleY(1.08); }
+  55% { transform: rotate(var(--wm-throw-angle, 0deg)) scaleX(1.06) scaleY(0.97); }
+  100% { transform: rotate(var(--wm-throw-angle, 0deg)) scale(1); }
+}
+@keyframes wm-throw-bounce-y {
+  0% { transform: rotate(var(--wm-throw-angle, 0deg)) scaleX(1.08) scaleY(0.78); }
+  55% { transform: rotate(var(--wm-throw-angle, 0deg)) scaleX(0.97) scaleY(1.06); }
+  100% { transform: rotate(var(--wm-throw-angle, 0deg)) scale(1); }
+}
+@keyframes wm-throw-bounce-both {
+  0% { transform: rotate(var(--wm-throw-angle, 0deg)) scale(0.8); }
+  55% { transform: rotate(var(--wm-throw-angle, 0deg)) scale(1.08); }
+  100% { transform: rotate(var(--wm-throw-angle, 0deg)) scale(1); }
 }
 
 /* 自主走动的位移与专用逐帧动画均由 JS 驱动。 */

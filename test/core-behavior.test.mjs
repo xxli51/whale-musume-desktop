@@ -107,3 +107,24 @@ test("weather and hit-zone decisions are deterministic", () => {
   assert.equal(core.hitZone(0.5, 0.6, "full"), "belly");
   assert.equal(core.hitZone(0.5, 0.9, "full"), "tail");
 });
+
+test("pointer throws use recent velocity, cap speed and bounce inside bounds", () => {
+  const slow = core.pointerThrowVelocity([
+    { x: 10, y: 10, at: 0 },
+    { x: 12, y: 10, at: 100 }
+  ]);
+  assert.deepEqual(slow, { vx: 0, vy: 0, speed: 0 });
+
+  const fast = core.pointerThrowVelocity([
+    { x: 0, y: 0, at: 0 },
+    { x: 400, y: 0, at: 100 }
+  ]);
+  assert.equal(fast.speed, 1.85);
+  assert.equal(fast.vx, 1.85);
+
+  const bounced = core.pointerThrowStep({ x: 95, y: 50, vx: 1, vy: 0 }, { minX: 0, minY: 0, maxX: 100, maxY: 100 }, 16);
+  assert.equal(bounced.x, 100);
+  assert.equal(bounced.hitX, true);
+  assert.ok(bounced.vx < 0);
+  assert.equal(bounced.hitY, false);
+});

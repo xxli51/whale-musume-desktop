@@ -72,6 +72,9 @@
   /* ---------- own layers ---------- */
 
   function removeRoot() {
+    if (entranceState && entranceState.timer) root.clearTimeout(entranceState.timer);
+    if (entranceState) { entranceState.timer = 0; entranceState.active = false; }
+    stopPointerThrow(false);
     stopAutoWalk(false);
     stopIdleBlink();
     var nodes = doc.querySelectorAll("[data-dsh-whale-root]");
@@ -412,6 +415,9 @@
   }
 
   var dragState = null;
+  var pointerThrowState = { active: false, raf: 0, x: 0, y: 0, vx: 0, vy: 0, lastAt: 0 };
+  var circleGesture = { lastAngle: null, total: 0, startedAt: 0, lastAt: 0, cooldownUntil: 0 };
+  var entranceState = { started: false, active: false, timer: 0, greetingUntil: 0 };
   var autoWalkAssetsPreloaded = false;
   var autoWalkState = { active: false, raf: 0, x: 0, y: 0, nextAt: 0, direction: "right" };
 
@@ -449,7 +455,10 @@
       || quietActive()
       || positionLocked()
       || doc.hidden
+      || entranceState.active
       || dragState
+      || pointerThrowState.active
+      || windowPerchActive()
       || gameOpen
       || catchOpen
       || (!autoWalkState.active && memory.moodUntil > now)
@@ -534,8 +543,141 @@
     }
   }
 
+  function pointerThrowBlocked() {
+    var settings = doc.querySelector("[data-whale-desktop-settings]");
+    var prefs = doc.querySelector("[data-dsh-whale-prefs]");
+    return readMode() !== "float"
+      || !readPref("mouse-physics")
+      || motionReduced()
+      || quietActive()
+      || positionLocked()
+      || doc.hidden
+      || entranceState.active
+      || windowPerchActive()
+      || gameOpen
+      || catchOpen
+      || (settings && !settings.hidden)
+      || (prefs && !prefs.hidden);
+  }
+
+  function stopPointerThrow(persist) {
+    if (pointerThrowState.raf) root.cancelAnimationFrame(pointerThrowState.raf);
+    pointerThrowState.raf = 0;
+    if (!pointerThrowState.active) return;
+    pointerThrowState.active = false;
+    var node = doc.querySelector("[data-dsh-whale-root]");
+    if (node) {
+      node.classList.remove("dsh-whale-thrown", "dsh-whale-bounce");
+      node.removeAttribute("data-dsh-whale-throwing");
+      node.style.removeProperty("--wm-throw-angle");
+      if (persist !== false) writeFloatPos(pointerThrowState.x, pointerThrowState.y);
+    }
+    autoWalkState.nextAt = Date.now() + 8000 + Math.floor(Math.random() * 7000);
+    schedule();
+  }
+
+  function showPointerBounce(node, hitX, hitY) {
+    if (!node) return;
+    node.setAttribute("data-dsh-whale-bounce-axis", hitX && hitY ? "both" : (hitX ? "x" : "y"));
+    node.classList.remove("dsh-whale-bounce");
+    void node.offsetWidth;
+    node.classList.add("dsh-whale-bounce");
+    root.setTimeout(function () {
+      if (!node || !node.isConnected) return;
+      node.classList.remove("dsh-whale-bounce");
+      node.removeAttribute("data-dsh-whale-bounce-axis");
+    }, 260);
+  }
+
+  function startPointerThrow(node, velocity) {
+    if (!node || !velocity || velocity.speed <= 0 || pointerThrowBlocked()) return false;
+    stopAutoWalk(true);
+    var rect = node.getBoundingClientRect();
+    pointerThrowState.active = true;
+    pointerThrowState.x = rect.left;
+    pointerThrowState.y = rect.top;
+    pointerThrowState.vx = velocity.vx;
+    pointerThrowState.vy = velocity.vy;
+    pointerThrowState.lastAt = 0;
+    node.classList.add("dsh-whale-thrown");
+    node.setAttribute("data-dsh-whale-throwing", "true");
+    schedule();
+
+    function step(timestamp) {
+      if (!pointerThrowState.active) return;
+      if (pointerThrowBlocked()) { stopPointerThrow(true); return; }
+      if (!pointerThrowState.lastAt) pointerThrowState.lastAt = timestamp;
+      var elapsed = Math.max(0, timestamp - pointerThrowState.lastAt);
+      pointerThrowState.lastAt = timestamp;
+      var currentRect = node.getBoundingClientRect();
+      var next = core.pointerThrowStep(pointerThrowState, {
+        minX: 8,
+        minY: 8,
+        maxX: Math.max(8, root.innerWidth - currentRect.width - 8),
+        maxY: Math.max(8, root.innerHeight - currentRect.height - 8)
+      }, elapsed);
+      pointerThrowState.x = next.x;
+      pointerThrowState.y = next.y;
+      pointerThrowState.vx = next.vx;
+      pointerThrowState.vy = next.vy;
+      node.style.left = Math.round(next.x) + "px";
+      node.style.top = Math.round(next.y) + "px";
+      node.style.setProperty("--wm-throw-angle", clamp(next.vx * 13, -20, 20).toFixed(1) + "deg");
+      if (next.hitX || next.hitY) showPointerBounce(node, next.hitX, next.hitY);
+      if (next.speed <= 0) { stopPointerThrow(true); return; }
+      pointerThrowState.raf = root.requestAnimationFrame(step);
+    }
+    pointerThrowState.raf = root.requestAnimationFrame(step);
+    return true;
+  }
+
+  function resetCircleGesture(now) {
+    circleGesture.lastAngle = null;
+    circleGesture.total = 0;
+    circleGesture.startedAt = now || 0;
+    circleGesture.lastAt = now || 0;
+  }
+
+  function detectCircleGesture(event, node) {
+    var now = Date.now();
+    if (!readPref("mouse-physics") || motionReduced() || dragState || pointerThrowState.active || now < circleGesture.cooldownUntil) return;
+    var rect = node.getBoundingClientRect();
+    var dx = event.clientX - (rect.left + rect.width / 2);
+    var dy = event.clientY - (rect.top + rect.height / 2);
+    var radius = Math.hypot(dx, dy);
+    var minRadius = Math.min(rect.width, rect.height) * 0.18;
+    var maxRadius = Math.max(rect.width, rect.height) * 0.58;
+    if (radius < minRadius || radius > maxRadius || now - circleGesture.lastAt > 220) {
+      resetCircleGesture(now);
+      return;
+    }
+    var angle = Math.atan2(dy, dx);
+    if (circleGesture.lastAngle === null) {
+      circleGesture.lastAngle = angle;
+      circleGesture.startedAt = now;
+      circleGesture.lastAt = now;
+      return;
+    }
+    var delta = angle - circleGesture.lastAngle;
+    if (delta > Math.PI) delta -= Math.PI * 2;
+    else if (delta < -Math.PI) delta += Math.PI * 2;
+    circleGesture.lastAngle = angle;
+    circleGesture.lastAt = now;
+    if (Math.abs(delta) < 0.035 || Math.abs(delta) > 0.9) return;
+    if (circleGesture.total && Math.sign(delta) !== Math.sign(circleGesture.total)) circleGesture.total *= 0.55;
+    circleGesture.total += delta;
+    if (Math.abs(circleGesture.total) < Math.PI * 2 * 1.2 || now - circleGesture.startedAt > 1800) return;
+    circleGesture.cooldownUntil = now + 5000;
+    resetCircleGesture(now);
+    stopAutoWalk(true);
+    showMood("meme-omg", 3600, true);
+    burst("💫");
+    if (readPref("chat")) showChatLine("转、转晕啦……眼前全是小星星！💫");
+  }
+
   function startDrag(event, rootNode) {
     if (positionLocked()) return;
+    stopPointerThrow(true);
     stopAutoWalk(true);
     event.preventDefault();
     dragState = {
@@ -546,7 +688,8 @@
       startX: event.clientX,
       startY: event.clientY,
       lastX: event.clientX,
-      lastY: event.clientY
+      lastY: event.clientY,
+      samples: [{ x: event.clientX, y: event.clientY, at: Date.now() }]
     };
     root.addEventListener("pointermove", onDrag, true);
     root.addEventListener("pointerup", endDrag, true);
@@ -577,20 +720,30 @@
     }
     dragState.lastX = event.clientX;
     dragState.lastY = event.clientY;
+    var sampleNow = Date.now();
+    dragState.samples.push({ x: event.clientX, y: event.clientY, at: sampleNow });
+    dragState.samples = dragState.samples.filter(function (sample) { return sampleNow - sample.at <= 150; }).slice(-8);
   }
-  function endDrag() {
+  function endDrag(event) {
     root.removeEventListener("pointermove", onDrag, true);
     root.removeEventListener("pointerup", endDrag, true);
     root.removeEventListener("pointercancel", endDrag, true);
-    if (dragState && dragState.node) {
-      dragState.node.classList.remove("dsh-whale-dragging");
+    var completedDrag = dragState;
+    if (completedDrag && event && Number.isFinite(event.clientX) && Number.isFinite(event.clientY)) {
+      completedDrag.samples.push({ x: event.clientX, y: event.clientY, at: Date.now() });
     }
-    if (dragState && dragState.moved && dragState.node) {
-      writeFloatPos(parseFloat(dragState.node.style.left), parseFloat(dragState.node.style.top));
-      var node = dragState.node;
+    if (completedDrag && completedDrag.node) {
+      completedDrag.node.classList.remove("dsh-whale-dragging");
+    }
+    if (completedDrag && completedDrag.moved && completedDrag.node) {
+      writeFloatPos(parseFloat(completedDrag.node.style.left), parseFloat(completedDrag.node.style.top));
+      var node = completedDrag.node;
       if (node.__dshWhaleMoeSuppressClick) node.__dshWhaleMoeSuppressClick();
     }
     dragState = null;
+    if (completedDrag && completedDrag.moved && completedDrag.node && readPref("mouse-physics") && !motionReduced()) {
+      startPointerThrow(completedDrag.node, core.pointerThrowVelocity(completedDrag.samples));
+    }
     schedule();
   }
 
@@ -690,6 +843,28 @@
     lastAnyAt: 0,
     lastTriggered: Object.create(null)
   };
+  var windowPerchState = { window: null };
+
+  function windowPerchActive() {
+    var target = windowPerchState.window;
+    var settings = doc.querySelector("[data-whale-desktop-settings]");
+    var prefs = doc.querySelector("[data-dsh-whale-prefs]");
+    return readMode() === "float"
+      && readPref("window-perch")
+      && !quietActive()
+      && !positionLocked()
+      && !doc.hidden
+      && !dragState
+      && !pointerThrowState.active
+      && !gameOpen
+      && !catchOpen
+      && !(settings && !settings.hidden)
+      && !(prefs && !prefs.hidden)
+      && target
+      && target.maximized === true
+      && target.width >= 400
+      && target.height >= 300;
+  }
   function feedMascot() {
     var out = applyGrowth({ type: "feed" }, Date.now(), 0);
     applyQuestSignal("feed", 1);
@@ -1504,8 +1679,11 @@
   function title() {
     try { var t = root.localStorage.getItem("whale-moe:title"); return t && t.trim() ? t.trim() : "主人"; } catch (e) { return "主人"; }
   }
+  function petName() {
+    try { var name = root.localStorage.getItem("whale-moe:petName"); return name && name.trim() ? name.trim() : "鲸鱼娘"; } catch (e) { return "鲸鱼娘"; }
+  }
   function localizeLine(line) {
-    return String(line).split("主人").join(title());
+    return String(line).replace(/主人|鲸鱼娘/g, function (token) { return token === "主人" ? title() : petName(); });
   }
   function isNight(now) {
     var h = new Date(now || Date.now()).getHours();
@@ -1583,6 +1761,53 @@
     };
   }
 
+  function entranceGreeting(now) {
+    var date = new Date(now || Date.now());
+    var hour = date.getHours();
+    var salutation = hour < 6 ? "夜深啦" : hour < 9 ? "早上好" : hour < 12 ? "上午好" : hour < 14 ? "中午好" : hour < 18 ? "下午好" : hour < 22 ? "晚上好" : "夜深啦";
+    var weekdays = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
+    var minute = String(date.getMinutes()).padStart(2, "0");
+    return "主人，" + salutation + "～今天是 " + (date.getMonth() + 1) + " 月 " + date.getDate() + " 日，" + weekdays[date.getDay()] + "，现在 " + String(hour).padStart(2, "0") + ":" + minute + "。鲸鱼娘来陪你啦✨";
+  }
+
+  function entranceGreetingBusy(now) {
+    return entranceState.active || Number(now || Date.now()) < entranceState.greetingUntil;
+  }
+
+  function announceEntrance() {
+    if (quietActive() || doc.hidden) return;
+    entranceState.greetingUntil = Date.now() + 7500;
+    showMood("greet", 2800, true);
+    if (readPref("particles")) emojiBurst(["✨", "⭐", "✨"]);
+    showChatLine(entranceGreeting(Date.now()));
+  }
+
+  function finishEntrance(cancelled) {
+    if (!entranceState.active) return;
+    entranceState.active = false;
+    if (entranceState.timer) root.clearTimeout(entranceState.timer);
+    entranceState.timer = 0;
+    var rootNode = doc.querySelector("[data-dsh-whale-root]");
+    if (rootNode) rootNode.removeAttribute("data-dsh-whale-entering");
+    if (!cancelled) announceEntrance();
+    autoWalkState.nextAt = Date.now() + 8000 + Math.floor(Math.random() * 7000);
+    schedule();
+  }
+
+  function startEntrance(rootNode, layout) {
+    if (entranceState.started || !rootNode || !layout || layout.hidden || layout.kind !== "float") return;
+    if (doc.hidden) return;
+    entranceState.started = true;
+    if (quietActive()) return;
+    if (motionReduced()) { announceEntrance(); return; }
+    entranceState.active = true;
+    stopIdleBlink();
+    stopAutoWalk(false);
+    stopPointerThrow(false);
+    rootNode.setAttribute("data-dsh-whale-entering", "true");
+    entranceState.timer = root.setTimeout(function () { finishEntrance(false); }, 2860);
+  }
+
   function render(computed) {
     if (!readPref("pet") || !computed || computed.state === "hidden") {
       removeRoot();
@@ -1597,18 +1822,24 @@
 
     /* layout routing */
     var layout = resolveLayout(view, computed);
+    startEntrance(rootNode, layout);
+    var entering = entranceState.active && layout && layout.kind === "float";
     var moodActive = memory.moodUntil > Date.now() && !!memory.moodPose;
     var walking = autoWalkState.active && layout && layout.kind === "float";
+    var throwing = pointerThrowState.active && layout && layout.kind === "float";
     /* 工作态优先级最高：只要在忙，情绪姿势一律让位给 running，
        只有点击互动专用的 work-pat/work-ram 可以短暂覆盖。 */
     var moodAllowed = BUSY_STATES[computed.state] !== 1 || memory.moodPose === "work-pat" || memory.moodPose === "work-ram";
-    var moodApplied = moodActive && moodAllowed && !walking;
+    var moodApplied = moodActive && moodAllowed && !walking && !throwing && !entering;
     if (!layout || layout.hidden) {
       rootNode.style.display = "none";
     } else {
-      if (moodApplied) {
+      if (entering) {
+        layout.src = autoWalkSrc("right");
+      } else if (moodApplied) {
         layout.src = ASSET_ROOT + "dsh-whale-state-" + memory.moodPose + ".webp";
       }
+      rootNode.setAttribute("data-dsh-whale-mode", layout.kind);
       placeAt(rootNode, layout.x, layout.y, layout.w, layout.h);
       rootNode.style.opacity = String(readNumber("displayOpacity", 100, 30, 100) / 100);
       rootNode.style.width = layout.w + "px";
@@ -1616,7 +1847,6 @@
       frame.style.width = layout.w + "px";
       frame.style.height = layout.h + "px";
       frame.style.cursor = layout.kind === "float" && !positionLocked() ? "grab" : "pointer";
-      rootNode.setAttribute("data-dsh-whale-mode", layout.kind);
       if (layout.kind === "mini") rootNode.setAttribute("data-dsh-whale-dense", "true");
       else rootNode.removeAttribute("data-dsh-whale-dense");
       /* 忙闲视觉：工作中持续亮状态签 + 光晕，空闲立即撤掉 */
@@ -1664,13 +1894,13 @@
 
     memory.state = computed;
     memory.lastLine = computed.line;
-    root.__dshWhaleMoeDebug = { state: computed.state, pose: computed.pose, line: computed.line, view: view, mode: readMode(), layout: layout.kind, walking: walking, failed: memory.failed, lastEventState: memory.lastEventState, stateHoldUntil: memory.stateHoldUntil, holdLeft: Math.max(0, memory.stateHoldUntil - Date.now()), moodPose: memory.moodPose, moodUntil: memory.moodUntil, moodAnimate: memory.moodAnimate, pendingMoodDuration: memory.pendingMoodDuration, layers: { active: layerState.active, loaded: layerState.loaded, gen: layerState.gen, pendingSwap: layerState.pendingSwap, pendingSince: layerState.pendingSince }, at: Date.now(), idleChat: { nextAt: idleChat.nextAt, lastGreetAt: idleChat.lastGreetAt, lastGreetBucket: idleChat.lastGreetBucket }, weather: weatherSummary() };
+    root.__dshWhaleMoeDebug = { state: computed.state, pose: computed.pose, line: computed.line, view: view, mode: readMode(), layout: layout.kind, entering: entering, walking: walking, throwing: throwing, failed: memory.failed, lastEventState: memory.lastEventState, stateHoldUntil: memory.stateHoldUntil, holdLeft: Math.max(0, memory.stateHoldUntil - Date.now()), moodPose: memory.moodPose, moodUntil: memory.moodUntil, moodAnimate: memory.moodAnimate, pendingMoodDuration: memory.pendingMoodDuration, layers: { active: layerState.active, loaded: layerState.loaded, gen: layerState.gen, pendingSwap: layerState.pendingSwap, pendingSince: layerState.pendingSince }, at: Date.now(), idleChat: { nextAt: idleChat.nextAt, lastGreetAt: idleChat.lastGreetAt, lastGreetBucket: idleChat.lastGreetBucket }, weather: weatherSummary() };
   }
 
   /* 待机 base 稳定为 idle-cute；情绪动作只由随机低频的 showMood 覆盖。
      拖拽中显示“被拎起来”并交给 CSS 左右摇摆。 */
   function statePose(computed, view) {
-    if (dragState && dragState.moved) return "pick-up";
+    if ((dragState && dragState.moved) || pointerThrowState.active) return "pick-up";
     /* 忙时情绪让位：running 优先，仅点击互动专用的两个姿势可覆盖 */
     var busy = BUSY_STATES[computed.state] === 1;
     var moodOk = !busy || memory.moodPose === "work-pat" || memory.moodPose === "work-ram";
@@ -1686,12 +1916,25 @@
     if (mode === "float") {
       var saved = readFloatPos();
       var scale = readNumber("displayScale", 100, 60, 160) / 100;
+      if (windowPerchActive()) {
+        var target = windowPerchState.window;
+        var perchSize = Math.round(150 * scale);
+        return {
+          hidden: false, kind: "perch", w: perchSize, h: perchSize,
+          src: ASSET_ROOT + "dsh-whale-workbench-peek.webp",
+          x: clamp(target.right - perchSize + 5, 8, vw - perchSize - 8),
+          y: clamp(target.top + 52, 8, vh - perchSize - 8)
+        };
+      }
       var fw = Math.round(200 * scale);
       var fh = Math.round(200 * scale);
       /* during an active drag, keep the live pointer position; never snap back */
       var fx = saved ? saved.x : vw - fw - 20;
       var fy = saved ? saved.y : vh - fh - 20;
-      if (autoWalkState.active) {
+      if (pointerThrowState.active) {
+        fx = pointerThrowState.x;
+        fy = pointerThrowState.y;
+      } else if (autoWalkState.active) {
         fx = autoWalkState.x;
         fy = autoWalkState.y;
       }
@@ -2237,6 +2480,7 @@
     if (Number.isFinite(idleSeconds) && idleSeconds >= 0) {
       memory.lastInteractionAt = now - Math.min(idleSeconds, 86400) * 1000;
     }
+    if (entranceGreetingBusy(now) && state.kind !== "lock" && state.kind !== "suspend") { schedule(); return; }
     if (state.kind === "lock" || state.kind === "suspend") {
       showMood("sleep", 60000, true);
       if (readPref("chat") && bubbleFree()) {
@@ -2263,6 +2507,7 @@
 
   function triggerComputerLink(eventKey, now, urgent) {
     var pose = COMPUTER_LINK_ACTIONS[eventKey];
+    if (entranceGreetingBusy(now)) return false;
     if (!pose || doc.hidden || quietActive() || !readPref("computer-link") || !readPref("pet") || !readPref("chat")) return false;
     if (BUSY_STATES[memory.state.state] || !bubbleFree()) return false;
     var perEventGap = /^(offline|online|plugged|unplugged)$/.test(eventKey) ? 60000 : 15 * 60000;
@@ -2278,8 +2523,24 @@
   }
 
   function onDesktopComputerState(event) {
-    if (!readPref("computer-link")) return;
     var sample = event && event.detail ? event.detail : {};
+    var foregroundWindow = sample.foreground && sample.foreground.window;
+    if (foregroundWindow
+      && [foregroundWindow.left, foregroundWindow.top, foregroundWindow.right, foregroundWindow.bottom, foregroundWindow.width, foregroundWindow.height].every(Number.isFinite)) {
+      windowPerchState.window = {
+        left: foregroundWindow.left,
+        top: foregroundWindow.top,
+        right: foregroundWindow.right,
+        bottom: foregroundWindow.bottom,
+        width: foregroundWindow.width,
+        height: foregroundWindow.height,
+        maximized: foregroundWindow.maximized === true
+      };
+    } else {
+      windowPerchState.window = null;
+    }
+    if (windowPerchActive()) stopAutoWalk(true);
+    if (!readPref("computer-link")) { schedule(); return; }
     var now = Number(sample.at) || Date.now();
     var category = sample.foreground && sample.foreground.category ? String(sample.foreground.category) : "other";
     var online = sample.network && typeof sample.network.online === "boolean" ? sample.network.online : null;
@@ -2426,7 +2687,9 @@
   };
 
   function onUserActivity() {
+    finishEntrance(true);
     stopAutoWalk(true);
+    stopPointerThrow(true);
     autoWalkState.nextAt = Date.now() + 3000 + Math.floor(Math.random() * 7000);
     memory.lastInteractionAt = Date.now();
     schedule();
@@ -2435,6 +2698,13 @@
   function onCompanionReminder(event) {
     var detail = event && event.detail ? event.detail : {};
     if (!detail.line || !readPref("pet")) return;
+    if (entranceGreetingBusy(Date.now())) {
+      var waitMs = Math.max(500, entranceState.active ? 8000 : entranceState.greetingUntil - Date.now() + 150);
+      root.setTimeout(function () {
+        root.dispatchEvent(new CustomEvent("whale-desktop-companion-reminder", { detail: detail }));
+      }, waitMs);
+      return;
+    }
     showMood(detail.pose || "daily-stretch", 6500, true);
     if (readPref("chat")) showChatLine(String(detail.line));
     schedule();
@@ -2533,6 +2803,7 @@
       if (mode !== "float" && mode !== "side") return;
       var node = doc.querySelector("[data-dsh-whale-root]");
       if (!node) return;
+      detectCircleGesture(event, node);
       gazePending = true;
       root.requestAnimationFrame(function () {
         gazePending = false;

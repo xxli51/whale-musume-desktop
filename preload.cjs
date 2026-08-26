@@ -30,6 +30,9 @@ contextBridge.exposeInMainWorld("whaleDesktop", Object.freeze({
   setComputerLinkEnabled(enabled) {
     ipcRenderer.send("whale:set-computer-link-enabled", Boolean(enabled));
   },
+  setWindowPerchEnabled(enabled) {
+    ipcRenderer.send("whale:set-window-perch-enabled", Boolean(enabled));
+  },
   setQuietActive(active) {
     ipcRenderer.send("whale:set-quiet-active", Boolean(active));
   },

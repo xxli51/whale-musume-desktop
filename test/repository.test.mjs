@@ -174,7 +174,7 @@ test("random auto-walk uses directional animated WebP assets and yields to direc
   assert.doesNotMatch(presenter, /memory\.lastInteractionAt < 45000/);
   assert.match(presenter, /positionLocked\(\)/);
   assert.match(presenter, /quietActive\(\)/);
-  assert.match(presenter, /function onUserActivity\(\) \{\s*stopAutoWalk\(true\)/);
+  assert.match(presenter, /function onUserActivity\(\) \{[\s\S]*?finishEntrance\(true\);[\s\S]*?stopAutoWalk\(true\)/);
   assert.match(presenter, /dsh-whale-walk-/);
   assert.match(presenter, /dsh-whale-walk-" \+ side \+ "\.webp"/);
   assert.doesNotMatch(presenter, /AUTO_WALK_FRAME_COUNT|AUTO_WALK_FRAME_MS|dsh-whale-walk-.*\.png/);
@@ -199,6 +199,74 @@ test("random auto-walk uses directional animated WebP assets and yields to direc
     "obsolete walk generation artifacts must not be packaged"
   );
   assert.match(styles, /data-dsh-whale-walking/);
+});
+
+test("startup entrance walks from far to near once and greets with local time", () => {
+  const presenter = read("assets/dsh-whale-moe.js");
+  const styles = read("assets/dsh-whale-moe.css");
+  assert.match(presenter, /entranceState = \{ started: false, active: false/);
+  assert.match(presenter, /function startEntrance\(/);
+  assert.match(presenter, /if \(doc\.hidden\) return;\s*entranceState\.started = true/);
+  assert.match(presenter, /layout\.src = autoWalkSrc\("right"\)/);
+  assert.match(presenter, /if \(motionReduced\(\)\) \{ announceEntrance\(\); return; \}/);
+  assert.match(presenter, /function entranceGreeting\(/);
+  assert.match(presenter, /星期日.*星期六/);
+  assert.match(presenter, /function announceEntrance\(\)[\s\S]*showChatLine\(entranceGreeting\(Date\.now\(\)\)\)/);
+  assert.match(presenter, /entranceState\.greetingUntil = Date\.now\(\) \+ 7500/);
+  assert.match(presenter, /if \(entranceGreetingBusy\(now\)\) return false/);
+  assert.match(presenter, /finishEntrance\(true\)/);
+  assert.match(styles, /wm-red-carpet-entrance/);
+  assert.match(styles, /translateY\(-42vh\) scale\(0\.12\)/);
+  assert.match(styles, /translateY\(0\) scale\(1\)/);
+});
+
+test("owner and mascot names are independently customizable", () => {
+  const presenter = read("assets/dsh-whale-moe.js");
+  const settings = read("renderer/settings.js");
+  const storage = read("renderer/storage.js");
+  assert.match(settings, /row\("如何称呼我", titleInput\)/);
+  assert.match(settings, /row\("如何称呼桌宠", petNameInput\)/);
+  assert.match(settings, /data-whale-pet-name/);
+  assert.match(storage, /petName: 32/);
+  assert.match(presenter, /function petName\(\)/);
+  assert.match(presenter, /replace\(\/主人\|鲸鱼娘\/g/);
+});
+
+test("mouse physics can be disabled and integrates with drag and auto-walk", () => {
+  const settingsData = read("renderer/settings-data.js");
+  const storage = read("renderer/storage.js");
+  const presenter = read("assets/dsh-whale-moe.js");
+  const styles = read("assets/dsh-whale-moe.css");
+  assert.match(settingsData, /\["mouse-physics", "鼠标物理互动", true\]/);
+  assert.match(storage, /"mouse-physics"/);
+  assert.match(presenter, /core\.pointerThrowVelocity\(completedDrag\.samples\)/);
+  assert.match(presenter, /core\.pointerThrowStep\(pointerThrowState/);
+  assert.match(presenter, /function detectCircleGesture\(/);
+  assert.match(presenter, /pointerThrowState\.active/);
+  assert.match(styles, /wm-throw-bounce-x/);
+});
+
+test("window perch follows maximized foreground bounds without reading titles", () => {
+  const main = read("main.cjs");
+  const preload = read("preload.cjs");
+  const desktop = read("renderer/desktop.js");
+  const settingsData = read("renderer/settings-data.js");
+  const storage = read("renderer/storage.js");
+  const presenter = read("assets/dsh-whale-moe.js");
+  const styles = read("assets/dsh-whale-moe.css");
+
+  assert.match(settingsData, /\["window-perch", "最大化窗口栖息", false\]/);
+  assert.match(storage, /"window-perch"/);
+  assert.match(main, /GetWindowRect/);
+  assert.match(main, /IsZoomed/);
+  assert.match(main, /whale:set-window-perch-enabled/);
+  assert.doesNotMatch(main, /GetWindowText/);
+  assert.match(preload, /setWindowPerchEnabled/);
+  assert.match(desktop, /whale-moe:window-perch/);
+  assert.match(presenter, /function windowPerchActive\(/);
+  assert.match(presenter, /target\.maximized === true/);
+  assert.match(presenter, /dsh-whale-workbench-peek\.webp/);
+  assert.match(styles, /data-dsh-whale-mode="perch"/);
 });
 
 test("scene reactions defer to an active walk and resume after it stops", () => {
