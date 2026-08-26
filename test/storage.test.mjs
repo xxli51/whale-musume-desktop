@@ -45,6 +45,7 @@ test("save export uses version 2 and keeps the weather key private", () => {
   const raw = new MemoryStorage({
     "whale-moe:mood": "80",
     "whale-moe:pet": "1",
+    "whale-moe:petName": "小鲸",
     "whale-moe:weatherKey": "keep-local",
     unrelated: "ignored"
   });
@@ -53,6 +54,7 @@ test("save export uses version 2 and keeps the weather key private", () => {
   assert.equal(payload.version, 2);
   assert.equal(payload.data["whale-moe:mood"], "80");
   assert.equal(payload.data["whale-moe:pet"], "1");
+  assert.equal(payload.data["whale-moe:petName"], "小鲸");
   assert.equal(payload.data["whale-moe:weatherKey"], undefined);
   assert.equal(payload.data.unrelated, undefined);
 });
@@ -97,5 +99,9 @@ test("settings catalog stays modular, complete and unique", () => {
   assert.equal(poses.length, 89);
   assert.equal(new Set(poses).size, poses.length);
   assert.ok(settingsData.TOGGLES.some((item) => item[0] === "auto-walk"));
+  assert.deepEqual(
+    settingsData.TOGGLES.find((item) => item[0] === "window-perch"),
+    ["window-perch", "最大化窗口栖息", false]
+  );
   assert.equal(new Set(settingsData.ACHIEVEMENTS.map((item) => item[0])).size, settingsData.ACHIEVEMENTS.length);
 });

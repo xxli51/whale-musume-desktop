@@ -12,6 +12,8 @@
     ["game", "小游戏", true],
     ["idle-nudge", "摸鱼提醒", true],
     ["auto-walk", "随机自动走动", true],
+    ["mouse-physics", "鼠标物理互动", true],
+    ["window-perch", "最大化窗口栖息", false],
     ["night", "深夜模式", true],
     ["weatherFx", "天气特效", true]
   ];

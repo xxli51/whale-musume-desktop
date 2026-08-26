@@ -13,9 +13,11 @@ let mouseInteractive = false;
 let cursorProbeTimer = null;
 let systemStateTimer = null;
 let computerStateTimer = null;
+let computerStateIntervalMs = 0;
 let topmostTimers = [];
 let topmostWatchdogTimer = null;
 let computerLinkEnabled = false;
+let windowPerchEnabled = false;
 let computerQuietActive = false;
 let systemPaused = false;
 let previousCpuTimes = null;
@@ -27,6 +29,7 @@ let rendererRecoveryAttempts = 0;
 let rendererRecoveryWindowAt = 0;
 let lastWindowsQueryErrorAt = 0;
 let cachedForeground = { process: "", category: "other" };
+let cachedForegroundWindow = null;
 let cachedBattery = { present: false, percent: null, charging: null };
 let lastBatteryQueryAt = 0;
 
@@ -294,14 +297,17 @@ function queryWindowsStatus(includeBattery, callback) {
     return null;
   }
   const script = [
-    "Add-Type -Namespace WhaleMusume -Name NativeWindow -MemberDefinition '[System.Runtime.InteropServices.DllImport(\"user32.dll\")] public static extern System.IntPtr GetForegroundWindow(); [System.Runtime.InteropServices.DllImport(\"user32.dll\")] public static extern uint GetWindowThreadProcessId(System.IntPtr hWnd, out uint processId);'",
+    "Add-Type -Namespace WhaleMusume -Name NativeWindow -MemberDefinition '[System.Runtime.InteropServices.StructLayout(System.Runtime.InteropServices.LayoutKind.Sequential)] public struct RECT { public int Left; public int Top; public int Right; public int Bottom; } [System.Runtime.InteropServices.DllImport(\"user32.dll\")] public static extern System.IntPtr GetForegroundWindow(); [System.Runtime.InteropServices.DllImport(\"user32.dll\")] public static extern uint GetWindowThreadProcessId(System.IntPtr hWnd, out uint processId); [System.Runtime.InteropServices.DllImport(\"user32.dll\")] public static extern bool GetWindowRect(System.IntPtr hWnd, out RECT rect); [System.Runtime.InteropServices.DllImport(\"user32.dll\")] public static extern bool IsZoomed(System.IntPtr hWnd);'",
     "$handle=[WhaleMusume.NativeWindow]::GetForegroundWindow()",
     "[uint32]$processId=0",
     "[WhaleMusume.NativeWindow]::GetWindowThreadProcessId($handle,[ref]$processId) | Out-Null",
     "$process=(Get-Process -Id $processId -ErrorAction SilentlyContinue).ProcessName",
+    "$rect=[WhaleMusume.NativeWindow+RECT]::new()",
+    "$rectOk=[WhaleMusume.NativeWindow]::GetWindowRect($handle,[ref]$rect)",
+    "$windowMaximized=[WhaleMusume.NativeWindow]::IsZoomed($handle)",
     includeBattery
-      ? "$battery=Get-CimInstance Win32_Battery -ErrorAction SilentlyContinue | Select-Object -First 1; $result=[pscustomobject]@{process=$process;batteryPresent=[bool]$battery;batteryPercent=if($battery){[int]$battery.EstimatedChargeRemaining}else{$null};batteryCharging=if($battery){[int]$battery.BatteryStatus -in @(6,7,8,9,11)}else{$null}}"
-      : "$result=[pscustomobject]@{process=$process}",
+      ? "$battery=Get-CimInstance Win32_Battery -ErrorAction SilentlyContinue | Select-Object -First 1; $result=[pscustomobject]@{process=$process;windowValid=[bool]$rectOk;windowLeft=$rect.Left;windowTop=$rect.Top;windowRight=$rect.Right;windowBottom=$rect.Bottom;windowMaximized=[bool]$windowMaximized;batteryPresent=[bool]$battery;batteryPercent=if($battery){[int]$battery.EstimatedChargeRemaining}else{$null};batteryCharging=if($battery){[int]$battery.BatteryStatus -in @(6,7,8,9,11)}else{$null}}"
+      : "$result=[pscustomobject]@{process=$process;windowValid=[bool]$rectOk;windowLeft=$rect.Left;windowTop=$rect.Top;windowRight=$rect.Right;windowBottom=$rect.Bottom;windowMaximized=[bool]$windowMaximized}",
     "$result | ConvertTo-Json -Compress"
   ].join("; ");
   return execFile(
@@ -343,6 +349,25 @@ function sendComputerState() {
         category: classifyForegroundProcess(details.process)
       };
     }
+    cachedForegroundWindow = null;
+    if (details && details.windowValid && overlay && !overlay.isDestroyed()) {
+      const left = Number(details.windowLeft);
+      const top = Number(details.windowTop);
+      const right = Number(details.windowRight);
+      const bottom = Number(details.windowBottom);
+      if ([left, top, right, bottom].every(Number.isFinite) && right - left >= 100 && bottom - top >= 100) {
+        const overlayBounds = overlay.getBounds();
+        cachedForegroundWindow = {
+          left: left - overlayBounds.x,
+          top: top - overlayBounds.y,
+          right: right - overlayBounds.x,
+          bottom: bottom - overlayBounds.y,
+          width: right - left,
+          height: bottom - top,
+          maximized: Boolean(details.windowMaximized)
+        };
+      }
+    }
     if (includeBattery) {
       lastBatteryQueryAt = now;
       if (details) {
@@ -357,7 +382,7 @@ function sendComputerState() {
     let onBattery = false;
     try { onBattery = powerMonitor.isOnBatteryPower(); } catch (_error) { /* unsupported platform */ }
     overlay.webContents.send("whale:computer-state", {
-      foreground: cachedForeground,
+      foreground: { ...cachedForeground, window: cachedForegroundWindow },
       resource,
       power: { ...cachedBattery, onBattery },
       network: { online: net.isOnline() },
@@ -368,6 +393,18 @@ function sendComputerState() {
 
 function setComputerLinkEnabled(enabled) {
   computerLinkEnabled = Boolean(enabled);
+  reconcileComputerStateMonitor();
+}
+
+function setWindowPerchEnabled(enabled) {
+  const next = Boolean(enabled);
+  if (windowPerchEnabled === next) return;
+  windowPerchEnabled = next;
+  if (computerStateTimer) {
+    clearInterval(computerStateTimer);
+    computerStateTimer = null;
+    computerStateIntervalMs = 0;
+  }
   reconcileComputerStateMonitor();
 }
 
@@ -417,7 +454,7 @@ function setSystemPaused(paused) {
 
 function computerMonitorShouldRun() {
   return shouldRunComputerMonitor({
-    preferenceEnabled: computerLinkEnabled,
+    preferenceEnabled: computerLinkEnabled || windowPerchEnabled,
     quietActive: computerQuietActive,
     systemPaused,
     overlayVisible: Boolean(overlay && !overlay.isDestroyed() && overlay.isVisible())
@@ -431,20 +468,25 @@ function reconcileComputerStateMonitor() {
       clearInterval(computerStateTimer);
       computerStateTimer = null;
     }
+    computerStateIntervalMs = 0;
     cancelForegroundQuery();
     previousCpuTimes = null;
     return;
   }
-  if (computerStateTimer) return;
+  const intervalMs = windowPerchEnabled ? 2000 : 10000;
+  if (computerStateTimer && computerStateIntervalMs === intervalMs) return;
+  if (computerStateTimer) clearInterval(computerStateTimer);
   previousCpuTimes = null;
   sendComputerState();
-  computerStateTimer = setInterval(sendComputerState, 10000);
+  computerStateIntervalMs = intervalMs;
+  computerStateTimer = setInterval(sendComputerState, intervalMs);
 }
 
 function stopComputerStateMonitor() {
   if (computerStateTimer) {
     clearInterval(computerStateTimer);
     computerStateTimer = null;
+    computerStateIntervalMs = 0;
   }
   cancelForegroundQuery();
   previousCpuTimes = null;
@@ -559,6 +601,9 @@ if (!hasLock) {
     });
     ipcMain.on("whale:set-computer-link-enabled", (_event, enabled) => {
       setComputerLinkEnabled(enabled);
+    });
+    ipcMain.on("whale:set-window-perch-enabled", (_event, enabled) => {
+      setWindowPerchEnabled(enabled);
     });
     ipcMain.on("whale:set-quiet-active", (_event, active) => {
       setComputerQuietActive(active);

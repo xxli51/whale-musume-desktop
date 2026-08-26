@@ -146,6 +146,71 @@
     return "head";
   }
 
+  /* ================= pointer throw physics (pure, DOM-free) ================= */
+
+  function pointerThrowVelocity(samples) {
+    if (!Array.isArray(samples) || samples.length < 2) return { vx: 0, vy: 0, speed: 0 };
+    var last = samples[samples.length - 1];
+    if (!last || !Number.isFinite(last.x) || !Number.isFinite(last.y) || !Number.isFinite(last.at)) {
+      return { vx: 0, vy: 0, speed: 0 };
+    }
+    var first = null;
+    for (var i = samples.length - 2; i >= 0; i -= 1) {
+      var candidate = samples[i];
+      if (!candidate || !Number.isFinite(candidate.x) || !Number.isFinite(candidate.y) || !Number.isFinite(candidate.at)) continue;
+      if (last.at - candidate.at > 130) break;
+      first = candidate;
+    }
+    if (!first) return { vx: 0, vy: 0, speed: 0 };
+    var elapsed = Math.max(16, last.at - first.at);
+    var vx = (last.x - first.x) / elapsed;
+    var vy = (last.y - first.y) / elapsed;
+    var speed = Math.hypot(vx, vy);
+    if (speed < 0.28) return { vx: 0, vy: 0, speed: 0 };
+    var maxSpeed = 1.85;
+    if (speed > maxSpeed) {
+      vx = vx / speed * maxSpeed;
+      vy = vy / speed * maxSpeed;
+      speed = maxSpeed;
+    }
+    return { vx: vx, vy: vy, speed: speed };
+  }
+
+  function pointerThrowStep(state, bounds, elapsedMs) {
+    var current = state || {};
+    var limit = bounds || {};
+    var dt = Math.max(0, Math.min(40, Number(elapsedMs) || 0));
+    var minX = Number.isFinite(limit.minX) ? limit.minX : 0;
+    var minY = Number.isFinite(limit.minY) ? limit.minY : 0;
+    var maxX = Math.max(minX, Number.isFinite(limit.maxX) ? limit.maxX : minX);
+    var maxY = Math.max(minY, Number.isFinite(limit.maxY) ? limit.maxY : minY);
+    var x = Number.isFinite(current.x) ? current.x : minX;
+    var y = Number.isFinite(current.y) ? current.y : minY;
+    var vx = Number.isFinite(current.vx) ? current.vx : 0;
+    var vy = Number.isFinite(current.vy) ? current.vy : 0;
+    var hitX = false;
+    var hitY = false;
+
+    x += vx * dt;
+    y += vy * dt;
+    if (x < minX || x > maxX) {
+      x = Math.max(minX, Math.min(maxX, x));
+      vx *= -0.58;
+      hitX = true;
+    }
+    if (y < minY || y > maxY) {
+      y = Math.max(minY, Math.min(maxY, y));
+      vy *= -0.58;
+      hitY = true;
+    }
+    var damping = Math.pow(0.94, dt / (1000 / 60));
+    vx *= damping;
+    vy *= damping;
+    var speed = Math.hypot(vx, vy);
+    if (speed < 0.035) { vx = 0; vy = 0; speed = 0; }
+    return { x: x, y: y, vx: vx, vy: vy, speed: speed, hitX: hitX, hitY: hitY };
+  }
+
   function base(prev) {
     var defaults = { state: "idle", since: -Infinity, lastSpeechAt: -Infinity, streak: 0, lineCount: 0 };
     return prev && typeof prev === "object" && typeof prev.state === "string"
@@ -2067,6 +2132,8 @@
     festivalKey: festivalKey,
     HIT_ZONES: HIT_ZONES,
     hitZone: hitZone,
+    pointerThrowVelocity: pointerThrowVelocity,
+    pointerThrowStep: pointerThrowStep,
     weatherText: weatherText,
     weatherFx: weatherFx,
     classifyTask: classifyTask,
