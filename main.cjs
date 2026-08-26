@@ -19,6 +19,8 @@ let topmostWatchdogTimer = null;
 let computerLinkEnabled = false;
 let windowPerchEnabled = false;
 let computerQuietActive = false;
+let adventureAway = false;
+let professionTrackingEnabled = true;
 let systemPaused = false;
 let previousCpuTimes = null;
 let foregroundQueryRunning = false;
@@ -415,6 +417,11 @@ function setComputerLinkEnabled(enabled) {
   reconcileComputerStateMonitor();
 }
 
+function setProfessionTrackingEnabled(enabled) {
+  professionTrackingEnabled = Boolean(enabled);
+  reconcileComputerStateMonitor();
+}
+
 function setWindowPerchEnabled(enabled) {
   const next = Boolean(enabled);
   if (windowPerchEnabled === next) return;
@@ -473,7 +480,7 @@ function setSystemPaused(paused) {
 
 function computerMonitorShouldRun() {
   return shouldRunComputerMonitor({
-    preferenceEnabled: computerLinkEnabled || windowPerchEnabled,
+    preferenceEnabled: computerLinkEnabled || windowPerchEnabled || professionTrackingEnabled,
     quietActive: computerQuietActive,
     systemPaused,
     overlayVisible: Boolean(overlay && !overlay.isDestroyed() && overlay.isVisible())
@@ -524,7 +531,7 @@ function refreshTrayMenu() {
   if (!tray) return;
   const shown = Boolean(overlay && overlay.isVisible());
   const launchAtLogin = app.getLoginItemSettings().openAtLogin;
-  tray.setContextMenu(Menu.buildFromTemplate([
+  const template = [
     {
       label: shown ? "隐藏鲸鱼娘" : "显示鲸鱼娘",
       click: () => {
@@ -544,6 +551,22 @@ function refreshTrayMenu() {
         if (!overlay) return;
         showOverlayInactive();
         overlay.webContents.send("whale:open-settings");
+      }
+    },
+    {
+      label: "鲸鱼小屋",
+      click: () => {
+        if (!overlay || overlay.isDestroyed() || overlay.webContents.isDestroyed()) return;
+        showOverlayInactive();
+        overlay.webContents.send("whale:open-house");
+      }
+    },
+    {
+      label: "今日生活总结",
+      click: () => {
+        if (!overlay || overlay.isDestroyed() || overlay.webContents.isDestroyed()) return;
+        showOverlayInactive();
+        overlay.webContents.send("whale:open-daily-summary");
       }
     },
     { type: "separator" },
@@ -574,7 +597,18 @@ function refreshTrayMenu() {
         app.quit();
       }
     }
-  ]));
+  ];
+  if (adventureAway) {
+    template.splice(3, 0, {
+      label: "提前召回鲸鱼娘",
+      click: () => {
+        if (!overlay || overlay.isDestroyed() || overlay.webContents.isDestroyed()) return;
+        showOverlayInactive();
+        overlay.webContents.send("whale:recall-adventure");
+      }
+    });
+  }
+  tray.setContextMenu(Menu.buildFromTemplate(template));
 }
 
 function createTray() {
@@ -626,6 +660,16 @@ if (!hasLock) {
     });
     ipcMain.on("whale:set-quiet-active", (_event, active) => {
       setComputerQuietActive(active);
+    });
+    ipcMain.on("whale:set-adventure-away", (event, away) => {
+      if (!overlay || overlay.isDestroyed() || event.sender !== overlay.webContents) return;
+      const next = Boolean(away);
+      if (adventureAway === next) return;
+      adventureAway = next;
+      refreshTrayMenu();
+    });
+    ipcMain.on("whale:set-profession-enabled", (_event, enabled) => {
+      setProfessionTrackingEnabled(enabled);
     });
     ipcMain.on("whale:renderer-error", (event, details) => {
       if (!overlay || overlay.isDestroyed() || event.sender !== overlay.webContents) return;

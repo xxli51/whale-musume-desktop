@@ -33,7 +33,11 @@
     "offwork-enabled",
     "quiet-mode",
     "quiet-schedule",
-    "quiet-active"
+    "quiet-active",
+    "adventure-enabled",
+    "profession-enabled",
+    "relationship-enabled",
+    "life-enabled"
   ]);
   var NUMBER_RULES = Object.freeze({
     mood: [0, 100],
@@ -58,7 +62,19 @@
     postureMinutes: [10, 240],
     waterMinutes: [15, 480]
   });
-  var JSON_KEYS = Object.freeze(["quests", "weekSignin", "gameStats", "pomodoroState", "pendingReminder"]);
+  var JSON_KEYS = Object.freeze([
+    "quests",
+    "weekSignin",
+    "gameStats",
+    "pomodoroState",
+    "pendingReminder",
+    "adventureState",
+    "professionState",
+    "relationshipState",
+    "houseState",
+    "dailySummaryState",
+    "lifeState"
+  ]);
   var STRING_RULES = Object.freeze({
     mode: 32,
     lastSignin: 32,

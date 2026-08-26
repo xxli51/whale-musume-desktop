@@ -49,7 +49,7 @@
     var next = Boolean(target && target.closest && target.closest(
       "[data-dsh-whale-frame], [data-dsh-whale-bubble], [data-dsh-whale-prefs], " +
       "[data-dsh-whale-context], [data-dsh-whale-game], [data-dsh-whale-catch], " +
-      "[data-dsh-whale-gear-mini], [data-whale-desktop-settings]"
+      "[data-dsh-whale-gear-mini], [data-whale-desktop-settings], [data-whale-house], [data-whale-daily]"
     ));
     if (next === interactive) return;
     interactive = next;
@@ -82,12 +82,17 @@
   function syncQuietPreference() {
     api.setQuietActive(localStorage.getItem("whale-moe:quiet-active") === "1");
   }
+  function syncProfessionPreference() {
+    api.setProfessionEnabled(localStorage.getItem("whale-moe:profession-enabled") !== "0");
+  }
   syncQuietPreference();
+  syncProfessionPreference();
   syncComputerLinkPreference();
   window.addEventListener("whale-moe-prefs-change", function (event) {
     if (!event.detail) return;
     if (event.detail.key === "computer-link" || event.detail.key === "window-perch") syncComputerLinkPreference();
     if (event.detail.key === "quiet-active") syncQuietPreference();
+    if (event.detail.key === "profession-enabled") syncProfessionPreference();
   });
   api.onResetPosition(function () {
     localStorage.removeItem("whale-moe:floatX");
@@ -96,5 +101,14 @@
   });
   api.onOpenSettings(function () {
     window.dispatchEvent(new CustomEvent("whale-desktop-open-settings"));
+  });
+  api.onOpenHouse(function () {
+    window.dispatchEvent(new CustomEvent("whale-desktop-open-house"));
+  });
+  api.onOpenDailySummary(function () {
+    window.dispatchEvent(new CustomEvent("whale-desktop-open-daily"));
+  });
+  api.onRecallAdventure(function () {
+    window.dispatchEvent(new CustomEvent("whale-desktop-recall-adventure"));
   });
 })();

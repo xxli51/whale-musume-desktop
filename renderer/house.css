@@ -1,0 +1,388 @@
+[data-whale-house] {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  box-sizing: border-box;
+  background: rgb(5 10 18 / 48%);
+  pointer-events: auto;
+  font:
+    13px/1.5 "Microsoft YaHei UI",
+    "Segoe UI",
+    sans-serif;
+}
+[data-whale-house][hidden] {
+  display: none;
+}
+.wm-house-panel {
+  width: min(760px, calc(100vw - 32px));
+  max-height: min(900px, calc(100vh - 32px));
+  overflow: hidden auto;
+  color: #edf7f8;
+  background: #172027;
+  border: 1px solid #39515c;
+  border-radius: 22px;
+  box-shadow: 0 30px 100px rgb(0 0 0 / 60%);
+}
+.wm-house-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  background: #1c2931;
+  border-bottom: 1px solid #31434c;
+}
+.wm-house-head strong,
+.wm-house-head span {
+  display: block;
+}
+.wm-house-head strong {
+  font-size: 16px;
+}
+.wm-house-head span {
+  color: #9db0b8;
+  font-size: 11px;
+}
+.wm-house-close {
+  width: 40px;
+  height: 34px;
+  color: #e8f2f4;
+  background: #283840;
+  border: 1px solid #3c535e;
+  border-radius: 10px;
+  font-size: 18px;
+  cursor: pointer;
+}
+.wm-house-scene {
+  position: relative;
+  height: 390px;
+  overflow: hidden;
+  background: linear-gradient(#cdeaf1 0 68%, #c99e74 68% 100%);
+  border-bottom: 1px solid #31434c;
+}
+.wm-house-scene.night {
+  background: linear-gradient(#24344f 0 68%, #765c58 68% 100%);
+}
+.wm-house-window {
+  position: absolute;
+  top: 38px;
+  left: 50%;
+  width: 180px;
+  height: 112px;
+  display: grid;
+  place-items: center;
+  color: #fff;
+  background: linear-gradient(#83cae7, #d7f1ef);
+  border: 10px solid #f0dfc1;
+  border-radius: 55% 55% 10px 10px;
+  box-shadow: inset 0 0 0 2px rgb(56 91 108 / 25%);
+  transform: translateX(-50%);
+  font-size: 22px;
+  letter-spacing: 20px;
+}
+.night .wm-house-window {
+  background: linear-gradient(#17213c, #49527a);
+}
+.wm-house-journal {
+  position: absolute;
+  z-index: 6;
+  top: 160px;
+  right: 48px;
+  padding: 7px 11px;
+  color: #684f3c;
+  background: #fff4d9;
+  border: 1px solid rgb(117 86 57 / 28%);
+  border-radius: 10px;
+  box-shadow: 0 5px 12px rgb(57 42 32 / 16%);
+  cursor: pointer;
+  font: inherit;
+}
+.wm-house-travel-corner {
+  position: absolute;
+  z-index: 7;
+  top: 158px;
+  left: 46px;
+  padding: 7px 11px;
+  color: #5f4736;
+  background: #fff0cd;
+  border: 1px solid rgb(117 86 57 / 28%);
+  border-radius: 10px;
+  box-shadow: 0 5px 12px rgb(57 42 32 / 16%);
+  cursor: pointer;
+  font: inherit;
+}
+.wm-house-travel-panel {
+  position: absolute;
+  z-index: 9;
+  top: 198px;
+  left: 38px;
+  display: grid;
+  width: min(330px, calc(100% - 76px));
+  gap: 9px;
+  box-sizing: border-box;
+  padding: 13px;
+  color: #e9f6f7;
+  background: rgb(20 36 50 / 94%);
+  border: 1px solid #49616b;
+  border-radius: 14px;
+  box-shadow: 0 14px 32px rgb(0 0 0 / 32%);
+}
+.wm-house-travel-panel[hidden] {
+  display: none;
+}
+.wm-house-travel-title {
+  font-size: 13px;
+}
+.wm-house-travel-panel > small {
+  color: #b9cdd2;
+}
+.wm-house-travel-routes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+.wm-house-travel-routes button,
+.wm-house-travel-recall {
+  display: grid;
+  gap: 2px;
+  padding: 7px 8px;
+  color: #e3eef0;
+  background: #2a3e47;
+  border: 1px solid #49616b;
+  border-radius: 9px;
+  cursor: pointer;
+  font: inherit;
+}
+.wm-house-travel-routes button.primary {
+  color: #17352e;
+  background: #a8e4d1;
+  border-color: #69bca2;
+}
+.wm-house-travel-routes button:disabled {
+  cursor: default;
+  opacity: 0.42;
+}
+.wm-house-travel-routes small {
+  font-size: 9px;
+}
+.wm-house-travel-latest {
+  padding-top: 7px;
+  border-top: 1px solid #3c515a;
+}
+.wm-house-wall-line {
+  position: absolute;
+  top: 68%;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: rgb(101 74 56 / 28%);
+}
+.wm-house-furniture {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  background: rgb(255 255 255 / 55%);
+  border: 2px solid rgb(100 77 60 / 25%);
+  box-shadow: 0 7px 20px rgb(57 42 32 / 20%);
+  cursor: pointer;
+  font-size: 42px;
+}
+.wm-house-furniture-active {
+  border-color: #74d6c0;
+  box-shadow:
+    0 0 0 4px rgb(116 214 192 / 24%),
+    0 7px 20px rgb(57 42 32 / 20%);
+}
+.wm-house-slot-desk {
+  right: 48px;
+  bottom: 42px;
+  width: 160px;
+  height: 88px;
+  border-radius: 18px 18px 8px 8px;
+}
+.wm-house-slot-wall {
+  top: 38px;
+  left: 42px;
+  width: 145px;
+  height: 88px;
+  border-radius: 12px;
+}
+.wm-house-slot-floor {
+  left: 50%;
+  bottom: 13px;
+  width: 230px;
+  height: 58px;
+  border-radius: 50%;
+  transform: translateX(-50%);
+}
+.wm-house-slot-decor {
+  right: 58px;
+  top: 38px;
+  width: 92px;
+  height: 92px;
+  border-radius: 50%;
+}
+.wm-house-pet {
+  position: absolute;
+  z-index: 3;
+  left: 50%;
+  bottom: 38px;
+  width: 190px;
+  height: 190px;
+  object-fit: contain;
+  transform: translateX(-50%);
+  filter: drop-shadow(0 12px 12px rgb(35 43 48 / 28%));
+}
+.wm-house-pet-walking {
+  transition:
+    left 1.6s linear,
+    bottom 1.6s ease-in-out;
+}
+.wm-house-collection {
+  position: absolute;
+  z-index: 4;
+  top: 92px;
+  left: 53px;
+  display: flex;
+  width: 122px;
+  min-height: 30px;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  color: #6e5a4e;
+  font-size: 17px;
+}
+.wm-house-collection small {
+  font-size: 9px;
+  text-align: center;
+}
+.wm-house-away {
+  position: absolute;
+  z-index: 4;
+  left: 50%;
+  bottom: 120px;
+  display: grid;
+  justify-items: center;
+  gap: 9px;
+  padding: 9px 14px;
+  color: #e9f6f7;
+  background: rgb(20 36 50 / 72%);
+  border-radius: 14px;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+.wm-house-away-recall {
+  padding: 6px 12px;
+  color: #17352e;
+  background: #a8e4d1;
+  border: 1px solid #69bca2;
+  border-radius: 999px;
+  cursor: pointer;
+  font: inherit;
+}
+.wm-house-away-recall:disabled {
+  cursor: default;
+  opacity: 0.65;
+}
+.wm-house-life-badge {
+  position: absolute;
+  z-index: 5;
+  left: 50%;
+  bottom: 216px;
+  display: grid;
+  gap: 2px;
+  min-width: 145px;
+  padding: 7px 11px;
+  color: #e9f6f7;
+  background: rgb(20 36 50 / 76%);
+  border-radius: 12px;
+  text-align: center;
+  transform: translateX(-50%);
+}
+.wm-house-life-badge strong {
+  font-size: 12px;
+}
+.wm-house-life-badge span {
+  color: #bdd4d9;
+  font-size: 10px;
+}
+.wm-house-caption {
+  position: absolute;
+  z-index: 5;
+  left: 50%;
+  bottom: 7px;
+  width: min(520px, 80%);
+  padding: 6px 13px;
+  color: #e9f6f7;
+  background: rgb(20 36 50 / 76%);
+  border-radius: 999px;
+  text-align: center;
+  transform: translateX(-50%);
+}
+.wm-house-customize {
+  padding: 14px 18px 18px;
+}
+.wm-house-customize h3 {
+  margin: 0 0 8px;
+  font-size: 13px;
+}
+.wm-house-option-group {
+  display: grid;
+  grid-template-columns: 72px 1fr;
+  align-items: start;
+  gap: 10px;
+  padding: 8px 0;
+  border-top: 1px solid #2c3c44;
+}
+.wm-house-option-group > strong {
+  padding-top: 7px;
+  color: #b9c9ce;
+  font-size: 11px;
+}
+.wm-house-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.wm-house-options button {
+  padding: 6px 9px;
+  color: #dfeaec;
+  background: #24343c;
+  border: 1px solid #3b515b;
+  border-radius: 9px;
+  cursor: pointer;
+}
+.wm-house-options button.selected {
+  color: #16332c;
+  background: #a8e4d1;
+  border-color: #69bca2;
+}
+.wm-house-options button:disabled {
+  cursor: default;
+  opacity: 0.38;
+}
+@media (max-width: 620px) {
+  .wm-house-scene {
+    height: 340px;
+  }
+  .wm-house-slot-wall {
+    left: 18px;
+  }
+  .wm-house-slot-decor {
+    right: 18px;
+  }
+  .wm-house-slot-desk {
+    right: 18px;
+    width: 125px;
+  }
+  .wm-house-pet {
+    width: 160px;
+    height: 160px;
+  }
+  .wm-house-option-group {
+    grid-template-columns: 1fr;
+  }
+}

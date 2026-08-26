@@ -105,3 +105,63 @@ test("settings catalog stays modular, complete and unique", () => {
   );
   assert.equal(new Set(settingsData.ACHIEVEMENTS.map((item) => item[0])).size, settingsData.ACHIEVEMENTS.length);
 });
+
+test("adventure state is validated and included in portable saves", () => {
+  const raw = new MemoryStorage();
+  const storage = storageApi.createStore(raw);
+  storage.set("adventure-enabled", "1");
+  storage.set("adventureState", JSON.stringify({ version: 1, collection: { "blue-shell": 1 } }));
+
+  const payload = storage.exportPayload(new Date(2026, 7, 26).getTime());
+  assert.equal(payload.data["whale-moe:adventure-enabled"], "1");
+  assert.match(payload.data["whale-moe:adventureState"], /blue-shell/);
+  assert.throws(() => storage.set("adventureState", "not-json"), /无效的存储字段/);
+});
+
+test("profession progress is a validated portable save field", () => {
+  const raw = new MemoryStorage();
+  const storage = storageApi.createStore(raw);
+  storage.set("profession-enabled", "1");
+  storage.set("professionState", JSON.stringify({ version: 1, careers: { coder: { xp: 20 } } }));
+  const payload = storage.exportPayload();
+
+  assert.equal(payload.data["whale-moe:profession-enabled"], "1");
+  assert.match(payload.data["whale-moe:professionState"], /coder/);
+});
+
+test("relationship memories and personality scores are portable", () => {
+  const raw = new MemoryStorage();
+  const storage = storageApi.createStore(raw);
+  storage.set("relationship-enabled", "1");
+  storage.set("relationshipState", JSON.stringify({ version: 1, stageId: "familiar", scores: { affection: 8 } }));
+  const payload = storage.exportPayload();
+
+  assert.equal(payload.data["whale-moe:relationship-enabled"], "1");
+  assert.match(payload.data["whale-moe:relationshipState"], /affection/);
+});
+
+test("whale house selections are included in validated saves", () => {
+  const raw = new MemoryStorage();
+  const storage = storageApi.createStore(raw);
+  storage.set("houseState", JSON.stringify({ version: 1, slots: { desk: "wood-desk" }, visits: 2 }));
+  const payload = storage.exportPayload();
+  assert.match(payload.data["whale-moe:houseState"], /wood-desk/);
+});
+
+test("daily life journal history is included in validated saves", () => {
+  const raw = new MemoryStorage();
+  const storage = storageApi.createStore(raw);
+  storage.set("dailySummaryState", JSON.stringify({ version: 1, current: { date: "2026-8-26" }, history: [] }));
+  const payload = storage.exportPayload();
+  assert.match(payload.data["whale-moe:dailySummaryState"], /2026-8-26/);
+});
+
+test("autonomous life state and preference are portable", () => {
+  const raw = new MemoryStorage();
+  const storage = storageApi.createStore(raw);
+  storage.set("life-enabled", "1");
+  storage.set("lifeState", JSON.stringify({ version: 1, stats: { completed: 2, byActivity: { tidy: 2 } } }));
+  const payload = storage.exportPayload();
+  assert.equal(payload.data["whale-moe:life-enabled"], "1");
+  assert.match(payload.data["whale-moe:lifeState"], /tidy/);
+});

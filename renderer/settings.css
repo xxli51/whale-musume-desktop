@@ -280,12 +280,107 @@ details.wm-card:not([open]) > .wm-card-content { display: none !important; }
 .wm-quest-progress { width: 100px; height: 7px; overflow: hidden; background: #363c43; border-radius: 5px; }
 .wm-quest-progress i { display: block; height: 100%; background: var(--wm-accent-deep); }
 
+.wm-adventure-routes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin: 8px 0;
+}
+.wm-adventure-away {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin: 8px 0;
+  padding: 12px 14px;
+  background: rgb(168 228 209 / 7%);
+  border: 1px solid rgb(168 228 209 / 18%);
+  border-radius: 11px;
+}
+.wm-adventure-away > span {
+  text-align: right;
+}
+.wm-collection {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.wm-collectible {
+  display: grid;
+  min-width: 0;
+  padding: 10px 5px;
+  text-align: center;
+  background: #20242a;
+  border: 1px solid #303640;
+  border-radius: 10px;
+}
+.wm-collectible strong {
+  font-size: 20px;
+}
+.wm-collectible span {
+  overflow: hidden;
+  color: #dce2e8;
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wm-collectible small {
+  color: var(--wm-muted);
+  font-size: 10px;
+}
+.wm-collectible.locked {
+  opacity: 0.35;
+  filter: grayscale(1);
+}
+.wm-diary {
+  margin-top: 8px;
+  padding: 12px 14px;
+  background: #20242a;
+  border: 1px solid #303640;
+  border-radius: 11px;
+}
+.wm-diary strong {
+  color: var(--wm-accent);
+  font-size: 12px;
+}
+.wm-diary p {
+  margin: 6px 0;
+  color: #dce2e8;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.wm-diary small {
+  color: var(--wm-muted);
+  font-size: 10px;
+}
+.wm-professions { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 8px 0; }
+.wm-profession { display: grid; gap: 5px; min-width: 0; padding: 10px; background: #20242a; border: 1px solid #303640; border-radius: 10px; }
+.wm-profession.primary { background: rgb(168 228 209 / 7%); border-color: rgb(168 228 209 / 30%); }
+.wm-profession strong { color: #dce2e8; font-size: 12px; }
+.wm-profession span,
+.wm-profession small { overflow: hidden; color: var(--wm-muted); font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.wm-profession .wm-quest-progress { width: 100%; }
+.wm-relationship-hero { display: grid; gap: 3px; margin: 8px 0; padding: 13px 14px; background: rgb(255 143 177 / 7%); border: 1px solid rgb(255 143 177 / 22%); border-radius: 11px; }
+.wm-relationship-hero strong { color: #ffd4e1; font-size: 14px; }
+.wm-relationship-hero span { color: #e8dce1; font-size: 12px; }
+.wm-relationship-hero small { color: var(--wm-muted); font-size: 10px; }
+.wm-traits { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin: 8px 0; }
+.wm-trait { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 5px 8px; padding: 9px 10px; background: #20242a; border: 1px solid #303640; border-radius: 10px; }
+.wm-trait strong { overflow: hidden; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.wm-trait span { color: var(--wm-muted); font-size: 10px; }
+.wm-trait-meter { grid-column: 1 / -1; height: 6px; overflow: hidden; background: #363c43; border-radius: 5px; }
+.wm-trait-meter i { display: block; height: 100%; background: #e995b0; border-radius: 5px; }
+.wm-trait-meter i.negative { margin-left: auto; background: #8aa7cc; }
+
 @media (max-width: 620px) {
   [data-whale-desktop-settings] { width: calc(100vw - 20px); max-height: calc(100vh - 20px); }
   .wm-settings-body { padding: 10px; }
   .wm-stats { grid-template-columns: repeat(3, 1fr); }
   .wm-actions { grid-template-columns: repeat(2, 1fr); }
   .wm-achievements { grid-template-columns: repeat(3, 1fr); }
+  .wm-collection { grid-template-columns: repeat(2, 1fr); }
+  .wm-adventure-routes { grid-template-columns: 1fr; }
+  .wm-professions { grid-template-columns: repeat(2, 1fr); }
   .wm-summary-meta { display: none; }
   .wm-quest-controls { width: 210px; flex-basis: 210px; grid-template-columns: minmax(70px, 1fr) 36px 70px; }
 }

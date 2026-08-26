@@ -16,6 +16,20 @@ test("standalone repository contains every runtime entry", () => {
     "renderer/index.html",
     "renderer/desktop.js",
     "renderer/storage.js",
+    "renderer/adventure-core.js",
+    "renderer/adventure.js",
+    "renderer/profession-core.js",
+    "renderer/profession.js",
+    "renderer/relationship-core.js",
+    "renderer/relationship.js",
+    "renderer/house-core.js",
+    "renderer/house.js",
+    "renderer/house.css",
+    "renderer/daily-summary-core.js",
+    "renderer/daily-summary.js",
+    "renderer/daily-summary.css",
+    "renderer/life-core.js",
+    "renderer/life.js",
     "renderer/settings-data.js",
     "renderer/settings.js",
     "renderer/companion.js",
@@ -156,6 +170,197 @@ test("companion tools are persistent, private, and wired to the mascot", () => {
   assert.match(presenter, /growth\.satiety <= 25/);
 });
 
+test("procedural adventures persist deterministic memories and collectibles", () => {
+  const index = read("renderer/index.html");
+  const storage = read("renderer/storage.js");
+  const settings = read("renderer/settings.js");
+  const controller = read("renderer/adventure.js");
+  const presenter = read("assets/dsh-whale-moe.js");
+  const main = read("main.cjs");
+  const preload = read("preload.cjs");
+  const desktop = read("renderer/desktop.js");
+  assert.match(index, /\.\/adventure-core\.js/);
+  assert.match(index, /\.\/adventure\.js/);
+  assert.match(storage, /adventureState/);
+  assert.match(settings, /旅行与收藏/);
+  assert.match(settings, /纪念品收藏/);
+  assert.match(controller, /whale-desktop-companion-reminder/);
+  assert.match(controller, /whale-desktop-computer-state/);
+  assert.match(presenter, /function adventureAway\(now\)/);
+  assert.match(presenter, /state: "adventure-away"/);
+  assert.match(presenter, /isAway\(state, at, 6500\)/);
+  assert.match(presenter, /scheduleDepartureExit/);
+  assert.match(presenter, /state: "adventure-departing"/);
+  assert.match(presenter, /state: "adventure-arriving"/);
+  assert.match(presenter, /beginAdventureArrival/);
+  assert.match(presenter, /whale-adventure-change", onAdventureChange/);
+  assert.match(presenter, /WhaleAdventureCore\.isAway/);
+  assert.match(main, /提前召回鲸鱼娘/);
+  assert.match(main, /if \(adventureAway\)/);
+  assert.match(main, /whale:recall-adventure/);
+  assert.match(preload, /setAdventureAway/);
+  assert.match(preload, /onRecallAdventure/);
+  assert.match(desktop, /whale-desktop-recall-adventure/);
+  assert.match(controller, /recallJourney/);
+  assert.match(controller, /type: "departed", journey: result\.journey, line: result\.line/);
+});
+
+test("career growth uses private foreground categories and influences adventures", () => {
+  const index = read("renderer/index.html");
+  const storage = read("renderer/storage.js");
+  const settings = read("renderer/settings.js");
+  const profession = read("renderer/profession.js");
+  const adventure = read("renderer/adventure.js");
+  const main = read("main.cjs");
+  const preload = read("preload.cjs");
+  const desktop = read("renderer/desktop.js");
+  assert.match(index, /profession-core\.js/);
+  assert.match(index, /profession\.js/);
+  assert.match(storage, /professionState/);
+  assert.match(settings, /职业成长/);
+  assert.match(profession, /whale-desktop-computer-state/);
+  assert.match(profession, /idleSeconds < 120/);
+  assert.match(adventure, /professionStatus\.state\.primaryId/);
+  assert.match(main, /professionTrackingEnabled/);
+  assert.match(main, /whale:set-profession-enabled/);
+  assert.match(preload, /setProfessionEnabled/);
+  assert.match(desktop, /profession-enabled/);
+});
+
+test("relationship stages and personality are driven by shared experiences", () => {
+  const index = read("renderer/index.html");
+  const storage = read("renderer/storage.js");
+  const settings = read("renderer/settings.js");
+  const relationship = read("renderer/relationship.js");
+  const presenter = read("assets/dsh-whale-moe.js");
+  const adventure = read("renderer/adventure.js");
+  const profession = read("renderer/profession.js");
+  assert.match(index, /relationship-core\.js/);
+  assert.match(index, /relationship\.js/);
+  assert.match(storage, /relationshipState/);
+  assert.match(settings, /关系与性格/);
+  assert.match(settings, /性格形成记录/);
+  assert.match(relationship, /whale-personality-signal/);
+  assert.match(presenter, /whale-personality-signal/);
+  assert.match(presenter, /function relationshipDialogue\(event\)/);
+  assert.match(adventure, /personalitySignal\("recall"/);
+  assert.match(profession, /type: focusSignal \? "focus" : "profession"/);
+});
+
+test("whale house is accessible and unlocked by persisted achievements", () => {
+  const index = read("renderer/index.html");
+  const storage = read("renderer/storage.js");
+  const house = read("renderer/house.js");
+  const houseCss = read("renderer/house.css");
+  const settings = read("renderer/settings.js");
+  const main = read("main.cjs");
+  const preload = read("preload.cjs");
+  const desktop = read("renderer/desktop.js");
+  assert.match(index, /house-core\.js/);
+  assert.match(index, /house\.js/);
+  assert.match(index, /house\.css/);
+  assert.match(storage, /houseState/);
+  assert.match(house, /WhaleProfession/);
+  assert.match(house, /WhaleRelationship/);
+  assert.match(house, /WhaleAdventure/);
+  assert.match(house, /dsh-whale-idle-blink\.webp/);
+  assert.doesNotMatch(house, /dsh-whale-state-idle-cute\.webp/);
+  assert.match(house, /dsh-whale-walk-" \+ direction \+ "\.webp/);
+  assert.match(house, /LIFE_TARGETS/);
+  assert.match(house, /transition\.type === "started"/);
+  assert.match(house, /transition\.type === "completed"/);
+  assert.match(house, /away: Boolean\(currentAdventureState\.current\)/);
+  assert.match(house, /querySelectorAll\("\.wm-house-life-badge"\)/);
+  assert.match(house, /whale-adventure-change", handleAdventureChange/);
+  assert.match(house, /HOUSE_EXIT_POSITION/);
+  assert.match(house, /我从门口出发啦/);
+  assert.match(house, /transition\.type === "arrived"/);
+  assert.match(house, /change\.type === "recalled" \|\| change\.type === "returned"/);
+  assert.match(
+    house,
+    /change\.type === "recalled" \|\| change\.type === "returned"\)\) \{\s*travelTransitionActive = true/
+  );
+  assert.match(house, /travelTransitionActive = true/);
+  assert.match(house, /!travelTransitionActive\) renderHouse/);
+  assert.match(house, /furnitureInteractionActive \|\| travelTransitionActive/);
+  assert.match(house, /wm-house-away-recall/);
+  assert.match(house, /recall\.textContent = "正在召回…"/);
+  assert.match(house, /renderTravelCorner\(scene, roomContext\)/);
+  assert.match(house, /🧳 旅行角/);
+  assert.match(house, /window\.WhaleAdventure\.depart\(routeId\)/);
+  assert.match(house, /window\.WhaleAdventure\.recall\(\)/);
+  assert.match(house, /上次回来/);
+  assert.match(house, /FURNITURE_STAY_DURATION = 10000/);
+  assert.match(house, /FURNITURE_INTERACTIONS/);
+  assert.match(house, /furnitureInteractionActive = true/);
+  assert.match(house, /!furnitureInteractionActive && !travelTransitionActive/);
+  assert.match(house, /if \(furnitureInteractionActive \|\| travelTransitionActive\) return/);
+  assert.match(house, /interactWithFurniture\(furniture, node\)/);
+  assert.match(house, /currentPetPosition\(pet\)/);
+  assert.match(house, /activePetWalk = pet\.animate/);
+  assert.match(house, /fill: "forwards"/);
+  assert.match(house, /activePetWalk\.onfinish = finishWalk/);
+  assert.match(house, /看完啦，我回到这里陪你/);
+  assert.match(houseCss, /wm-house-pet-walking/);
+  assert.match(houseCss, /wm-house-furniture-active/);
+  assert.match(houseCss, /wm-house-travel-panel/);
+  assert.match(houseCss, /wm-house-travel-routes/);
+  assert.match(houseCss, /wm-house-away-recall/);
+  assert.match(houseCss, /data-whale-house/);
+  assert.match(settings, /进入鲸鱼小屋/);
+  assert.match(main, /label: "鲸鱼小屋"/);
+  assert.match(preload, /onOpenHouse/);
+  assert.match(desktop, /whale-desktop-open-house/);
+});
+
+test("daily life summaries roll up persisted systems and remain accessible", () => {
+  const index = read("renderer/index.html");
+  const storage = read("renderer/storage.js");
+  const daily = read("renderer/daily-summary.js");
+  const dailyCss = read("renderer/daily-summary.css");
+  const settings = read("renderer/settings.js");
+  const house = read("renderer/house.js");
+  const main = read("main.cjs");
+  const preload = read("preload.cjs");
+  const desktop = read("renderer/desktop.js");
+  assert.match(index, /daily-summary-core\.js/);
+  assert.match(index, /daily-summary\.js/);
+  assert.match(index, /daily-summary\.css/);
+  assert.match(storage, /dailySummaryState/);
+  assert.match(daily, /relationshipState/);
+  assert.match(daily, /professionState/);
+  assert.match(daily, /adventureState/);
+  assert.match(dailyCss, /data-whale-daily/);
+  assert.match(settings, /翻开生活手账/);
+  assert.match(house, /今日手账/);
+  assert.match(main, /label: "今日生活总结"/);
+  assert.match(preload, /onOpenDailySummary/);
+  assert.match(desktop, /whale-desktop-open-daily/);
+});
+
+test("autonomous life uses persisted contextual decisions without conflicting with travel", () => {
+  const index = read("renderer/index.html");
+  const storage = read("renderer/storage.js");
+  const life = read("renderer/life.js");
+  const settings = read("renderer/settings.js");
+  const house = read("renderer/house.js");
+  const daily = read("renderer/daily-summary.js");
+  const presenter = read("assets/dsh-whale-moe.js");
+  assert.match(index, /life-core\.js/);
+  assert.match(index, /life\.js/);
+  assert.match(storage, /lifeState/);
+  assert.match(storage, /life-enabled/);
+  assert.match(life, /idleSeconds < 120/);
+  assert.match(life, /interruptForTravel/);
+  assert.match(life, /quiet-active/);
+  assert.match(settings, /让鲸鱼在空闲时自主安排生活/);
+  assert.match(settings, /看看她现在想做什么/);
+  assert.match(house, /lifeActivity/);
+  assert.match(daily, /lifeActivities/);
+  assert.match(presenter, /function activeLife\(now\)/);
+  assert.match(presenter, /lifeApplied/);
+});
+
 test("settings preferences update in place without rebuilding the panel", () => {
   const settings = read("renderer/settings.js");
   const listenerStart = settings.indexOf('window.addEventListener("whale-moe-prefs-change"');
@@ -211,7 +416,7 @@ test("startup entrance walks from far to near once and greets with local time", 
   assert.match(presenter, /function startEntrance\(/);
   assert.match(presenter, /if \(doc\.hidden\) return;\s*entranceState\.started = true/);
   assert.match(presenter, /layout\.src = autoWalkSrc\("right"\)/);
-  assert.match(presenter, /if \(motionReduced\(\)\) \{ announceEntrance\(\); return; \}/);
+  assert.match(presenter, /if \(motionReduced\(\)\) \{\s*announceEntrance\(\);\s*return;\s*\}/);
   assert.match(presenter, /function entranceGreeting\(/);
   assert.match(presenter, /星期日.*星期六/);
   assert.match(presenter, /function announceEntrance\(\)[\s\S]*showChatLine\(entranceGreeting\(Date\.now\(\)\)\)/);
@@ -243,7 +448,7 @@ test("mouse physics can be disabled and integrates with drag and auto-walk", () 
   assert.match(settingsData, /\["mouse-physics", "鼠标物理互动", true\]/);
   assert.match(storage, /"mouse-physics"/);
   assert.match(presenter, /core\.pointerThrowVelocity\(completedDrag\.samples\)/);
-  assert.match(presenter, /core\.pointerThrowStep\(pointerThrowState/);
+  assert.match(presenter, /core\.pointerThrowStep\(\s*pointerThrowState/);
   assert.match(presenter, /function detectCircleGesture\(/);
   assert.match(presenter, /pointerThrowState\.active/);
   assert.match(styles, /wm-throw-bounce-x/);

@@ -23,10 +23,18 @@
   ];
 
   function readPref(key) {
-    try { return storage.get(key, "1") !== "0"; } catch (e) { return true; }
+    try {
+      return storage.get(key, "1") !== "0";
+    } catch (e) {
+      return true;
+    }
   }
   function writePref(key, value) {
-    try { storage.set(key, value ? "1" : "0"); } catch (e) { /* storage unavailable */ }
+    try {
+      storage.set(key, value ? "1" : "0");
+    } catch (e) {
+      /* storage unavailable */
+    }
   }
   function readNumber(key, fallback, min, max) {
     try {
@@ -34,13 +42,46 @@
       var value = raw === null ? fallback : Number(raw);
       if (!Number.isFinite(value)) value = fallback;
       return Math.max(min, Math.min(max, value));
-    } catch (e) { return fallback; }
+    } catch (e) {
+      return fallback;
+    }
   }
   function quietActive() {
-    try { return storage.get("quiet-active", "0") === "1"; } catch (e) { return false; }
+    try {
+      return storage.get("quiet-active", "0") === "1";
+    } catch (e) {
+      return false;
+    }
   }
   function positionLocked() {
-    try { return storage.get("positionLocked", "0") === "1"; } catch (e) { return false; }
+    try {
+      return storage.get("positionLocked", "0") === "1";
+    } catch (e) {
+      return false;
+    }
+  }
+  function adventureAway(now) {
+    try {
+      var raw = storage.get("adventureState", "{}");
+      var state = JSON.parse(raw);
+      var at = Number(now || Date.now());
+      /* The farewell bubble gets time to finish, then the mascot walks beyond
+         the screen edge before this fallback considers her fully away. */
+      return root.WhaleAdventureCore ? root.WhaleAdventureCore.isAway(state, at, 6500) : false;
+    } catch (e) {
+      return false;
+    }
+  }
+  function activeLife(now) {
+    try {
+      if (storage.get("life-enabled", "1") === "0") return null;
+      var state = JSON.parse(storage.get("lifeState", "{}"));
+      var current = state && state.current;
+      if (!current || Number(current.endsAt) <= Number(now || Date.now())) return null;
+      return root.WhaleLifeCore ? root.WhaleLifeCore.activity(current.activityId) : null;
+    } catch (e) {
+      return null;
+    }
   }
 
   var MODES = Object.freeze({ float: 1, mini: 1 });
@@ -49,7 +90,9 @@
       var value = storage.get("mode", null);
       if (value === null) return "float";
       return MODES[value] ? value : "float";
-    } catch (e) { return "float"; }
+    } catch (e) {
+      return "float";
+    }
   }
   function readFloatPos() {
     try {
@@ -59,21 +102,28 @@
       var x = Number(rawX);
       var y = Number(rawY);
       if (Number.isFinite(x) && Number.isFinite(y)) return { x: x, y: y };
-    } catch (e) { /* ignore */ }
+    } catch (e) {
+      /* ignore */
+    }
     return null;
   }
   function writeFloatPos(x, y) {
     try {
       storage.set("floatX", Math.round(x));
       storage.set("floatY", Math.round(y));
-    } catch (e) { /* storage unavailable */ }
+    } catch (e) {
+      /* storage unavailable */
+    }
   }
 
   /* ---------- own layers ---------- */
 
   function removeRoot() {
     if (entranceState && entranceState.timer) root.clearTimeout(entranceState.timer);
-    if (entranceState) { entranceState.timer = 0; entranceState.active = false; }
+    if (entranceState) {
+      entranceState.timer = 0;
+      entranceState.active = false;
+    }
     stopPointerThrow(false);
     stopAutoWalk(false);
     stopIdleBlink();
@@ -85,8 +135,14 @@
     for (var g = 0; g < games.length; g += 1) games[g].remove();
     gameOpen = false;
     catchOpen = false;
-    if (gameTimer) { root.clearInterval(gameTimer); gameTimer = null; }
-    if (catchTimer) { root.clearInterval(catchTimer); catchTimer = null; }
+    if (gameTimer) {
+      root.clearInterval(gameTimer);
+      gameTimer = null;
+    }
+    if (catchTimer) {
+      root.clearInterval(catchTimer);
+      catchTimer = null;
+    }
     weatherFxStop();
   }
 
@@ -186,10 +242,7 @@
       layerState.pendingSwap = src;
       layerState.pendingSince = Date.now();
       var hide = motionNode.animate(
-        [
-          { transform: "translateY(0) scale(1)" },
-          { transform: "translateY(12px) scale(0.86, 0.92)" }
-        ],
+        [{ transform: "translateY(0) scale(1)" }, { transform: "translateY(12px) scale(0.86, 0.92)" }],
         { duration: 140, easing: "cubic-bezier(0.55, 0, 1, 0.45)" }
       );
       hide.oncancel = function () {
@@ -217,10 +270,7 @@
         }
         applyLayers();
         motionNode.animate(
-          [
-            { transform: "translateY(18px) scale(0.88, 0.94)" },
-            { transform: "translateY(0) scale(1)" }
-          ],
+          [{ transform: "translateY(18px) scale(0.88, 0.94)" }, { transform: "translateY(0) scale(1)" }],
           { duration: 480, easing: "cubic-bezier(0.22, 1, 0.36, 1)" }
         );
       };
@@ -246,12 +296,16 @@
     layerState.loaded[nextName] = src;
     layerState.gen += 1;
     var gen = layerState.gen;
-    next.addEventListener("load", function handler() {
-      next.removeEventListener("load", handler);
-      if (gen !== layerState.gen) return; /* superseded by a newer pose */
-      if (layerState.pendingSwap === src) return;
-      swap();
-    }, { once: true });
+    next.addEventListener(
+      "load",
+      function handler() {
+        next.removeEventListener("load", handler);
+        if (gen !== layerState.gen) return; /* superseded by a newer pose */
+        if (layerState.pendingSwap === src) return;
+        swap();
+      },
+      { once: true }
+    );
   }
 
   function burst(symbol) {
@@ -261,8 +315,16 @@
     node.setAttribute("data-dsh-whale-burst", "true");
     node.textContent = symbol;
     rootNode.appendChild(node);
-    node.addEventListener("animationend", function () { node.remove(); }, { once: true });
-    root.setTimeout(function () { node.remove(); }, 1000);
+    node.addEventListener(
+      "animationend",
+      function () {
+        node.remove();
+      },
+      { once: true }
+    );
+    root.setTimeout(function () {
+      node.remove();
+    }, 1000);
   }
 
   function emojiBurst(symbols) {
@@ -277,10 +339,21 @@
       node.style.setProperty("--wm-dx", String(side * (14 + (i % 3) * 12)) + "px");
       node.style.setProperty("--wm-dy", String(-34 - (i % 3) * 16) + "px");
       node.style.setProperty("--wm-rot", String(side * (8 + i * 7)) + "deg");
-      node.style.animationDelay = (i * 55) + "ms";
+      node.style.animationDelay = i * 55 + "ms";
       rootNode.appendChild(node);
-      node.addEventListener("animationend", function () { node.remove(); }, { once: true });
-      root.setTimeout(function () { node.remove(); }, 1200 + i * 60);
+      node.addEventListener(
+        "animationend",
+        function () {
+          node.remove();
+        },
+        { once: true }
+      );
+      root.setTimeout(
+        function () {
+          node.remove();
+        },
+        1200 + i * 60
+      );
     }
   }
 
@@ -337,14 +410,22 @@
     layerA.alt = "";
     layerA.draggable = false;
     layerA.setAttribute("data-dsh-whale-layer", "a");
-    layerA.addEventListener("error", function () { layerA.style.display = "none"; });
-    layerA.addEventListener("load", function () { layerA.style.display = ""; });
+    layerA.addEventListener("error", function () {
+      layerA.style.display = "none";
+    });
+    layerA.addEventListener("load", function () {
+      layerA.style.display = "";
+    });
     var layerB = doc.createElement("img");
     layerB.alt = "";
     layerB.draggable = false;
     layerB.setAttribute("data-dsh-whale-layer", "b");
-    layerB.addEventListener("error", function () { layerB.style.display = "none"; });
-    layerB.addEventListener("load", function () { layerB.style.display = ""; });
+    layerB.addEventListener("error", function () {
+      layerB.style.display = "none";
+    });
+    layerB.addEventListener("load", function () {
+      layerB.style.display = "";
+    });
     motion.appendChild(layerA);
     motion.appendChild(layerB);
     frame.appendChild(motion);
@@ -387,17 +468,24 @@
     rootNode.appendChild(menu);
     doc.body.appendChild(rootNode);
 
-    rootNode.addEventListener("click", function (event) { event.stopPropagation(); });
+    rootNode.addEventListener("click", function (event) {
+      event.stopPropagation();
+    });
     var suppressClick = false;
     frame.addEventListener("click", function (event) {
       event.stopPropagation();
-      if (suppressClick) { suppressClick = false; return; }
+      if (suppressClick) {
+        suppressClick = false;
+        return;
+      }
       var m = rootNode.querySelector("[data-dsh-whale-motion]");
       if (m && !motionReduced()) {
         m.classList.remove("dsh-whale-react");
         void m.offsetWidth;
         m.classList.add("dsh-whale-react");
-        root.setTimeout(function () { m.classList.remove("dsh-whale-react"); }, 650);
+        root.setTimeout(function () {
+          m.classList.remove("dsh-whale-react");
+        }, 650);
       }
       patMascot(resolveHitZone(event.clientX, event.clientY, rootNode));
     });
@@ -410,7 +498,9 @@
       event.stopPropagation();
       showContextMenu(event.clientX, event.clientY);
     });
-    rootNode.__dshWhaleMoeSuppressClick = function () { suppressClick = true; };
+    rootNode.__dshWhaleMoeSuppressClick = function () {
+      suppressClick = true;
+    };
     return rootNode;
   }
 
@@ -420,14 +510,21 @@
   var entranceState = { started: false, active: false, timer: 0, greetingUntil: 0 };
   var autoWalkAssetsPreloaded = false;
   var autoWalkState = { active: false, raf: 0, x: 0, y: 0, nextAt: 0, direction: "right" };
+  var departureExitState = { timer: 0, animation: null, active: false };
+  var arrivalEntryState = { animation: null, active: false, targetX: 0, targetY: 0 };
   var displayBounds = Array.isArray(root.__DSH_WHALE_DISPLAY_BOUNDS__) ? root.__DSH_WHALE_DISPLAY_BOUNDS__ : [];
 
   function displayIndexAt(point) {
     if (!point || !Number.isFinite(point.x) || !Number.isFinite(point.y)) return -1;
     for (var index = 0; index < displayBounds.length; index += 1) {
       var display = displayBounds[index];
-      if (point.x >= display.x && point.x < display.x + display.width
-        && point.y >= display.y && point.y < display.y + display.height) return index;
+      if (
+        point.x >= display.x &&
+        point.x < display.x + display.width &&
+        point.y >= display.y &&
+        point.y < display.y + display.height
+      )
+        return index;
     }
     return -1;
   }
@@ -458,6 +555,133 @@
     return ASSET_ROOT + "dsh-whale-walk-" + side + ".webp" + POSE_VERSION;
   }
 
+  function cancelDepartureExit() {
+    if (departureExitState.timer) root.clearTimeout(departureExitState.timer);
+    if (departureExitState.animation) departureExitState.animation.cancel();
+    departureExitState.timer = 0;
+    departureExitState.animation = null;
+    departureExitState.active = false;
+    var node = doc.querySelector("[data-dsh-whale-root]");
+    if (node) node.removeAttribute("data-dsh-whale-departing");
+  }
+
+  function finishDepartureExit() {
+    if (departureExitState.animation) departureExitState.animation.cancel();
+    departureExitState.animation = null;
+    departureExitState.active = false;
+    removeRoot();
+    root.__dshWhaleMoeDebug = { state: "adventure-away", pose: null, line: "", view: memory.view };
+  }
+
+  function beginDepartureExit() {
+    departureExitState.timer = 0;
+    var node = doc.querySelector("[data-dsh-whale-root]");
+    if (!node || doc.hidden) {
+      finishDepartureExit();
+      return;
+    }
+    stopAutoWalk(false);
+    stopPointerThrow(false);
+    stopIdleBlink();
+    var rect = node.getBoundingClientRect();
+    var direction = rect.left + rect.width / 2 < root.innerWidth / 2 ? "left" : "right";
+    var targetX = direction === "left" ? -rect.width - 24 : root.innerWidth + 24;
+    departureExitState.active = true;
+    node.setAttribute("data-dsh-whale-departing", direction);
+    setPose(autoWalkSrc(direction), true, true);
+    if (typeof node.animate !== "function" || motionReduced()) {
+      node.style.left = Math.round(targetX) + "px";
+      root.setTimeout(finishDepartureExit, 1800);
+      return;
+    }
+    departureExitState.animation = node.animate([{ left: rect.left + "px" }, { left: targetX + "px" }], {
+      duration: 1800,
+      easing: "ease-in",
+      fill: "forwards"
+    });
+    departureExitState.animation.onfinish = finishDepartureExit;
+  }
+
+  function scheduleDepartureExit() {
+    cancelDepartureExit();
+    departureExitState.timer = root.setTimeout(beginDepartureExit, 4600);
+  }
+
+  function cancelAdventureArrival() {
+    if (arrivalEntryState.animation) arrivalEntryState.animation.cancel();
+    arrivalEntryState.animation = null;
+    arrivalEntryState.active = false;
+    var node = doc.querySelector("[data-dsh-whale-root]");
+    if (node) node.removeAttribute("data-dsh-whale-arriving");
+  }
+
+  function finishAdventureArrival() {
+    var node = doc.querySelector("[data-dsh-whale-root]");
+    if (arrivalEntryState.animation) arrivalEntryState.animation.cancel();
+    arrivalEntryState.animation = null;
+    arrivalEntryState.active = false;
+    if (node) {
+      node.removeAttribute("data-dsh-whale-arriving");
+      node.style.left = Math.round(arrivalEntryState.targetX) + "px";
+      node.style.top = Math.round(arrivalEntryState.targetY) + "px";
+    }
+    schedule();
+  }
+
+  function beginAdventureArrival() {
+    cancelAdventureArrival();
+    var scale = readNumber("displayScale", 100, 60, 160) / 100;
+    var width = Math.round(200 * scale);
+    var height = Math.round(200 * scale);
+    var saved = readFloatPos();
+    var targetX = clamp(saved ? saved.x : root.innerWidth - width - 20, 8, root.innerWidth - width - 8);
+    var targetY = clamp(saved ? saved.y : root.innerHeight - height - 20, 8, root.innerHeight - height - 8);
+    var fromLeft = targetX + width / 2 < root.innerWidth / 2;
+    var startX = fromLeft ? -width - 24 : root.innerWidth + 24;
+    var direction = fromLeft ? "right" : "left";
+    var node = ensureRoot();
+    var frame = node.querySelector("[data-dsh-whale-frame]");
+    node.style.display = "block";
+    node.style.left = Math.round(startX) + "px";
+    node.style.top = Math.round(targetY) + "px";
+    node.style.width = width + "px";
+    node.style.height = height + "px";
+    if (frame) {
+      frame.style.width = width + "px";
+      frame.style.height = height + "px";
+    }
+    node.setAttribute("data-dsh-whale-arriving", direction);
+    setPose(autoWalkSrc(direction), true, true);
+    arrivalEntryState.active = true;
+    arrivalEntryState.targetX = targetX;
+    arrivalEntryState.targetY = targetY;
+    if (typeof node.animate !== "function" || motionReduced()) {
+      node.style.left = Math.round(targetX) + "px";
+      root.setTimeout(finishAdventureArrival, 1800);
+      return;
+    }
+    arrivalEntryState.animation = node.animate([{ left: startX + "px" }, { left: targetX + "px" }], {
+      duration: 1800,
+      easing: "ease-out",
+      fill: "forwards"
+    });
+    arrivalEntryState.animation.onfinish = finishAdventureArrival;
+  }
+
+  function onAdventureChange(event) {
+    var detail = event && event.detail ? event.detail : {};
+    var change = detail.event || {};
+    if (change.type === "departed") {
+      cancelAdventureArrival();
+      scheduleDepartureExit();
+    } else if (change.type === "returned" || change.type === "recalled") {
+      var wasVisible = Boolean(doc.querySelector("[data-dsh-whale-root]"));
+      cancelDepartureExit();
+      if (!wasVisible) beginAdventureArrival();
+      else schedule();
+    }
+  }
+
   function preloadAutoWalkFrames() {
     if (autoWalkAssetsPreloaded || typeof root.Image !== "function") return;
     autoWalkAssetsPreloaded = true;
@@ -482,21 +706,24 @@
   function autoWalkBlocked(now) {
     var settings = doc.querySelector("[data-whale-desktop-settings]");
     var prefs = doc.querySelector("[data-dsh-whale-prefs]");
-    return readMode() !== "float"
-      || !readPref("auto-walk")
-      || quietActive()
-      || positionLocked()
-      || doc.hidden
-      || entranceState.active
-      || dragState
-      || pointerThrowState.active
-      || windowPerchActive()
-      || gameOpen
-      || catchOpen
-      || (!autoWalkState.active && memory.moodUntil > now)
-      || (settings && !settings.hidden)
-      || (prefs && !prefs.hidden)
-      || !!doc.querySelector("[data-dsh-whale-context]");
+    return (
+      readMode() !== "float" ||
+      !readPref("auto-walk") ||
+      quietActive() ||
+      positionLocked() ||
+      doc.hidden ||
+      entranceState.active ||
+      dragState ||
+      pointerThrowState.active ||
+      windowPerchActive() ||
+      gameOpen ||
+      catchOpen ||
+      !!activeLife(now) ||
+      (!autoWalkState.active && memory.moodUntil > now) ||
+      (settings && !settings.hidden) ||
+      (prefs && !prefs.hidden) ||
+      !!doc.querySelector("[data-dsh-whale-context]")
+    );
   }
 
   function stopAutoWalk(persist) {
@@ -558,7 +785,10 @@
     var startTimestamp = null;
     function step(timestamp) {
       if (!autoWalkState.active) return;
-      if (autoWalkBlocked(Date.now())) { stopAutoWalk(true); return; }
+      if (autoWalkBlocked(Date.now())) {
+        stopAutoWalk(true);
+        return;
+      }
       if (startTimestamp === null) startTimestamp = timestamp;
       var progress = Math.max(0, Math.min(1, (timestamp - startTimestamp) / duration));
       var eased = progress < 0.5 ? 2 * progress * progress : 1 - Math.pow(-2 * progress + 2, 2) / 2;
@@ -566,7 +796,10 @@
       autoWalkState.y = fromY + (toY - fromY) * eased;
       node.style.left = Math.round(autoWalkState.x) + "px";
       node.style.top = Math.round(autoWalkState.y) + "px";
-      if (progress >= 1) { stopAutoWalk(true); return; }
+      if (progress >= 1) {
+        stopAutoWalk(true);
+        return;
+      }
       autoWalkState.raf = root.requestAnimationFrame(step);
     }
     autoWalkState.raf = root.requestAnimationFrame(step);
@@ -587,18 +820,20 @@
   function pointerThrowBlocked() {
     var settings = doc.querySelector("[data-whale-desktop-settings]");
     var prefs = doc.querySelector("[data-dsh-whale-prefs]");
-    return readMode() !== "float"
-      || !readPref("mouse-physics")
-      || motionReduced()
-      || quietActive()
-      || positionLocked()
-      || doc.hidden
-      || entranceState.active
-      || windowPerchActive()
-      || gameOpen
-      || catchOpen
-      || (settings && !settings.hidden)
-      || (prefs && !prefs.hidden);
+    return (
+      readMode() !== "float" ||
+      !readPref("mouse-physics") ||
+      motionReduced() ||
+      quietActive() ||
+      positionLocked() ||
+      doc.hidden ||
+      entranceState.active ||
+      windowPerchActive() ||
+      gameOpen ||
+      catchOpen ||
+      (settings && !settings.hidden) ||
+      (prefs && !prefs.hidden)
+    );
   }
 
   function stopPointerThrow(persist) {
@@ -619,7 +854,7 @@
 
   function showPointerBounce(node, hitX, hitY) {
     if (!node) return;
-    node.setAttribute("data-dsh-whale-bounce-axis", hitX && hitY ? "both" : (hitX ? "x" : "y"));
+    node.setAttribute("data-dsh-whale-bounce-axis", hitX && hitY ? "both" : hitX ? "x" : "y");
     node.classList.remove("dsh-whale-bounce");
     void node.offsetWidth;
     node.classList.add("dsh-whale-bounce");
@@ -647,17 +882,24 @@
 
     function step(timestamp) {
       if (!pointerThrowState.active) return;
-      if (pointerThrowBlocked()) { stopPointerThrow(true); return; }
+      if (pointerThrowBlocked()) {
+        stopPointerThrow(true);
+        return;
+      }
       if (!pointerThrowState.lastAt) pointerThrowState.lastAt = timestamp;
       var elapsed = Math.max(0, timestamp - pointerThrowState.lastAt);
       pointerThrowState.lastAt = timestamp;
       var currentRect = node.getBoundingClientRect();
-      var next = core.pointerThrowStep(pointerThrowState, {
-        minX: 8,
-        minY: 8,
-        maxX: Math.max(8, root.innerWidth - currentRect.width - 8),
-        maxY: Math.max(8, root.innerHeight - currentRect.height - 8)
-      }, elapsed);
+      var next = core.pointerThrowStep(
+        pointerThrowState,
+        {
+          minX: 8,
+          minY: 8,
+          maxX: Math.max(8, root.innerWidth - currentRect.width - 8),
+          maxY: Math.max(8, root.innerHeight - currentRect.height - 8)
+        },
+        elapsed
+      );
       var constrained = constrainFloatPosition(
         next.x,
         next.y,
@@ -683,7 +925,10 @@
       node.style.top = Math.round(next.y) + "px";
       node.style.setProperty("--wm-throw-angle", clamp(next.vx * 13, -20, 20).toFixed(1) + "deg");
       if (next.hitX || next.hitY) showPointerBounce(node, next.hitX, next.hitY);
-      if (next.speed <= 0) { stopPointerThrow(true); return; }
+      if (next.speed <= 0) {
+        stopPointerThrow(true);
+        return;
+      }
       pointerThrowState.raf = root.requestAnimationFrame(step);
     }
     pointerThrowState.raf = root.requestAnimationFrame(step);
@@ -699,7 +944,14 @@
 
   function detectCircleGesture(event, node) {
     var now = Date.now();
-    if (!readPref("mouse-physics") || motionReduced() || dragState || pointerThrowState.active || now < circleGesture.cooldownUntil) return;
+    if (
+      !readPref("mouse-physics") ||
+      motionReduced() ||
+      dragState ||
+      pointerThrowState.active ||
+      now < circleGesture.cooldownUntil
+    )
+      return;
     var rect = node.getBoundingClientRect();
     var dx = event.clientX - (rect.left + rect.width / 2);
     var dy = event.clientY - (rect.top + rect.height / 2);
@@ -762,7 +1014,10 @@
     var height = node.getBoundingClientRect().height;
     var left = event.clientX - dragState.dx;
     var top = event.clientY - dragState.dy;
-    if (!dragState.moved && (Math.abs(event.clientX - dragState.startX) > 4 || Math.abs(event.clientY - dragState.startY) > 4)) {
+    if (
+      !dragState.moved &&
+      (Math.abs(event.clientX - dragState.startX) > 4 || Math.abs(event.clientY - dragState.startY) > 4)
+    ) {
       dragState.moved = true;
       node.classList.add("dsh-whale-dragging");
       schedule();
@@ -787,7 +1042,11 @@
     dragState.lastY = event.clientY;
     var sampleNow = Date.now();
     dragState.samples.push({ x: event.clientX, y: event.clientY, at: sampleNow });
-    dragState.samples = dragState.samples.filter(function (sample) { return sampleNow - sample.at <= 150; }).slice(-8);
+    dragState.samples = dragState.samples
+      .filter(function (sample) {
+        return sampleNow - sample.at <= 150;
+      })
+      .slice(-8);
   }
   function endDrag(event) {
     root.removeEventListener("pointermove", onDrag, true);
@@ -824,35 +1083,94 @@
     menu.setAttribute("data-dsh-whale-context", "true");
     var items = [
       { label: "投喂小点心", action: feedMascot },
-      { label: "戳一下", action: function () { applyGrowth({ type: "poke" }, Date.now(), 0); burst("💢"); showMood("angry", 3000); var line = say("interact", "poke"); if (line) showLine(line); } },
-      { label: "夸夸 鲸鱼娘", action: function () { applyGrowth({ type: "praise" }, Date.now(), 0); applyQuestSignal("praise", 1); burst("✨"); showMood("tail-swing", 3000, true); var line = say("interact", "praise"); if (line) showLine(line); } }
+      {
+        label: "戳一下",
+        action: function () {
+          applyGrowth({ type: "poke" }, Date.now(), 0);
+          burst("💢");
+          showMood("angry", 3000);
+          var line = say("interact", "poke");
+          if (line) showLine(line);
+        }
+      },
+      {
+        label: "夸夸 鲸鱼娘",
+        action: function () {
+          applyGrowth({ type: "praise" }, Date.now(), 0);
+          applyQuestSignal("praise", 1);
+          burst("✨");
+          showMood("tail-swing", 3000, true);
+          var line = say("interact", "praise");
+          if (line) showLine(line);
+        }
+      }
     ];
     if (readPref("game")) {
-      items.push({ label: "小游戏：戳泡泡", action: function () { openGame(); } });
-      items.push({ label: "小游戏：接点心", action: function () { openCatchGame(); } });
+      items.push({
+        label: "小游戏：戳泡泡",
+        action: function () {
+          openGame();
+        }
+      });
+      items.push({
+        label: "小游戏：接点心",
+        action: function () {
+          openCatchGame();
+        }
+      });
     }
     items.push(
-      { label: "回到原位", action: function () { try { root.localStorage.removeItem("whale-moe:floatX"); root.localStorage.removeItem("whale-moe:floatY"); } catch (e) { /* ignore */ } reconcile(); } },
-      { label: "打开看板娘设置", action: function () {
-        root.dispatchEvent(new CustomEvent("whale-desktop-open-settings"));
-      } },
-      { label: "关闭菜单", action: function () { menu.remove(); } }
+      {
+        label: "回到原位",
+        action: function () {
+          try {
+            root.localStorage.removeItem("whale-moe:floatX");
+            root.localStorage.removeItem("whale-moe:floatY");
+          } catch (e) {
+            /* ignore */
+          }
+          reconcile();
+        }
+      },
+      {
+        label: "打开看板娘设置",
+        action: function () {
+          root.dispatchEvent(new CustomEvent("whale-desktop-open-settings"));
+        }
+      },
+      {
+        label: "关闭菜单",
+        action: function () {
+          menu.remove();
+        }
+      }
     );
     for (var i = 0; i < items.length; i += 1) {
       (function (item) {
         var btn = doc.createElement("button");
         btn.type = "button";
         btn.textContent = item.label;
-        btn.addEventListener("click", function (event) { event.stopPropagation(); item.action(); menu.remove(); });
+        btn.addEventListener("click", function (event) {
+          event.stopPropagation();
+          item.action();
+          menu.remove();
+        });
         menu.appendChild(btn);
       })(items[i]);
     }
     doc.body.appendChild(menu);
     menu.style.left = Math.min(x, root.innerWidth - 180) + "px";
     menu.style.top = Math.min(y, root.innerHeight - 160) + "px";
-    doc.addEventListener("pointerdown", function closer(event) {
-      if (!menu.contains(event.target)) { menu.remove(); doc.removeEventListener("pointerdown", closer, true); }
-    }, true);
+    doc.addEventListener(
+      "pointerdown",
+      function closer(event) {
+        if (!menu.contains(event.target)) {
+          menu.remove();
+          doc.removeEventListener("pointerdown", closer, true);
+        }
+      },
+      true
+    );
   }
 
   /* ---------- interactions ---------- */
@@ -864,36 +1182,126 @@
   var lastTripleAt = 0;
   var lastPatProcessedAt = 0;
   var lastPatSpeechAt = 0;
-  var IDLE_ACTION_POOL = ["daily-eat", "daily-coffee", "daily-stretch", "daily-pajama", "daily-shower", "cool-shades", "meme-smug", "daily-picnic", "daily-cooking", "daily-fishing", "daily-painting", "daily-gaming", "tail-swing", "meme-music"];
+  var IDLE_ACTION_POOL = [
+    "daily-eat",
+    "daily-coffee",
+    "daily-stretch",
+    "daily-pajama",
+    "daily-shower",
+    "cool-shades",
+    "meme-smug",
+    "daily-picnic",
+    "daily-cooking",
+    "daily-fishing",
+    "daily-painting",
+    "daily-gaming",
+    "tail-swing",
+    "meme-music"
+  ];
   var DESKTOP_FALLBACK_ACTIONS = [
-    "abstract", "bold", "meme-broke", "meme-cry", "meme-doge", "meme-doubt", "meme-heart", "meme-kyun", "meme-no",
-    "meme-ojisan", "meme-omg", "meme-peace", "meme-shock", "meme-sike", "meme-smile-pain", "meme-wakuwaku", "meme-worship", "meme-yes",
-    "failure", "running", "success", "thinking", "tool", "work-boss", "work-celebrate", "work-deadline", "work-debug", "work-deploy",
-    "work-idea", "work-meeting", "work-pat", "work-ram", "work-review", "work-slack-phone", "work-slack", "work-sleep",
-    "celebrate", "greet", "night", "sleep", "sweep", "waiting"
+    "abstract",
+    "bold",
+    "meme-broke",
+    "meme-cry",
+    "meme-doge",
+    "meme-doubt",
+    "meme-heart",
+    "meme-kyun",
+    "meme-no",
+    "meme-ojisan",
+    "meme-omg",
+    "meme-peace",
+    "meme-shock",
+    "meme-sike",
+    "meme-smile-pain",
+    "meme-wakuwaku",
+    "meme-worship",
+    "meme-yes",
+    "failure",
+    "running",
+    "success",
+    "thinking",
+    "tool",
+    "work-boss",
+    "work-celebrate",
+    "work-deadline",
+    "work-debug",
+    "work-deploy",
+    "work-idea",
+    "work-meeting",
+    "work-pat",
+    "work-ram",
+    "work-review",
+    "work-slack-phone",
+    "work-slack",
+    "work-sleep",
+    "celebrate",
+    "greet",
+    "night",
+    "sleep",
+    "sweep",
+    "waiting"
   ];
   var DESKTOP_ACTION_DIALOGUE = Object.freeze({
-    abstract: ["keyword", "crazy"], bold: ["keyword", "cheer"],
-    "meme-doge": ["keyword", "doge"], "meme-doubt": ["keyword", "doubt"], "meme-kyun": ["keyword", "kyun"],
-    "meme-ojisan": ["keyword", "ojisan"], "meme-omg": ["keyword", "omg"], "meme-peace": ["keyword", "peace"],
-    "meme-sike": ["keyword", "sike"], "meme-smile-pain": ["keyword", "smilepain"],
-    "meme-wakuwaku": ["keyword", "wakuwaku"], "meme-worship": ["keyword", "worship"],
-    "meme-broke": ["idleAction", "meme-broke"], "meme-cry": ["idleAction", "meme-cry"],
-    "meme-heart": ["idleAction", "meme-heart"], "meme-no": ["idleAction", "meme-no"],
-    "meme-shock": ["idleAction", "meme-shock"], "meme-yes": ["idleAction", "meme-yes"],
-    failure: ["work", "failure"], running: ["work", "tool"], success: ["work", "success"], thinking: ["work", "thinking"], tool: ["work", "tool"],
-    "work-boss": ["meme", "cake"], "work-celebrate": ["work", "success"], "work-deadline": ["meme", "ddl"],
-    "work-debug": ["context", "bug"], "work-deploy": ["context", "deploy"], "work-idea": ["context", "code"],
-    "work-meeting": ["keyword", "meeting"], "work-pat": ["interact", "pat"], "work-ram": ["work", "long"],
-    "work-review": ["keyword", "review"], "work-slack-phone": ["meme", "slack"], "work-slack": ["meme", "slack"], "work-sleep": ["keyword", "tired"],
+    abstract: ["keyword", "crazy"],
+    bold: ["keyword", "cheer"],
+    "meme-doge": ["keyword", "doge"],
+    "meme-doubt": ["keyword", "doubt"],
+    "meme-kyun": ["keyword", "kyun"],
+    "meme-ojisan": ["keyword", "ojisan"],
+    "meme-omg": ["keyword", "omg"],
+    "meme-peace": ["keyword", "peace"],
+    "meme-sike": ["keyword", "sike"],
+    "meme-smile-pain": ["keyword", "smilepain"],
+    "meme-wakuwaku": ["keyword", "wakuwaku"],
+    "meme-worship": ["keyword", "worship"],
+    "meme-broke": ["idleAction", "meme-broke"],
+    "meme-cry": ["idleAction", "meme-cry"],
+    "meme-heart": ["idleAction", "meme-heart"],
+    "meme-no": ["idleAction", "meme-no"],
+    "meme-shock": ["idleAction", "meme-shock"],
+    "meme-yes": ["idleAction", "meme-yes"],
+    failure: ["work", "failure"],
+    running: ["work", "tool"],
+    success: ["work", "success"],
+    thinking: ["work", "thinking"],
+    tool: ["work", "tool"],
+    "work-boss": ["meme", "cake"],
+    "work-celebrate": ["work", "success"],
+    "work-deadline": ["meme", "ddl"],
+    "work-debug": ["context", "bug"],
+    "work-deploy": ["context", "deploy"],
+    "work-idea": ["context", "code"],
+    "work-meeting": ["keyword", "meeting"],
+    "work-pat": ["interact", "pat"],
+    "work-ram": ["work", "long"],
+    "work-review": ["keyword", "review"],
+    "work-slack-phone": ["meme", "slack"],
+    "work-slack": ["meme", "slack"],
+    "work-sleep": ["keyword", "tired"],
     "daily-done": ["idleAction", "daily-done"],
-    celebrate: ["work", "success"], night: ["daily", "night"], sleep: ["daily", "night"], sweep: ["daily", "idle"], waiting: ["daily", "idle"]
+    celebrate: ["work", "success"],
+    night: ["daily", "night"],
+    sleep: ["daily", "night"],
+    sweep: ["daily", "idle"],
+    waiting: ["daily", "idle"]
   });
   var COMPUTER_LINK_ACTIONS = Object.freeze({
-    ide: "work-debug", browser: "curious", office: "work-review", media: "meme-music",
-    meeting: "work-meeting", terminal: "tool", design: "daily-painting", game: "daily-gaming",
-    "cpu-high": "work-ram", "memory-high": "work-ram", "battery-low": "work-sleep",
-    plugged: "tail-swing", unplugged: "waiting", offline: "waiting", online: "celebrate"
+    ide: "work-debug",
+    browser: "curious",
+    office: "work-review",
+    media: "meme-music",
+    meeting: "work-meeting",
+    terminal: "tool",
+    design: "daily-painting",
+    game: "daily-gaming",
+    "cpu-high": "work-ram",
+    "memory-high": "work-ram",
+    "battery-low": "work-sleep",
+    plugged: "tail-swing",
+    unplugged: "waiting",
+    offline: "waiting",
+    online: "celebrate"
   });
   var computerLinkState = {
     initialized: false,
@@ -914,21 +1322,23 @@
     var target = windowPerchState.window;
     var settings = doc.querySelector("[data-whale-desktop-settings]");
     var prefs = doc.querySelector("[data-dsh-whale-prefs]");
-    return readMode() === "float"
-      && readPref("window-perch")
-      && !quietActive()
-      && !positionLocked()
-      && !doc.hidden
-      && !dragState
-      && !pointerThrowState.active
-      && !gameOpen
-      && !catchOpen
-      && !(settings && !settings.hidden)
-      && !(prefs && !prefs.hidden)
-      && target
-      && target.maximized === true
-      && target.width >= 400
-      && target.height >= 300;
+    return (
+      readMode() === "float" &&
+      readPref("window-perch") &&
+      !quietActive() &&
+      !positionLocked() &&
+      !doc.hidden &&
+      !dragState &&
+      !pointerThrowState.active &&
+      !gameOpen &&
+      !catchOpen &&
+      !(settings && !settings.hidden) &&
+      !(prefs && !prefs.hidden) &&
+      target &&
+      target.maximized === true &&
+      target.width >= 400 &&
+      target.height >= 300
+    );
   }
   function feedMascot() {
     var out = applyGrowth({ type: "feed" }, Date.now(), 0);
@@ -945,7 +1355,10 @@
     var moodDuration = duration || 3000;
     memory.moodPose = kind;
     memory.moodAnimate = animate === true;
-    if (moodTimer) { root.clearTimeout(moodTimer); moodTimer = null; }
+    if (moodTimer) {
+      root.clearTimeout(moodTimer);
+      moodTimer = null;
+    }
     if (autoWalkState.active) {
       /* Scene-driven reactions must never replace the directional walk cycle.
          Keep the newest reaction queued and give it its full duration once the
@@ -985,8 +1398,16 @@
     span.style.left = Math.round(x) + "px";
     span.style.top = Math.round(y) + "px";
     doc.body.appendChild(span);
-    span.addEventListener("animationend", function () { span.remove(); }, { once: true });
-    root.setTimeout(function () { span.remove(); }, 1300);
+    span.addEventListener(
+      "animationend",
+      function () {
+        span.remove();
+      },
+      { once: true }
+    );
+    root.setTimeout(function () {
+      span.remove();
+    }, 1300);
   }
 
   function resolveHitZone(clientX, clientY, rootNode) {
@@ -1026,9 +1447,17 @@
     if (now < celebrateUntil) return;
     var busyNow = BUSY_STATES[memory.state.state] === 1;
     /* 分区反应:非忙态下肚皮/尾巴/头各有专属反应;忙态一律 work-pat/work-ram */
-    if (!busyNow && readPref("zones") && zone === "tail") { tailReact(now); return; }
-    if (!busyNow && readPref("zones") && zone === "belly") { bellyReact(now); return; }
-    patHistory = patHistory.filter(function (t) { return now - t < 2000; });
+    if (!busyNow && readPref("zones") && zone === "tail") {
+      tailReact(now);
+      return;
+    }
+    if (!busyNow && readPref("zones") && zone === "belly") {
+      bellyReact(now);
+      return;
+    }
+    patHistory = patHistory.filter(function (t) {
+      return now - t < 2000;
+    });
     patHistory.push(now);
     if (patHistory.length >= 3 && now - lastTripleAt >= 2600) {
       patHistory = [];
@@ -1045,7 +1474,9 @@
         var motionNode = node.querySelector("[data-dsh-whale-motion]");
         if (motionNode) {
           motionNode.classList.add("dsh-whale-spin");
-          root.setTimeout(function () { motionNode.classList.remove("dsh-whale-spin"); }, 850);
+          root.setTimeout(function () {
+            motionNode.classList.remove("dsh-whale-spin");
+          }, 850);
         }
       }
     } else {
@@ -1053,9 +1484,16 @@
          speech churn so the bubble never stutters 诶嘿诶嘿 repeatedly */
       var rapid = now - lastPatProcessedAt < 450;
       lastPatProcessedAt = now;
-      showMood(busyNow ? (Math.random() < 0.5 ? "work-pat" : "work-ram") : (zone === "head" ? "react-head" : "blush"), busyNow ? 2400 : 2600, true);
+      showMood(
+        busyNow ? (Math.random() < 0.5 ? "work-pat" : "work-ram") : zone === "head" ? "react-head" : "blush",
+        busyNow ? 2400 : 2600,
+        true
+      );
       emojiBurst(busyNow ? ["💻", "💦", "✨"] : ["💖", "✨", "⭐"]);
-      if (rapid) { reconcile(); return; }
+      if (rapid) {
+        reconcile();
+        return;
+      }
       var pat = applyGrowth({ type: "pat" }, now, patHistory.length);
       applyQuestSignal("pat", 1);
       if (now - lastPatSpeechAt >= 2500) {
@@ -1075,7 +1513,10 @@
     if (!bubble || !text) return;
     var wasHidden = bubble.hidden;
     bubble.classList.remove("dsh-whale-out");
-    if (memory.bubbleOutTimer) { root.clearTimeout(memory.bubbleOutTimer); memory.bubbleOutTimer = null; }
+    if (memory.bubbleOutTimer) {
+      root.clearTimeout(memory.bubbleOutTimer);
+      memory.bubbleOutTimer = null;
+    }
     typeBubble(text, localizeLine(line));
     bubble.hidden = false;
     memory.bubbleHideAt = Date.now() + 4500;
@@ -1114,7 +1555,13 @@
   }
 
   function announceUnlocks(ids) {
-    var label = core.ACHIEVEMENTS.filter(function (a) { return ids.indexOf(a.id) !== -1; }).map(function (a) { return a.name; }).join("、");
+    var label = core.ACHIEVEMENTS.filter(function (a) {
+      return ids.indexOf(a.id) !== -1;
+    })
+      .map(function (a) {
+        return a.name;
+      })
+      .join("、");
     if (!label) return;
     if (!BUSY_STATES[memory.state.state]) showMood("achievement", 3500, true);
     burst("🏅");
@@ -1137,13 +1584,25 @@
       span.style.top = Math.round(rect.top + rect.height * 0.35) + "px";
       span.style.setProperty("--wm-drift", drift + "px");
       doc.body.appendChild(span);
-      span.addEventListener("animationend", function () { span.remove(); }, { once: true });
-      root.setTimeout(function () { span.remove(); }, 1100);
+      span.addEventListener(
+        "animationend",
+        function () {
+          span.remove();
+        },
+        { once: true }
+      );
+      root.setTimeout(function () {
+        span.remove();
+      }, 1100);
     }
   }
 
   function motionReduced() {
-    try { return root.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) { return false; }
+    try {
+      return root.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    } catch (e) {
+      return false;
+    }
   }
 
   /* ---------- mini game: bubble pop ---------- */
@@ -1158,14 +1617,20 @@
   function loadGameStats() {
     try {
       var raw = root.localStorage.getItem("whale-moe:gameStats");
-      gameStats = raw ? JSON.parse(raw) : { plays: 0, wins: 0, best: 0, comboMax: 0, today: "", playsToday: 0, highscore: false };
+      gameStats = raw
+        ? JSON.parse(raw)
+        : { plays: 0, wins: 0, best: 0, comboMax: 0, today: "", playsToday: 0, highscore: false };
     } catch (e) {
       gameStats = { plays: 0, wins: 0, best: 0, comboMax: 0, today: "", playsToday: 0, highscore: false };
     }
     return gameStats;
   }
   function saveGameStats() {
-    try { root.localStorage.setItem("whale-moe:gameStats", JSON.stringify(gameStats)); } catch (e) { /* ignore */ }
+    try {
+      root.localStorage.setItem("whale-moe:gameStats", JSON.stringify(gameStats));
+    } catch (e) {
+      /* ignore */
+    }
   }
   function dayKeyOf(now) {
     var d = new Date(typeof now === "number" ? now : Date.now());
@@ -1184,7 +1649,10 @@
 
   function closeGame() {
     gameOpen = false;
-    if (gameTimer) { root.clearInterval(gameTimer); gameTimer = null; }
+    if (gameTimer) {
+      root.clearInterval(gameTimer);
+      gameTimer = null;
+    }
     var panel = gamePanel();
     if (panel) panel.remove();
     schedule();
@@ -1293,7 +1761,7 @@
       cells[i].classList.remove("dsh-whale-cursor");
       if (bubble) {
         cells[i].setAttribute("data-dsh-whale-bubble-kind", bubble.kind);
-        cells[i].textContent = bubble.kind === "star" ? "⭐" : (bubble.kind === "bomb" ? "💣" : "");
+        cells[i].textContent = bubble.kind === "star" ? "⭐" : bubble.kind === "bomb" ? "💣" : "";
         cells[i].setAttribute("aria-label", "第 " + (i + 1) + " 格，" + (bubble.kind === "bomb" ? "炸弹" : "泡泡"));
       } else {
         cells[i].setAttribute("aria-label", "第 " + (i + 1) + " 格");
@@ -1306,10 +1774,16 @@
     if (!gameOpen || !gameState) return;
     var now = Date.now();
     if (gamePaused()) {
-      if (!gamePausedFlag) { gamePausedFlag = true; gamePauseBadge(true, "hidden"); }
+      if (!gamePausedFlag) {
+        gamePausedFlag = true;
+        gamePauseBadge(true, "hidden");
+      }
       return;
     }
-    if (gamePausedFlag) { gamePausedFlag = false; gamePauseBadge(false); }
+    if (gamePausedFlag) {
+      gamePausedFlag = false;
+      gamePauseBadge(false);
+    }
     var out = core.gameTick(gameState, now, Math.random);
     gameState = out.state;
     renderGamePanel();
@@ -1338,7 +1812,11 @@
   function onGameKeydown(event) {
     if (!gameOpen) return;
     var key = event.key;
-    if (key === "Escape") { event.preventDefault(); closeGame(); return; }
+    if (key === "Escape") {
+      event.preventDefault();
+      closeGame();
+      return;
+    }
     if (key === "ArrowUp" || key === "ArrowDown" || key === "ArrowLeft" || key === "ArrowRight") {
       event.preventDefault();
       var g = core.GAME.GRID;
@@ -1352,14 +1830,20 @@
       renderGamePanel();
       return;
     }
-    if (key === "Enter" || key === " ") { event.preventDefault(); onGamePop(gameCursor); }
+    if (key === "Enter" || key === " ") {
+      event.preventDefault();
+      onGamePop(gameCursor);
+    }
   }
 
   function settleGame(panel, result, againFn, closeFn, extraText) {
     loadGameStats();
     gameStats.plays = (gameStats.plays || 0) + 1;
     var today = dayKeyOf(Date.now());
-    if (gameStats.today !== today) { gameStats.today = today; gameStats.playsToday = 0; }
+    if (gameStats.today !== today) {
+      gameStats.today = today;
+      gameStats.playsToday = 0;
+    }
     gameStats.playsToday = (gameStats.playsToday || 0) + 1;
     if (result.grade === "win") gameStats.wins = (gameStats.wins || 0) + 1;
     if (result.comboMax > (gameStats.comboMax || 0)) gameStats.comboMax = result.comboMax;
@@ -1376,19 +1860,34 @@
     if (unlocks.length) {
       growth.achievements = growth.achievements.concat(unlocks);
       saveGrowth();
-      try { root.dispatchEvent(new CustomEvent("whale-moe-prefs-change", { detail: { key: "growth", value: String(Date.now()) } })); } catch (e) { /* ignore */ }
+      try {
+        root.dispatchEvent(
+          new CustomEvent("whale-moe-prefs-change", { detail: { key: "growth", value: String(Date.now()) } })
+        );
+      } catch (e) {
+        /* ignore */
+      }
       announceUnlocks(unlocks);
     }
     if (rewardAllowed) {
       applyGrowth({ type: core.gameReward(result.grade) }, Date.now(), 0);
     }
-    showMood(result.grade === "win" ? "game-win" : (result.grade === "draw" ? "game-happy" : "game-lose"), 3400, true);
+    showMood(result.grade === "win" ? "game-win" : result.grade === "draw" ? "game-happy" : "game-lose", 3400, true);
     if (panel) {
       var overlay = doc.createElement("div");
       overlay.setAttribute("data-dsh-whale-game-overlay", "true");
-      var titleText = result.grade === "win" ? "🎉 大胜利！" : (result.grade === "draw" ? "及格！" : "再接再厉～");
+      var titleText = result.grade === "win" ? "🎉 大胜利！" : result.grade === "draw" ? "及格！" : "再接再厉～";
       var line = doc.createElement("div");
-      line.textContent = titleText + " 得分 " + result.score + " · 最佳 " + gameStats.best + " · 最高连击 " + result.comboMax + (extraText ? " · " + extraText : "") + (rewardAllowed ? "" : "（今日奖励已达上限）");
+      line.textContent =
+        titleText +
+        " 得分 " +
+        result.score +
+        " · 最佳 " +
+        gameStats.best +
+        " · 最高连击 " +
+        result.comboMax +
+        (extraText ? " · " + extraText : "") +
+        (rewardAllowed ? "" : "（今日奖励已达上限）");
       overlay.appendChild(line);
       if (unlocks.length) {
         var ach = doc.createElement("div");
@@ -1398,11 +1897,17 @@
       var again = doc.createElement("button");
       again.type = "button";
       again.textContent = "再玩一局";
-      again.addEventListener("click", function (event) { event.stopPropagation(); againFn(); });
+      again.addEventListener("click", function (event) {
+        event.stopPropagation();
+        againFn();
+      });
       var close = doc.createElement("button");
       close.type = "button";
       close.textContent = "关闭";
-      close.addEventListener("click", function (event) { event.stopPropagation(); closeFn(); });
+      close.addEventListener("click", function (event) {
+        event.stopPropagation();
+        closeFn();
+      });
       overlay.appendChild(again);
       overlay.appendChild(close);
       panel.appendChild(overlay);
@@ -1412,8 +1917,20 @@
   function endGame(result) {
     if (!gameOpen) return;
     gameOpen = false;
-    if (gameTimer) { root.clearInterval(gameTimer); gameTimer = null; }
-    settleGame(gamePanel(), result, function () { openGame(); }, function () { closeGame(); });
+    if (gameTimer) {
+      root.clearInterval(gameTimer);
+      gameTimer = null;
+    }
+    settleGame(
+      gamePanel(),
+      result,
+      function () {
+        openGame();
+      },
+      function () {
+        closeGame();
+      }
+    );
   }
 
   /* ---------- mini game 2: catch the snacks ---------- */
@@ -1427,14 +1944,20 @@
   }
   function closeCatchGame() {
     catchOpen = false;
-    if (catchTimer) { root.clearInterval(catchTimer); catchTimer = null; }
+    if (catchTimer) {
+      root.clearInterval(catchTimer);
+      catchTimer = null;
+    }
     var panel = catchPanel();
     if (panel) panel.remove();
     schedule();
   }
   function ensureCatchPanel() {
     var existing = catchPanel();
-    if (existing) { existing.focus(); return existing; }
+    if (existing) {
+      existing.focus();
+      return existing;
+    }
     var panel = doc.createElement("div");
     panel.setAttribute("data-dsh-whale-catch", "true");
     panel.setAttribute("role", "region");
@@ -1497,7 +2020,7 @@
     if (time) time.textContent = Math.ceil(catchState.remainingMs / 1000) + "s";
     if (combo) combo.textContent = catchState.combo > 1 ? "连击 x" + catchState.combo : "";
     if (best) best.textContent = "最佳 " + (gameStats ? gameStats.best : 0);
-    if (basket) basket.style.left = (catchState.basketX * 100) + "%";
+    if (basket) basket.style.left = catchState.basketX * 100 + "%";
     var existing = arena.querySelectorAll("[data-dsh-whale-catch-item]");
     for (var i = 0; i < existing.length; i += 1) existing[i].remove();
     for (var j = 0; j < catchState.items.length; j += 1) {
@@ -1505,9 +2028,9 @@
       var span = doc.createElement("span");
       span.setAttribute("data-dsh-whale-catch-item", "true");
       span.className = "dsh-whale-catch-" + item.kind;
-      span.textContent = item.kind === "star" ? "⭐" : (item.kind === "bomb" ? "💣" : "🍰");
-      span.style.left = (item.x * 100) + "%";
-      span.style.top = (item.y * 100) + "%";
+      span.textContent = item.kind === "star" ? "⭐" : item.kind === "bomb" ? "💣" : "🍰";
+      span.style.left = item.x * 100 + "%";
+      span.style.top = item.y * 100 + "%";
       arena.appendChild(span);
     }
   }
@@ -1533,7 +2056,11 @@
   function onCatchKeydown(event) {
     if (!catchOpen) return;
     var key = event.key;
-    if (key === "Escape") { event.preventDefault(); closeCatchGame(); return; }
+    if (key === "Escape") {
+      event.preventDefault();
+      closeCatchGame();
+      return;
+    }
     if (key === "ArrowLeft" || key === "ArrowRight") {
       event.preventDefault();
       var step = key === "ArrowLeft" ? -0.07 : 0.07;
@@ -1556,8 +2083,21 @@
   function endCatchGame(result) {
     if (!catchOpen) return;
     catchOpen = false;
-    if (catchTimer) { root.clearInterval(catchTimer); catchTimer = null; }
-    settleGame(catchPanel(), result, function () { openCatchGame(); }, function () { closeCatchGame(); }, "接到 " + result.caught + " 个");
+    if (catchTimer) {
+      root.clearInterval(catchTimer);
+      catchTimer = null;
+    }
+    settleGame(
+      catchPanel(),
+      result,
+      function () {
+        openCatchGame();
+      },
+      function () {
+        closeCatchGame();
+      },
+      "接到 " + result.caught + " 个"
+    );
   }
 
   /* ---------- state plumbing ---------- */
@@ -1570,19 +2110,28 @@
       var since = root.localStorage.getItem("whale-moe:companionSince");
       if (since === null) {
         since = String(Date.now());
-        try { root.localStorage.setItem("whale-moe:companionSince", since); } catch (e) { /* ignore */ }
+        try {
+          root.localStorage.setItem("whale-moe:companionSince", since);
+        } catch (e) {
+          /* ignore */
+        }
       }
       growth = {
         mood: Number(root.localStorage.getItem("whale-moe:mood")) || core.DEFAULT_GROWTH.mood,
         affinity: Number(root.localStorage.getItem("whale-moe:affinity")) || 0,
-        satiety: root.localStorage.getItem("whale-moe:satiety") === null ? core.DEFAULT_GROWTH.satiety : Number(root.localStorage.getItem("whale-moe:satiety")),
+        satiety:
+          root.localStorage.getItem("whale-moe:satiety") === null
+            ? core.DEFAULT_GROWTH.satiety
+            : Number(root.localStorage.getItem("whale-moe:satiety")),
         lastSignin: root.localStorage.getItem("whale-moe:lastSignin") || "",
         signinStreak: Number(root.localStorage.getItem("whale-moe:signinStreak")) || 0,
         achievements: (root.localStorage.getItem("whale-moe:achievements") || "").split(",").filter(Boolean),
         level: Number(root.localStorage.getItem("whale-moe:level")) || 1,
         companionSince: Number(since) || Date.now()
       };
-    } catch (e) { growth = Object.assign({}, core.DEFAULT_GROWTH, { companionSince: Date.now() }); }
+    } catch (e) {
+      growth = Object.assign({}, core.DEFAULT_GROWTH, { companionSince: Date.now() });
+    }
   }
   function saveGrowth() {
     try {
@@ -1594,17 +2143,35 @@
       root.localStorage.setItem("whale-moe:achievements", growth.achievements.join(","));
       root.localStorage.setItem("whale-moe:level", String(growth.level));
       if (growth.companionSince) root.localStorage.setItem("whale-moe:companionSince", String(growth.companionSince));
-    } catch (e) { /* storage unavailable */ }
+    } catch (e) {
+      /* storage unavailable */
+    }
   }
   function syncCompanionAchievements(now) {
     if (!growth || !growth.companionSince) return;
     var days = Math.max(0, Math.floor((now - growth.companionSince) / 86400000));
-    var tiers = [{ id: "day1", days: 1 }, { id: "day7", days: 7 }, { id: "day30", days: 30 }];
-    var unlocks = tiers.filter(function (tier) { return days >= tier.days && growth.achievements.indexOf(tier.id) === -1; }).map(function (tier) { return tier.id; });
+    var tiers = [
+      { id: "day1", days: 1 },
+      { id: "day7", days: 7 },
+      { id: "day30", days: 30 }
+    ];
+    var unlocks = tiers
+      .filter(function (tier) {
+        return days >= tier.days && growth.achievements.indexOf(tier.id) === -1;
+      })
+      .map(function (tier) {
+        return tier.id;
+      });
     if (unlocks.length) {
       growth.achievements = growth.achievements.concat(unlocks);
       saveGrowth();
-      try { root.dispatchEvent(new CustomEvent("whale-moe-prefs-change", { detail: { key: "growth", value: String(Date.now()) } })); } catch (e) { /* ignore */ }
+      try {
+        root.dispatchEvent(
+          new CustomEvent("whale-moe-prefs-change", { detail: { key: "growth", value: String(Date.now()) } })
+        );
+      } catch (e) {
+        /* ignore */
+      }
       announceUnlocks(unlocks);
     }
   }
@@ -1614,8 +2181,46 @@
     growth = out.growth;
     saveGrowth();
     if (out.leveledUp) onBondLevelUp();
-    try { root.dispatchEvent(new CustomEvent("whale-moe-prefs-change", { detail: { key: "growth", value: String(Date.now()) } })); } catch (e) { /* ignore */ }
+    try {
+      root.dispatchEvent(
+        new CustomEvent("whale-moe-prefs-change", { detail: { key: "growth", value: String(Date.now()) } })
+      );
+    } catch (e) {
+      /* ignore */
+    }
+    if (["feed", "poke", "praise", "pat", "belly", "tail"].indexOf(event && event.type) !== -1) {
+      try {
+        root.dispatchEvent(
+          new CustomEvent("whale-personality-signal", { detail: { type: event.type, amount: 1, at: now } })
+        );
+      } catch (e) {
+        /* ignore */
+      }
+    }
     return out;
+  }
+  function relationshipDialogue(event) {
+    if (!root.WhaleRelationship || typeof root.WhaleRelationship.status !== "function") return "";
+    var status = root.WhaleRelationship.status();
+    if (!status || !status.stage || status.stage.id === "new") return "";
+    var openings = {
+      familiar: "和主人熟悉起来以后，",
+      trusted: "因为很信任主人，",
+      bonded: "我们越来越有默契了，",
+      forever: "主人是我最重要的伙伴，所以"
+    };
+    var moments = {
+      feed: "每一口点心都像共同生活的小小仪式～",
+      praise: "这句夸奖我会偷偷记很久哦✨",
+      pat: "被这样摸摸头，我就知道你一直在身边。",
+      belly: "连这种小恶作剧都变成我们的默契啦。",
+      tail: "尾巴只放心交给熟悉的人摸哦～",
+      poke: "突然戳我也不许装作什么都没发生！"
+    };
+    var suffix = "";
+    if (status.personality && status.personality.name === "亲昵黏人") suffix = " 再陪我一会儿嘛。";
+    else if (status.personality && status.personality.name === "小小傲娇") suffix = " 我、我才没有特别开心呢。";
+    return moments[event] ? (openings[status.stage.id] || "") + moments[event] + suffix : "";
   }
   function say(bank, event) {
     if (!readPref("chat")) return "";
@@ -1630,6 +2235,7 @@
         line = core.pickDialogue("bond", "high-mood", dialogueCounters[bank][event], Math.random);
       }
     }
+    if (bank === "interact" && Math.random() < 0.28) line = relationshipDialogue(event) || line;
     return line;
   }
 
@@ -1642,26 +2248,41 @@
     try {
       var raw = root.localStorage.getItem("whale-moe:quests");
       quests = raw ? JSON.parse(raw) : null;
-    } catch (e) { quests = null; }
+    } catch (e) {
+      quests = null;
+    }
     return quests;
   }
   function saveQuests() {
-    try { root.localStorage.setItem("whale-moe:quests", JSON.stringify(quests)); } catch (e) { /* ignore */ }
+    try {
+      root.localStorage.setItem("whale-moe:quests", JSON.stringify(quests));
+    } catch (e) {
+      /* ignore */
+    }
   }
   function loadWeekSignin() {
     try {
       var raw = root.localStorage.getItem("whale-moe:weekSignin");
       weekSignin = raw ? JSON.parse(raw) : null;
-    } catch (e) { weekSignin = null; }
+    } catch (e) {
+      weekSignin = null;
+    }
     return weekSignin;
   }
   function saveWeekSignin() {
-    try { root.localStorage.setItem("whale-moe:weekSignin", JSON.stringify(weekSignin)); } catch (e) { /* ignore */ }
+    try {
+      root.localStorage.setItem("whale-moe:weekSignin", JSON.stringify(weekSignin));
+    } catch (e) {
+      /* ignore */
+    }
   }
   function refreshQuestsIfNeeded(now) {
     if (!quests) loadQuests();
     var refreshed = core.refreshQuests(quests, now, Math.random);
-    if (refreshed !== quests) { quests = refreshed; saveQuests(); }
+    if (refreshed !== quests) {
+      quests = refreshed;
+      saveQuests();
+    }
   }
   function applyQuestSignal(metric, amount) {
     if (!quests) loadQuests();
@@ -1682,7 +2303,13 @@
     if (unlocks.length) {
       growth.achievements = growth.achievements.concat(unlocks);
       saveGrowth();
-      try { root.dispatchEvent(new CustomEvent("whale-moe-prefs-change", { detail: { key: "growth", value: String(Date.now()) } })); } catch (e) { /* ignore */ }
+      try {
+        root.dispatchEvent(
+          new CustomEvent("whale-moe-prefs-change", { detail: { key: "growth", value: String(Date.now()) } })
+        );
+      } catch (e) {
+        /* ignore */
+      }
       announceUnlocks(unlocks);
     }
     burst("🎯");
@@ -1699,21 +2326,37 @@
     var out = core.computeWeekSignin(weekSignin, dayKeyOf(now), now);
     weekSignin = out.weekSignin;
     saveWeekSignin();
-    try { root.dispatchEvent(new CustomEvent("whale-moe-prefs-change", { detail: { key: "growth", value: String(Date.now()) } })); } catch (e) { /* ignore */ }
+    try {
+      root.dispatchEvent(
+        new CustomEvent("whale-moe-prefs-change", { detail: { key: "growth", value: String(Date.now()) } })
+      );
+    } catch (e) {
+      /* ignore */
+    }
     if (out.milestoneHit === "7") {
       applyGrowth({ type: "weekly" }, now, 0);
       var unlocks = core.evaluateQuestAchievements(growth, quests, weekSignin);
       if (unlocks.length) {
         growth.achievements = growth.achievements.concat(unlocks);
         saveGrowth();
-        try { root.dispatchEvent(new CustomEvent("whale-moe-prefs-change", { detail: { key: "growth", value: String(Date.now()) } })); } catch (e) { /* ignore */ }
+        try {
+          root.dispatchEvent(
+            new CustomEvent("whale-moe-prefs-change", { detail: { key: "growth", value: String(Date.now()) } })
+          );
+        } catch (e) {
+          /* ignore */
+        }
         announceUnlocks(unlocks);
       }
     }
     return out.milestoneHit;
   }
   function applyBadge(id) {
-    try { root.localStorage.setItem("whale-moe:badge", String(id || "")); } catch (e) { /* ignore */ }
+    try {
+      root.localStorage.setItem("whale-moe:badge", String(id || ""));
+    } catch (e) {
+      /* ignore */
+    }
     root.dispatchEvent(new CustomEvent("whale-moe-prefs-change", { detail: { key: "badge", value: id || "" } }));
   }
   function maybeFestival(now) {
@@ -1723,7 +2366,9 @@
     try {
       if (root.localStorage.getItem("whale-moe:festivalShown") === today) return;
       root.localStorage.setItem("whale-moe:festivalShown", today);
-    } catch (e) { /* ignore */ }
+    } catch (e) {
+      /* ignore */
+    }
     if (!BUSY_STATES[memory.state.state]) showMood(pose, 7000, true);
     if (readPref("chat")) {
       var line = core.pickDialogue("daily", "holiday", 0, Math.random);
@@ -1742,23 +2387,45 @@
     if (!BUSY_STATES[memory.state.state]) showMood("levelup", 4200, true);
   }
   function title() {
-    try { var t = root.localStorage.getItem("whale-moe:title"); return t && t.trim() ? t.trim() : "主人"; } catch (e) { return "主人"; }
+    try {
+      var t = root.localStorage.getItem("whale-moe:title");
+      return t && t.trim() ? t.trim() : "主人";
+    } catch (e) {
+      return "主人";
+    }
   }
   function petName() {
-    try { var name = root.localStorage.getItem("whale-moe:petName"); return name && name.trim() ? name.trim() : "鲸鱼娘"; } catch (e) { return "鲸鱼娘"; }
+    try {
+      var name = root.localStorage.getItem("whale-moe:petName");
+      return name && name.trim() ? name.trim() : "鲸鱼娘";
+    } catch (e) {
+      return "鲸鱼娘";
+    }
   }
   function localizeLine(line) {
-    return String(line).replace(/主人|鲸鱼娘/g, function (token) { return token === "主人" ? title() : petName(); });
+    return String(line).replace(/主人|鲸鱼娘/g, function (token) {
+      return token === "主人" ? title() : petName();
+    });
   }
   function isNight(now) {
     var h = new Date(now || Date.now()).getHours();
     var nightOn = true;
-    try { nightOn = root.localStorage.getItem("whale-moe:night") !== "0"; } catch (e) { /* default on */ }
+    try {
+      nightOn = root.localStorage.getItem("whale-moe:night") !== "0";
+    } catch (e) {
+      /* default on */
+    }
     return nightOn && (h >= 22 || h < 6);
   }
 
   var STATE_HOLD_MS = Object.freeze({ success: 3000, failure: 3500, curious: 2500, tool: 1200, thinking: 1200 });
-  var STATE_CHIP = Object.freeze({ thinking: "思考中", tool: "工作中", success: "完成", failure: "出错", curious: "好奇" });
+  var STATE_CHIP = Object.freeze({
+    thinking: "思考中",
+    tool: "工作中",
+    success: "完成",
+    failure: "出错",
+    curious: "好奇"
+  });
   var BUSY_STATES = Object.freeze({ thinking: 1, tool: 1, success: 1, failure: 1 });
 
   function blinkOnce() {
@@ -1779,7 +2446,10 @@
     chip.setAttribute("data-dsh-whale-chip", "true");
     chip.textContent = label;
     rootNode.appendChild(chip);
-    if (!persist) root.setTimeout(function () { chip.remove(); }, 2200);
+    if (!persist)
+      root.setTimeout(function () {
+        chip.remove();
+      }, 2200);
   }
 
   var memory = {
@@ -1829,10 +2499,37 @@
   function entranceGreeting(now) {
     var date = new Date(now || Date.now());
     var hour = date.getHours();
-    var salutation = hour < 6 ? "夜深啦" : hour < 9 ? "早上好" : hour < 12 ? "上午好" : hour < 14 ? "中午好" : hour < 18 ? "下午好" : hour < 22 ? "晚上好" : "夜深啦";
+    var salutation =
+      hour < 6
+        ? "夜深啦"
+        : hour < 9
+          ? "早上好"
+          : hour < 12
+            ? "上午好"
+            : hour < 14
+              ? "中午好"
+              : hour < 18
+                ? "下午好"
+                : hour < 22
+                  ? "晚上好"
+                  : "夜深啦";
     var weekdays = ["星期日", "星期一", "星期二", "星期三", "星期四", "星期五", "星期六"];
     var minute = String(date.getMinutes()).padStart(2, "0");
-    return "主人，" + salutation + "～今天是 " + (date.getMonth() + 1) + " 月 " + date.getDate() + " 日，" + weekdays[date.getDay()] + "，现在 " + String(hour).padStart(2, "0") + ":" + minute + "。鲸鱼娘来陪你啦✨";
+    return (
+      "主人，" +
+      salutation +
+      "～今天是 " +
+      (date.getMonth() + 1) +
+      " 月 " +
+      date.getDate() +
+      " 日，" +
+      weekdays[date.getDay()] +
+      "，现在 " +
+      String(hour).padStart(2, "0") +
+      ":" +
+      minute +
+      "。鲸鱼娘来陪你啦✨"
+    );
   }
 
   function entranceGreetingBusy(now) {
@@ -1864,16 +2561,40 @@
     if (doc.hidden) return;
     entranceState.started = true;
     if (quietActive()) return;
-    if (motionReduced()) { announceEntrance(); return; }
+    if (motionReduced()) {
+      announceEntrance();
+      return;
+    }
     entranceState.active = true;
     stopIdleBlink();
     stopAutoWalk(false);
     stopPointerThrow(false);
     rootNode.setAttribute("data-dsh-whale-entering", "true");
-    entranceState.timer = root.setTimeout(function () { finishEntrance(false); }, 2860);
+    entranceState.timer = root.setTimeout(function () {
+      finishEntrance(false);
+    }, 2860);
   }
 
   function render(computed) {
+    if (arrivalEntryState.active) {
+      root.__dshWhaleMoeDebug = { state: "adventure-arriving", pose: "walking", line: memory.lastLine, view: memory.view };
+      return;
+    }
+    if (departureExitState.active) {
+      root.__dshWhaleMoeDebug = {
+        state: "adventure-departing",
+        pose: "walking",
+        line: memory.lastLine,
+        view: memory.view
+      };
+      return;
+    }
+    if (adventureAway(Date.now())) {
+      entranceState.started = true;
+      removeRoot();
+      root.__dshWhaleMoeDebug = { state: "adventure-away", pose: null, line: "", view: memory.view };
+      return;
+    }
     if (!readPref("pet") || !computed || computed.state === "hidden") {
       removeRoot();
       root.__dshWhaleMoeDebug = { state: "hidden", pose: null, line: "", view: memory.view };
@@ -1892,10 +2613,13 @@
     var moodActive = memory.moodUntil > Date.now() && !!memory.moodPose;
     var walking = autoWalkState.active && layout && layout.kind === "float";
     var throwing = pointerThrowState.active && layout && layout.kind === "float";
+    var life = computed.state === "idle" ? activeLife(Date.now()) : null;
     /* 工作态优先级最高：只要在忙，情绪姿势一律让位给 running，
        只有点击互动专用的 work-pat/work-ram 可以短暂覆盖。 */
-    var moodAllowed = BUSY_STATES[computed.state] !== 1 || memory.moodPose === "work-pat" || memory.moodPose === "work-ram";
+    var moodAllowed =
+      BUSY_STATES[computed.state] !== 1 || memory.moodPose === "work-pat" || memory.moodPose === "work-ram";
     var moodApplied = moodActive && moodAllowed && !walking && !throwing && !entering;
+    var lifeApplied = Boolean(life && !moodApplied && !walking && !throwing && !entering);
     if (!layout || layout.hidden) {
       rootNode.style.display = "none";
     } else {
@@ -1903,6 +2627,8 @@
         layout.src = autoWalkSrc("right");
       } else if (moodApplied) {
         layout.src = ASSET_ROOT + "dsh-whale-state-" + memory.moodPose + ".webp";
+      } else if (lifeApplied) {
+        layout.src = ASSET_ROOT + "dsh-whale-state-" + life.pose + ".webp";
       }
       rootNode.setAttribute("data-dsh-whale-mode", layout.kind);
       placeAt(rootNode, layout.x, layout.y, layout.w, layout.h);
@@ -1959,7 +2685,40 @@
 
     memory.state = computed;
     memory.lastLine = computed.line;
-    root.__dshWhaleMoeDebug = { state: computed.state, pose: computed.pose, line: computed.line, view: view, mode: readMode(), layout: layout.kind, entering: entering, walking: walking, throwing: throwing, failed: memory.failed, lastEventState: memory.lastEventState, stateHoldUntil: memory.stateHoldUntil, holdLeft: Math.max(0, memory.stateHoldUntil - Date.now()), moodPose: memory.moodPose, moodUntil: memory.moodUntil, moodAnimate: memory.moodAnimate, pendingMoodDuration: memory.pendingMoodDuration, layers: { active: layerState.active, loaded: layerState.loaded, gen: layerState.gen, pendingSwap: layerState.pendingSwap, pendingSince: layerState.pendingSince }, at: Date.now(), idleChat: { nextAt: idleChat.nextAt, lastGreetAt: idleChat.lastGreetAt, lastGreetBucket: idleChat.lastGreetBucket }, weather: weatherSummary() };
+    root.__dshWhaleMoeDebug = {
+      state: computed.state,
+      pose: computed.pose,
+      line: computed.line,
+      view: view,
+      mode: readMode(),
+      layout: layout.kind,
+      entering: entering,
+      walking: walking,
+      throwing: throwing,
+      life: life ? life.id : "",
+      failed: memory.failed,
+      lastEventState: memory.lastEventState,
+      stateHoldUntil: memory.stateHoldUntil,
+      holdLeft: Math.max(0, memory.stateHoldUntil - Date.now()),
+      moodPose: memory.moodPose,
+      moodUntil: memory.moodUntil,
+      moodAnimate: memory.moodAnimate,
+      pendingMoodDuration: memory.pendingMoodDuration,
+      layers: {
+        active: layerState.active,
+        loaded: layerState.loaded,
+        gen: layerState.gen,
+        pendingSwap: layerState.pendingSwap,
+        pendingSince: layerState.pendingSince
+      },
+      at: Date.now(),
+      idleChat: {
+        nextAt: idleChat.nextAt,
+        lastGreetAt: idleChat.lastGreetAt,
+        lastGreetBucket: idleChat.lastGreetBucket
+      },
+      weather: weatherSummary()
+    };
   }
 
   /* 待机 base 稳定为 idle-cute；情绪动作只由随机低频的 showMood 覆盖。
@@ -1985,7 +2744,10 @@
         var target = windowPerchState.window;
         var perchSize = Math.round(150 * scale);
         return {
-          hidden: false, kind: "perch", w: perchSize, h: perchSize,
+          hidden: false,
+          kind: "perch",
+          w: perchSize,
+          h: perchSize,
           src: ASSET_ROOT + "dsh-whale-workbench-peek.webp",
           x: clamp(target.right - perchSize + 5, 8, vw - perchSize - 8),
           y: clamp(target.top + 52, 8, vh - perchSize - 8)
@@ -2009,8 +2771,13 @@
       }
       var constrainedFloat = constrainFloatPosition(fx, fy, fw, fh);
       return {
-        hidden: false, kind: "float", w: fw, h: fh,
-        src: autoWalkState.active ? autoWalkSrc(autoWalkState.direction) : ASSET_ROOT + "dsh-whale-state-" + statePose(computed, view) + ".webp",
+        hidden: false,
+        kind: "float",
+        w: fw,
+        h: fh,
+        src: autoWalkState.active
+          ? autoWalkSrc(autoWalkState.direction)
+          : ASSET_ROOT + "dsh-whale-state-" + statePose(computed, view) + ".webp",
         x: constrainedFloat.x,
         y: constrainedFloat.y
       };
@@ -2020,7 +2787,10 @@
     var mw = 64;
     var mh = 64;
     return {
-      hidden: false, kind: "mini", w: mw, h: mh,
+      hidden: false,
+      kind: "mini",
+      w: mw,
+      h: mh,
       src: ASSET_ROOT + "dsh-whale-state-" + statePose(computed, view) + ".webp",
       x: vw - mw - 14,
       y: vh - mh - 14
@@ -2051,9 +2821,17 @@
     } catch (error) {
       if (!memory.failed) {
         memory.failed = true;
-        if (root.console && root.console.warn) root.console.warn("[dsh-whale-moe] presenter disabled after error:", error);
+        if (root.console && root.console.warn)
+          root.console.warn("[dsh-whale-moe] presenter disabled after error:", error);
       }
-      root.__dshWhaleMoeDebug = { state: "hidden", pose: null, line: "", view: memory.view, failed: true, error: String(error) };
+      root.__dshWhaleMoeDebug = {
+        state: "hidden",
+        pose: null,
+        line: "",
+        view: memory.view,
+        failed: true,
+        error: String(error)
+      };
       removeRoot();
     }
   }
@@ -2065,8 +2843,13 @@
     if (!growth) loadGrowth();
     syncCompanionAchievements(now);
     refreshQuestsIfNeeded(now);
-    if (!memory.lastGrowthTick) { memory.lastGrowthTick = now; applyGrowth({ type: "signin" }, now, 0); applyQuestSignal("signin", 1); syncWeekSignin(now); maybeFestival(now); }
-    else if (now - memory.lastGrowthTick >= 60000) {
+    if (!memory.lastGrowthTick) {
+      memory.lastGrowthTick = now;
+      applyGrowth({ type: "signin" }, now, 0);
+      applyQuestSignal("signin", 1);
+      syncWeekSignin(now);
+      maybeFestival(now);
+    } else if (now - memory.lastGrowthTick >= 60000) {
       var deltaMin = (now - memory.lastGrowthTick) / 60000;
       memory.lastGrowthTick = now;
       applyGrowth({ type: "tick", deltaMin: deltaMin }, now, 0);
@@ -2074,7 +2857,10 @@
     if (growth.satiety <= 25 && now - memory.lastHungryAt >= 45 * 60000 && !quietActive()) {
       memory.lastHungryAt = now;
       showMood("balance-low", 6000, true);
-      if (readPref("chat") && bubbleFree()) showChatLine(growth.satiety <= 10 ? "肚子咕咕叫啦……可以投喂一点小点心吗？🍰" : "能量有点低，鲸鱼娘想吃点东西啦～");
+      if (readPref("chat") && bubbleFree())
+        showChatLine(
+          growth.satiety <= 10 ? "肚子咕咕叫啦……可以投喂一点小点心吗？🍰" : "能量有点低，鲸鱼娘想吃点东西啦～"
+        );
     }
     if (isNight(now)) doc.body.setAttribute("data-dsh-whale-night", "true");
     else doc.body.removeAttribute("data-dsh-whale-night");
@@ -2119,7 +2905,11 @@
   };
 
   function readWeather(key) {
-    try { return root.localStorage.getItem("whale-moe:" + key) || ""; } catch (e) { return ""; }
+    try {
+      return root.localStorage.getItem("whale-moe:" + key) || "";
+    } catch (e) {
+      return "";
+    }
   }
   function readCoords() {
     try {
@@ -2127,7 +2917,9 @@
       var lon = root.localStorage.getItem("whale-moe:weatherLon");
       if (lat === null || lon === null) return null;
       return { lat: Number(lat), lon: Number(lon) };
-    } catch (e) { return null; }
+    } catch (e) {
+      return null;
+    }
   }
   function writeCoords(coords) {
     try {
@@ -2138,7 +2930,9 @@
         root.localStorage.removeItem("whale-moe:weatherLat");
         root.localStorage.removeItem("whale-moe:weatherLon");
       }
-    } catch (e) { /* storage unavailable */ }
+    } catch (e) {
+      /* storage unavailable */
+    }
   }
 
   function weatherJson(url, timeoutMs) {
@@ -2148,16 +2942,20 @@
         if (ctrl) ctrl.abort();
         reject(new Error("weather timeout"));
       }, timeoutMs || 7000);
-      root.fetch(url, { signal: ctrl ? ctrl.signal : undefined, headers: { Accept: "application/json" } }).then(function (res) {
-        if (!res.ok) throw new Error("weather http " + res.status);
-        return res.json();
-      }).then(function (json) {
-        root.clearTimeout(timer);
-        resolve(json);
-      }).catch(function (error) {
-        root.clearTimeout(timer);
-        reject(error);
-      });
+      root
+        .fetch(url, { signal: ctrl ? ctrl.signal : undefined, headers: { Accept: "application/json" } })
+        .then(function (res) {
+          if (!res.ok) throw new Error("weather http " + res.status);
+          return res.json();
+        })
+        .then(function (json) {
+          root.clearTimeout(timer);
+          resolve(json);
+        })
+        .catch(function (error) {
+          root.clearTimeout(timer);
+          reject(error);
+        });
     });
   }
 
@@ -2167,10 +2965,18 @@
   }
 
   function geocodeCity(city) {
-    var url = "https://geocoding-api.open-meteo.com/v1/search?name=" + encodeURIComponent(city) + "&count=1&language=zh&format=json" + weatherKeyParam();
+    var url =
+      "https://geocoding-api.open-meteo.com/v1/search?name=" +
+      encodeURIComponent(city) +
+      "&count=1&language=zh&format=json" +
+      weatherKeyParam();
     return weatherJson(url, 8000).then(function (json) {
       if (!json || !json.results || !json.results.length) throw new Error("city not found");
-      return { lat: Number(json.results[0].latitude), lon: Number(json.results[0].longitude), name: json.results[0].name || city };
+      return {
+        lat: Number(json.results[0].latitude),
+        lon: Number(json.results[0].longitude),
+        name: json.results[0].name || city
+      };
     });
   }
 
@@ -2182,7 +2988,13 @@
     return coordsP.then(function (coords) {
       weatherState.coords = coords;
       writeCoords(coords);
-      var url = "https://api.open-meteo.com/v1/forecast?latitude=" + coords.lat + "&longitude=" + coords.lon + "&current=temperature_2m,weather_code,wind_speed_10m,relative_humidity_2m&timezone=auto" + weatherKeyParam();
+      var url =
+        "https://api.open-meteo.com/v1/forecast?latitude=" +
+        coords.lat +
+        "&longitude=" +
+        coords.lon +
+        "&current=temperature_2m,weather_code,wind_speed_10m,relative_humidity_2m&timezone=auto" +
+        weatherKeyParam();
       return weatherJson(url, 8000).then(function (json) {
         if (!json || !json.current) throw new Error("no current weather");
         weatherState.current = {
@@ -2193,7 +3005,10 @@
         };
         weatherState.fetchedAt = Date.now();
         weatherState.retryAt = 0;
-        weatherState.nextRefreshAt = weatherState.fetchedAt + WEATHER_REFRESH_MIN + Math.floor(Math.random() * (WEATHER_REFRESH_MAX - WEATHER_REFRESH_MIN));
+        weatherState.nextRefreshAt =
+          weatherState.fetchedAt +
+          WEATHER_REFRESH_MIN +
+          Math.floor(Math.random() * (WEATHER_REFRESH_MAX - WEATHER_REFRESH_MIN));
         weatherState.status = "ok";
         schedule();
         return weatherState.current;
@@ -2225,7 +3040,13 @@
   function weatherSummary() {
     if (!weatherState.current) return null;
     var w = core.weatherText(weatherState.current.code);
-    return { temp: weatherState.current.temp, emoji: w.emoji, label: w.label, kind: w.kind, wind: weatherState.current.wind };
+    return {
+      temp: weatherState.current.temp,
+      emoji: w.emoji,
+      label: w.label,
+      kind: w.kind,
+      wind: weatherState.current.wind
+    };
   }
 
   function weatherLine(now, counter) {
@@ -2249,17 +3070,21 @@
     var beforeCoords = weatherState.coords;
     var beforeKey = weatherState.key;
     if (key !== undefined && key !== null) {
-      try { root.localStorage.setItem("whale-moe:weatherKey", String(key)); } catch (e) {}
+      try {
+        root.localStorage.setItem("whale-moe:weatherKey", String(key));
+      } catch (e) {}
     }
     weatherState.coords = null;
-    return fetchWeather(useCity, key || "").then(function () {
-      var s = weatherSummary();
-      return "✅ 已连通：" + useCity + " " + Math.round(s.temp) + "°C " + s.label;
-    }).catch(function (error) {
-      weatherState.coords = beforeCoords;
-      weatherState.key = beforeKey;
-      throw error;
-    });
+    return fetchWeather(useCity, key || "")
+      .then(function () {
+        var s = weatherSummary();
+        return "✅ 已连通：" + useCity + " " + Math.round(s.temp) + "°C " + s.label;
+      })
+      .catch(function (error) {
+        weatherState.coords = beforeCoords;
+        weatherState.key = beforeKey;
+        throw error;
+      });
   };
 
   /* ---------- weather visual fx (gated canvas layer) ----------
@@ -2270,27 +3095,46 @@
 
   var WEATHER_FX_PARTICLE_MAX = 160;
   var weatherFxState = {
-    canvas: null, ctx: null, rafId: 0, kind: "", mode: "", intensity: 1,
-    particles: [], lastFrame: 0, nextFlashAt: 0, flashUntil: 0,
-    running: false, busy: false, staticOnly: false, dpr: 1, frameMs: 0,
+    canvas: null,
+    ctx: null,
+    rafId: 0,
+    kind: "",
+    mode: "",
+    intensity: 1,
+    particles: [],
+    lastFrame: 0,
+    nextFlashAt: 0,
+    flashUntil: 0,
+    running: false,
+    busy: false,
+    staticOnly: false,
+    dpr: 1,
+    frameMs: 0,
     viewport: { left: 0, top: 0, width: 0, height: 0 }
   };
 
   function forcedColorsActive() {
-    try { return root.matchMedia("(forced-colors: active)").matches; } catch (e) { return false; }
+    try {
+      return root.matchMedia("(forced-colors: active)").matches;
+    } catch (e) {
+      return false;
+    }
   }
   function weatherFxCurrent() {
     if (!weatherState.current) return null;
     return core.weatherFx(weatherState.current.code, weatherState.current.temp, weatherState.current.wind);
   }
   function weatherFxGate(computed) {
-    var enabled = readPref("weatherFx")
-      && readWeather("weatherCity").trim().length > 0
-      && weatherState.current
-      && Date.now() - weatherState.fetchedAt < WEATHER_DATA_MS
-      && !forcedColorsActive();
+    var enabled =
+      readPref("weatherFx") &&
+      readWeather("weatherCity").trim().length > 0 &&
+      weatherState.current &&
+      Date.now() - weatherState.fetchedAt < WEATHER_DATA_MS &&
+      !forcedColorsActive();
     var staticOnly = false;
-    if (enabled && motionReduced()) { staticOnly = true; }
+    if (enabled && motionReduced()) {
+      staticOnly = true;
+    }
     var busy = !!(computed && BUSY_STATES[computed.state] === 1);
     return { enabled: enabled, busy: busy, staticOnly: staticOnly };
   }
@@ -2391,8 +3235,11 @@
       if (kind === "rain") {
         p.y += p.speed / 60;
         p.x += (spec.windDrift || 0) * 0.4 + Math.sin(p.phase) * 2;
-        if (p.y > h + 20) { p.y = -20; p.x = Math.random() * w; }
-        ctx.strokeStyle = "rgba(180,200,230," + (p.opacity * busyDim) + ")";
+        if (p.y > h + 20) {
+          p.y = -20;
+          p.x = Math.random() * w;
+        }
+        ctx.strokeStyle = "rgba(180,200,230," + p.opacity * busyDim + ")";
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(p.x, p.y);
@@ -2400,17 +3247,23 @@
         ctx.stroke();
       } else if (kind === "snow") {
         p.y += p.speed / 60;
-        p.x += Math.sin(p.phase + ts / 800) * drift / 30;
-        if (p.y > h + 10) { p.y = -10; p.x = Math.random() * w; }
-        ctx.fillStyle = "rgba(255,255,255," + (p.opacity * busyDim) + ")";
+        p.x += (Math.sin(p.phase + ts / 800) * drift) / 30;
+        if (p.y > h + 10) {
+          p.y = -10;
+          p.x = Math.random() * w;
+        }
+        ctx.fillStyle = "rgba(255,255,255," + p.opacity * busyDim + ")";
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.size || 3, 0, Math.PI * 2);
         ctx.fill();
       } else if (kind === "wind") {
         p.x += p.speed / 60;
         p.y += Math.sin(p.phase) * 0.6;
-        if (p.x > w + 160) { p.x = -160; p.y = Math.random() * h; }
-        ctx.strokeStyle = "rgba(220,230,245," + (p.opacity * busyDim) + ")";
+        if (p.x > w + 160) {
+          p.x = -160;
+          p.y = Math.random() * h;
+        }
+        ctx.strokeStyle = "rgba(220,230,245," + p.opacity * busyDim + ")";
         ctx.lineWidth = 1;
         ctx.beginPath();
         ctx.moveTo(p.x, p.y);
@@ -2420,10 +3273,16 @@
     }
   }
   function weatherFxLoop(ts) {
-    if (doc.hidden) { weatherFxStop(); return; }
+    if (doc.hidden) {
+      weatherFxStop();
+      return;
+    }
     var spec = weatherFxCurrent();
     var gate = weatherFxGate(memory.state);
-    if (!gate.enabled || !spec) { weatherFxStop(); return; }
+    if (!gate.enabled || !spec) {
+      weatherFxStop();
+      return;
+    }
     weatherFxPlaceLayer();
     var dim = gate.busy ? 0.6 : 1;
     var intensity = gate.busy ? Math.max(1, spec.intensity - 1) : spec.intensity;
@@ -2437,31 +3296,38 @@
       weatherFxState.staticOnly = false;
       weatherFxDrawMotion(spec.params, now, dim);
       if (spec.kind === "thunder" && spec.params.flash) {
-        if (!weatherFxState.nextFlashAt) weatherFxState.nextFlashAt = now + spec.params.flash.minMs + Math.random() * (spec.params.flash.maxMs - spec.params.flash.minMs);
+        if (!weatherFxState.nextFlashAt)
+          weatherFxState.nextFlashAt =
+            now + spec.params.flash.minMs + Math.random() * (spec.params.flash.maxMs - spec.params.flash.minMs);
         if (now >= weatherFxState.nextFlashAt && now >= weatherFxState.flashUntil) {
           weatherFxState.flashUntil = now + 140;
-          weatherFxState.nextFlashAt = now + spec.params.flash.minMs + Math.random() * (spec.params.flash.maxMs - spec.params.flash.minMs);
+          weatherFxState.nextFlashAt =
+            now + spec.params.flash.minMs + Math.random() * (spec.params.flash.maxMs - spec.params.flash.minMs);
         }
       }
     }
     weatherFxState.rafId = root.requestAnimationFrame(weatherFxLoop);
   }
   function weatherFxStart(spec) {
-    if (weatherFxState.running && weatherFxState.kind === spec.kind && weatherFxState.intensity === spec.intensity) return;
+    if (weatherFxState.running && weatherFxState.kind === spec.kind && weatherFxState.intensity === spec.intensity)
+      return;
     weatherFxStop();
     ensureFxLayer();
     weatherFxSize();
     weatherFxState.kind = spec.kind;
     weatherFxState.mode = spec.mode;
     weatherFxState.intensity = spec.intensity;
-    weatherFxState.particles = (spec.mode === "motion") ? weatherFxSeedParticles(spec.params) : [];
+    weatherFxState.particles = spec.mode === "motion" ? weatherFxSeedParticles(spec.params) : [];
     weatherFxState.staticOnly = false;
     weatherFxState.running = true;
     weatherFxState.lastFrame = Date.now();
     weatherFxState.rafId = root.requestAnimationFrame(weatherFxLoop);
   }
   function weatherFxStop() {
-    if (weatherFxState.rafId) { root.cancelAnimationFrame(weatherFxState.rafId); weatherFxState.rafId = 0; }
+    if (weatherFxState.rafId) {
+      root.cancelAnimationFrame(weatherFxState.rafId);
+      weatherFxState.rafId = 0;
+    }
     weatherFxState.running = false;
     weatherFxState.particles = [];
     weatherFxState.nextFlashAt = 0;
@@ -2474,18 +3340,31 @@
   function weatherFxReconcile(computed) {
     var gate = weatherFxGate(computed);
     var spec = weatherFxCurrent();
-    if (!gate.enabled || !spec) { weatherFxStop(); return; }
+    if (!gate.enabled || !spec) {
+      weatherFxStop();
+      return;
+    }
     if (!weatherFxState.running || weatherFxState.kind !== spec.kind || weatherFxState.intensity !== spec.intensity) {
       weatherFxStart(spec);
     }
     if (weatherFxState.busy !== gate.busy) weatherFxState.busy = gate.busy;
   }
   root.__dshWhaleMoeWeatherFxDebug = {
-    get running() { return weatherFxState.running; },
-    get kind() { return weatherFxState.kind; },
-    get intensity() { return weatherFxState.intensity; },
-    get busy() { return weatherFxState.busy; },
-    get particles() { return weatherFxState.particles.length; }
+    get running() {
+      return weatherFxState.running;
+    },
+    get kind() {
+      return weatherFxState.kind;
+    },
+    get intensity() {
+      return weatherFxState.intensity;
+    },
+    get busy() {
+      return weatherFxState.busy;
+    },
+    get particles() {
+      return weatherFxState.particles.length;
+    }
   };
 
   /* ---------- idle chat scheduler (5-8 min) ---------- */
@@ -2508,7 +3387,9 @@
     try {
       var bubble = doc.querySelector("[data-dsh-whale-bubble]");
       return !bubble || bubble.hidden || !(bubble.textContent || "").trim();
-    } catch (e) { return true; }
+    } catch (e) {
+      return true;
+    }
   }
 
   function showChatLine(line) {
@@ -2522,7 +3403,13 @@
       return core.pickDialogueAvoidRecent("idleAction", pose, 0, Math.random, recentLines);
     }
     if (pose === "greet") {
-      return core.pickDialogueAvoidRecent("greet", core.greetBucket(new Date().getHours()), 0, Math.random, recentLines);
+      return core.pickDialogueAvoidRecent(
+        "greet",
+        core.greetBucket(new Date().getHours()),
+        0,
+        Math.random,
+        recentLines
+      );
     }
     var route = DESKTOP_ACTION_DIALOGUE[pose];
     if (!route) return core.pickDialogueAvoidRecent("daily", "idle", 0, Math.random, recentLines);
@@ -2535,7 +3422,9 @@
     /* avoid immediate repeat */
     if (pose === memory.lastIdleActionPose) {
       var fallback = IDLE_ACTION_POOL.concat(DESKTOP_FALLBACK_ACTIONS);
-      fallback = fallback.filter(function (p) { return p !== pose; });
+      fallback = fallback.filter(function (p) {
+        return p !== pose;
+      });
       if (fallback.length) pose = fallback[Math.floor(Math.random() * fallback.length)];
     }
     memory.lastIdleActionPose = pose;
@@ -2552,7 +3441,10 @@
     if (Number.isFinite(idleSeconds) && idleSeconds >= 0) {
       memory.lastInteractionAt = now - Math.min(idleSeconds, 86400) * 1000;
     }
-    if (entranceGreetingBusy(now) && state.kind !== "lock" && state.kind !== "suspend") { schedule(); return; }
+    if (entranceGreetingBusy(now) && state.kind !== "lock" && state.kind !== "suspend") {
+      schedule();
+      return;
+    }
     if (state.kind === "lock" || state.kind === "suspend") {
       showMood("sleep", 60000, true);
       if (readPref("chat") && bubbleFree()) {
@@ -2563,10 +3455,22 @@
       memory.lastInteractionAt = now;
       showMood("greet", 5200, true);
       if (readPref("chat") && bubbleFree()) {
-        var greetLine = core.pickDialogueAvoidRecent("greet", core.greetBucket(new Date(now).getHours()), 0, Math.random, recentLines);
+        var greetLine = core.pickDialogueAvoidRecent(
+          "greet",
+          core.greetBucket(new Date(now).getHours()),
+          0,
+          Math.random,
+          recentLines
+        );
         if (greetLine) showChatLine(greetLine);
       }
-    } else if (state.kind === "sample" && idleSeconds < 180 && isNight(now) && !quietActive() && now - (memory.lastSystemNightAt || 0) >= 3 * 3600000) {
+    } else if (
+      state.kind === "sample" &&
+      idleSeconds < 180 &&
+      isNight(now) &&
+      !quietActive() &&
+      now - (memory.lastSystemNightAt || 0) >= 3 * 3600000
+    ) {
       memory.lastSystemNightAt = now;
       showMood("night", 5200, true);
       if (readPref("chat") && bubbleFree()) {
@@ -2580,7 +3484,8 @@
   function triggerComputerLink(eventKey, now, urgent) {
     var pose = COMPUTER_LINK_ACTIONS[eventKey];
     if (entranceGreetingBusy(now)) return false;
-    if (!pose || doc.hidden || quietActive() || !readPref("computer-link") || !readPref("pet") || !readPref("chat")) return false;
+    if (!pose || doc.hidden || quietActive() || !readPref("computer-link") || !readPref("pet") || !readPref("chat"))
+      return false;
     if (BUSY_STATES[memory.state.state] || !bubbleFree()) return false;
     var perEventGap = /^(offline|online|plugged|unplugged)$/.test(eventKey) ? 60000 : 15 * 60000;
     if (now - (computerLinkState.lastTriggered[eventKey] || 0) < perEventGap) return false;
@@ -2597,8 +3502,17 @@
   function onDesktopComputerState(event) {
     var sample = event && event.detail ? event.detail : {};
     var foregroundWindow = sample.foreground && sample.foreground.window;
-    if (foregroundWindow
-      && [foregroundWindow.left, foregroundWindow.top, foregroundWindow.right, foregroundWindow.bottom, foregroundWindow.width, foregroundWindow.height].every(Number.isFinite)) {
+    if (
+      foregroundWindow &&
+      [
+        foregroundWindow.left,
+        foregroundWindow.top,
+        foregroundWindow.right,
+        foregroundWindow.bottom,
+        foregroundWindow.width,
+        foregroundWindow.height
+      ].every(Number.isFinite)
+    ) {
       windowPerchState.window = {
         left: foregroundWindow.left,
         top: foregroundWindow.top,
@@ -2612,7 +3526,10 @@
       windowPerchState.window = null;
     }
     if (windowPerchActive()) stopAutoWalk(true);
-    if (!readPref("computer-link")) { schedule(); return; }
+    if (!readPref("computer-link")) {
+      schedule();
+      return;
+    }
     var now = Number(sample.at) || Date.now();
     var category = sample.foreground && sample.foreground.category ? String(sample.foreground.category) : "other";
     var online = sample.network && typeof sample.network.online === "boolean" ? sample.network.online : null;
@@ -2620,7 +3537,8 @@
     var batteryPercent = sample.power && typeof sample.power.percent === "number" ? sample.power.percent : NaN;
     var charging = sample.power && typeof sample.power.charging === "boolean" ? sample.power.charging : null;
     var cpu = sample.resource && typeof sample.resource.cpuPercent === "number" ? sample.resource.cpuPercent : NaN;
-    var memoryUsed = sample.resource && typeof sample.resource.memoryPercent === "number" ? sample.resource.memoryPercent : NaN;
+    var memoryUsed =
+      sample.resource && typeof sample.resource.memoryPercent === "number" ? sample.resource.memoryPercent : NaN;
     var candidates = [];
 
     if (!computerLinkState.initialized) {
@@ -2646,7 +3564,9 @@
 
     var lowNow = Number.isFinite(batteryPercent) && batteryPercent <= 20 && charging !== true && onBattery === true;
     if (lowNow && !computerLinkState.batteryLow) candidates.unshift({ key: "battery-low", urgent: true });
-    computerLinkState.batteryLow = lowNow || (computerLinkState.batteryLow && Number.isFinite(batteryPercent) && batteryPercent <= 25 && charging !== true);
+    computerLinkState.batteryLow =
+      lowNow ||
+      (computerLinkState.batteryLow && Number.isFinite(batteryPercent) && batteryPercent <= 25 && charging !== true);
 
     computerLinkState.cpuHotSamples = Number.isFinite(cpu) && cpu >= 85 ? computerLinkState.cpuHotSamples + 1 : 0;
     if (computerLinkState.cpuHot && Number.isFinite(cpu) && cpu < 70) computerLinkState.cpuHot = false;
@@ -2654,8 +3574,10 @@
       computerLinkState.cpuHot = true;
       candidates.push({ key: "cpu-high", urgent: false });
     }
-    computerLinkState.memoryHotSamples = Number.isFinite(memoryUsed) && memoryUsed >= 85 ? computerLinkState.memoryHotSamples + 1 : 0;
-    if (computerLinkState.memoryHot && Number.isFinite(memoryUsed) && memoryUsed < 75) computerLinkState.memoryHot = false;
+    computerLinkState.memoryHotSamples =
+      Number.isFinite(memoryUsed) && memoryUsed >= 85 ? computerLinkState.memoryHotSamples + 1 : 0;
+    if (computerLinkState.memoryHot && Number.isFinite(memoryUsed) && memoryUsed < 75)
+      computerLinkState.memoryHot = false;
     if (!computerLinkState.memoryHot && computerLinkState.memoryHotSamples >= 2) {
       computerLinkState.memoryHot = true;
       candidates.push({ key: "memory-high", urgent: false });
@@ -2702,7 +3624,11 @@
           weatherState.lastToldKind = summary ? summary.kind : "";
           var weatherPose = "";
           if (summary && weatherState.current) {
-            var fxSpec = core.weatherFx(weatherState.current.code, weatherState.current.temp, weatherState.current.wind);
+            var fxSpec = core.weatherFx(
+              weatherState.current.code,
+              weatherState.current.temp,
+              weatherState.current.wind
+            );
             var fxKind = fxSpec ? fxSpec.kind : summary.kind;
             if (fxKind === "rain") weatherPose = Math.random() < 0.3 ? "weather-rain-happy" : "weather-umbrella";
             else if (fxKind === "snow") weatherPose = "weather-snow";
@@ -2720,13 +3646,13 @@
     }
     if (!line && growth && growth.level >= 3 && Math.random() < 0.25) {
       var tier = core.moodTier(growth.mood);
-      var bondEvent = growth.level >= 7 ? "l7" : (growth.level >= 5 ? "l5" : "l3");
+      var bondEvent = growth.level >= 7 ? "l7" : growth.level >= 5 ? "l5" : "l3";
       if (tier === "low") bondEvent = "low-mood";
       else if (tier === "high" && Math.random() < 0.5) bondEvent = "high-mood";
       line = core.pickDialogueAvoidRecent("bond", bondEvent, 0, Math.random, recentLines);
     }
     if (!line) {
-      var memeBank = Math.random() < 0.5 ? "worker" : (Math.random() < 0.5 ? "slack" : "ddl");
+      var memeBank = Math.random() < 0.5 ? "worker" : Math.random() < 0.5 ? "slack" : "ddl";
       line = core.pickDialogueAvoidRecent("meme", memeBank, 0, Math.random, recentLines);
     }
     if (line) showChatLine(line);
@@ -2770,6 +3696,12 @@
   function onCompanionReminder(event) {
     var detail = event && event.detail ? event.detail : {};
     if (!detail.line || !readPref("pet")) return;
+    if (arrivalEntryState.active) {
+      root.setTimeout(function () {
+        root.dispatchEvent(new CustomEvent("whale-desktop-companion-reminder", { detail: detail }));
+      }, 1950);
+      return;
+    }
     if (entranceGreetingBusy(Date.now())) {
       var waitMs = Math.max(500, entranceState.active ? 8000 : entranceState.greetingUntil - Date.now() + 150);
       root.setTimeout(function () {
@@ -2790,9 +3722,14 @@
 
   function runIdleLoop() {
     var now = Date.now();
+    if (adventureAway(now)) {
+      removeRoot();
+      schedule();
+      return;
+    }
     var node = doc.querySelector("[data-dsh-whale-root]");
     maybeAutoWalk(now, node);
-    if (node && memory.state.state === "idle" && !quietActive()) {
+    if (node && memory.state.state === "idle" && !quietActive() && !activeLife(now)) {
       /* 微动作：随机 18-28s 一次，幅度轻 */
       if (!memory.nextIdleMicroAt) memory.nextIdleMicroAt = now + 18000 + Math.floor(Math.random() * 10000);
       if (now >= memory.nextIdleMicroAt) {
@@ -2803,7 +3740,9 @@
           motionNode.classList.remove("dsh-whale-hop", "dsh-whale-squint");
           void motionNode.offsetWidth;
           motionNode.classList.add(cls);
-          root.setTimeout(function () { motionNode.classList.remove("dsh-whale-hop", "dsh-whale-squint"); }, 900);
+          root.setTimeout(function () {
+            motionNode.classList.remove("dsh-whale-hop", "dsh-whale-squint");
+          }, 900);
         }
       }
       /* 大动作：随机 35-60s 一次，无固定顺序，每张停留 4.2-5.8s。 */
@@ -2827,11 +3766,14 @@
   function scheduleIdleLoop(delay) {
     stopIdleLoop();
     if (doc.hidden || motionReduced()) return;
-    root.__dshWhaleMoeIdleTimer = root.setTimeout(function () {
-      root.__dshWhaleMoeIdleTimer = null;
-      runIdleLoop();
-      scheduleIdleLoop(3000);
-    }, Math.max(0, Number(delay) || 0));
+    root.__dshWhaleMoeIdleTimer = root.setTimeout(
+      function () {
+        root.__dshWhaleMoeIdleTimer = null;
+        runIdleLoop();
+        scheduleIdleLoop(3000);
+      },
+      Math.max(0, Number(delay) || 0)
+    );
   }
 
   function start() {
@@ -2846,14 +3788,21 @@
     root.addEventListener("whale-desktop-system-state", onDesktopSystemState);
     root.addEventListener("whale-desktop-computer-state", onDesktopComputerState);
     root.addEventListener("whale-desktop-companion-reminder", onCompanionReminder);
+    root.addEventListener("whale-adventure-change", onAdventureChange);
     root.addEventListener("visibilitychange", function () {
       if (doc.hidden) {
         if (gameOpen) {
           gamePausedFlag = true;
           gamePauseBadge(true, "hidden");
-          if (gameTimer) { root.clearInterval(gameTimer); gameTimer = null; }
+          if (gameTimer) {
+            root.clearInterval(gameTimer);
+            gameTimer = null;
+          }
         }
-        if (catchOpen && catchTimer) { root.clearInterval(catchTimer); catchTimer = null; }
+        if (catchOpen && catchTimer) {
+          root.clearInterval(catchTimer);
+          catchTimer = null;
+        }
         weatherFxStop();
         stopIdleLoop();
       } else {
@@ -2869,27 +3818,31 @@
     });
     scheduleIdleLoop(3000);
     var gazePending = false;
-    root.addEventListener("pointermove", function (event) {
-      if (gazePending || motionReduced()) return;
-      var mode = readMode();
-      if (mode !== "float" && mode !== "side") return;
-      var node = doc.querySelector("[data-dsh-whale-root]");
-      if (!node) return;
-      detectCircleGesture(event, node);
-      gazePending = true;
-      root.requestAnimationFrame(function () {
-        gazePending = false;
-        var rect = node.getBoundingClientRect();
-        if (rect.width <= 1) return;
-        var cx = rect.left + rect.width / 2;
-        var cy = rect.top + rect.height / 2;
-        var gx = clamp((event.clientX - cx) / Math.max(rect.width, 48) * 5, -4, 4);
-        var gy = clamp((event.clientY - cy) / Math.max(rect.height, 48) * 4, -3, 3);
-        node.style.setProperty("--wm-gaze-x", gx.toFixed(2) + "px");
-        node.style.setProperty("--wm-gaze-y", gy.toFixed(2) + "px");
-        node.style.setProperty("--wm-gaze-r", (gx * 0.3).toFixed(2) + "deg");
-      });
-    }, { passive: true });
+    root.addEventListener(
+      "pointermove",
+      function (event) {
+        if (gazePending || motionReduced()) return;
+        var mode = readMode();
+        if (mode !== "float" && mode !== "side") return;
+        var node = doc.querySelector("[data-dsh-whale-root]");
+        if (!node) return;
+        detectCircleGesture(event, node);
+        gazePending = true;
+        root.requestAnimationFrame(function () {
+          gazePending = false;
+          var rect = node.getBoundingClientRect();
+          if (rect.width <= 1) return;
+          var cx = rect.left + rect.width / 2;
+          var cy = rect.top + rect.height / 2;
+          var gx = clamp(((event.clientX - cx) / Math.max(rect.width, 48)) * 5, -4, 4);
+          var gy = clamp(((event.clientY - cy) / Math.max(rect.height, 48)) * 4, -3, 3);
+          node.style.setProperty("--wm-gaze-x", gx.toFixed(2) + "px");
+          node.style.setProperty("--wm-gaze-y", gy.toFixed(2) + "px");
+          node.style.setProperty("--wm-gaze-r", (gx * 0.3).toFixed(2) + "deg");
+        });
+      },
+      { passive: true }
+    );
 
     function init() {
       safeReconcile();

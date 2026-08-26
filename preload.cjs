@@ -21,6 +21,18 @@ contextBridge.exposeInMainWorld("whaleDesktop", Object.freeze({
   onOpenSettings(callback) {
     ipcRenderer.on("whale:open-settings", () => callback());
   },
+  onOpenHouse(callback) {
+    ipcRenderer.on("whale:open-house", () => callback());
+  },
+  onOpenDailySummary(callback) {
+    ipcRenderer.on("whale:open-daily-summary", () => callback());
+  },
+  setAdventureAway(away) {
+    ipcRenderer.send("whale:set-adventure-away", Boolean(away));
+  },
+  onRecallAdventure(callback) {
+    ipcRenderer.on("whale:recall-adventure", () => callback());
+  },
   onCursorProbe(callback) {
     ipcRenderer.on("whale:cursor-probe", (_event, point) => callback(point));
   },
@@ -38,6 +50,9 @@ contextBridge.exposeInMainWorld("whaleDesktop", Object.freeze({
   },
   setQuietActive(active) {
     ipcRenderer.send("whale:set-quiet-active", Boolean(active));
+  },
+  setProfessionEnabled(enabled) {
+    ipcRenderer.send("whale:set-profession-enabled", Boolean(enabled));
   },
   reportError(details) {
     ipcRenderer.send("whale:renderer-error", {
