@@ -83,6 +83,23 @@ function overlayDesktopBounds() {
   };
 }
 
+function rendererDisplayBounds() {
+  if (!overlay || overlay.isDestroyed()) return [];
+  const overlayBounds = overlay.getBounds();
+  return screen.getAllDisplays().map((display) => ({
+    id: String(display.id),
+    x: display.bounds.x - overlayBounds.x,
+    y: display.bounds.y - overlayBounds.y,
+    width: display.bounds.width,
+    height: display.bounds.height
+  }));
+}
+
+function sendDisplayBounds() {
+  if (!overlay || overlay.isDestroyed() || overlay.webContents.isDestroyed()) return;
+  overlay.webContents.send("whale:display-bounds", rendererDisplayBounds());
+}
+
 function fitVirtualDesktop() {
   if (!overlay || overlay.isDestroyed()) return;
   const next = overlayDesktopBounds();
@@ -93,6 +110,7 @@ function fitVirtualDesktop() {
   );
   overlay.setBounds(next, false);
   overlay.setMaximumSize(next.width, next.height);
+  sendDisplayBounds();
 }
 
 function clearTopmostTimers() {
@@ -187,6 +205,7 @@ function createOverlay() {
   overlay.once("ready-to-show", showOverlayInactive);
   overlay.webContents.on("did-finish-load", () => {
     logDiagnostic("info", "renderer-loaded", { url: overlay.webContents.getURL() });
+    sendDisplayBounds();
   });
   overlay.webContents.on("did-fail-load", (_event, code, description, url, isMainFrame) => {
     if (isMainFrame) logDiagnostic("error", "renderer-load-failed", { code, description, url });

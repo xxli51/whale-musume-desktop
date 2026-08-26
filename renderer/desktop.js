@@ -65,6 +65,10 @@
     if (!point || !Number.isFinite(point.x) || !Number.isFinite(point.y)) return;
     updateMouseModeAt(point.x, point.y);
   });
+  api.onDisplayBounds(function (displays) {
+    window.__DSH_WHALE_DISPLAY_BOUNDS__ = Array.isArray(displays) ? displays : [];
+    window.dispatchEvent(new CustomEvent("whale-desktop-display-bounds", { detail: displays }));
+  });
   api.onSystemState(function (state) {
     window.dispatchEvent(new CustomEvent("whale-desktop-system-state", { detail: state }));
   });

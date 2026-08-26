@@ -76,6 +76,9 @@ test("all pose assets and desktop safety fixes are present", () => {
   assert.match(main, /setInterval\(reinforceOverlayTopmost, 3000\)/);
   assert.match(main, /visibleOnFullScreen: false/);
   assert.match(desktop, /api\.onCursorProbe/);
+  assert.match(desktop, /api\.onDisplayBounds/);
+  assert.match(main, /function rendererDisplayBounds\(\)/);
+  assert.match(presenter, /constrainRectToDisplays/);
   assert.doesNotMatch(desktop, /addEventListener\("blur"/);
 });
 

@@ -24,6 +24,9 @@ contextBridge.exposeInMainWorld("whaleDesktop", Object.freeze({
   onCursorProbe(callback) {
     ipcRenderer.on("whale:cursor-probe", (_event, point) => callback(point));
   },
+  onDisplayBounds(callback) {
+    ipcRenderer.on("whale:display-bounds", (_event, displays) => callback(displays));
+  },
   onSystemState(callback) {
     ipcRenderer.on("whale:system-state", (_event, state) => callback(state));
   },

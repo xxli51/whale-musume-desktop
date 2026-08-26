@@ -211,6 +211,41 @@
     return { x: x, y: y, vx: vx, vy: vy, speed: speed, hitX: hitX, hitY: hitY };
   }
 
+  function constrainRectToDisplays(position, size, displays, anchor, margin) {
+    var source = position || {};
+    var rectSize = size || {};
+    var x = Number.isFinite(source.x) ? source.x : 0;
+    var y = Number.isFinite(source.y) ? source.y : 0;
+    var width = Math.max(0, Number(rectSize.width) || 0);
+    var height = Math.max(0, Number(rectSize.height) || 0);
+    var inset = Math.max(0, Number(margin) || 0);
+    var available = Array.isArray(displays) ? displays.filter(function (display) {
+      return display && [display.x, display.y, display.width, display.height].every(Number.isFinite)
+        && display.width > 0 && display.height > 0;
+    }) : [];
+    if (!available.length) return { x: x, y: y, displayIndex: -1 };
+
+    var anchorX = anchor && Number.isFinite(anchor.x) ? anchor.x : x + width / 2;
+    var anchorY = anchor && Number.isFinite(anchor.y) ? anchor.y : y + height / 2;
+    var best = null;
+    available.forEach(function (display, displayIndex) {
+      var minX = display.x + inset;
+      var minY = display.y + inset;
+      var maxX = Math.max(minX, display.x + display.width - width - inset);
+      var maxY = Math.max(minY, display.y + display.height - height - inset);
+      var nextX = Math.max(minX, Math.min(maxX, x));
+      var nextY = Math.max(minY, Math.min(maxY, y));
+      var nearestAnchorX = Math.max(display.x, Math.min(display.x + display.width, anchorX));
+      var nearestAnchorY = Math.max(display.y, Math.min(display.y + display.height, anchorY));
+      var anchorDistance = Math.pow(anchorX - nearestAnchorX, 2) + Math.pow(anchorY - nearestAnchorY, 2);
+      var positionDistance = Math.pow(x - nextX, 2) + Math.pow(y - nextY, 2);
+      var candidate = { x: nextX, y: nextY, displayIndex: displayIndex, anchorDistance: anchorDistance, positionDistance: positionDistance };
+      if (!best || candidate.anchorDistance < best.anchorDistance
+        || (candidate.anchorDistance === best.anchorDistance && candidate.positionDistance < best.positionDistance)) best = candidate;
+    });
+    return { x: best.x, y: best.y, displayIndex: best.displayIndex };
+  }
+
   function base(prev) {
     var defaults = { state: "idle", since: -Infinity, lastSpeechAt: -Infinity, streak: 0, lineCount: 0 };
     return prev && typeof prev === "object" && typeof prev.state === "string"
@@ -2134,6 +2169,7 @@
     hitZone: hitZone,
     pointerThrowVelocity: pointerThrowVelocity,
     pointerThrowStep: pointerThrowStep,
+    constrainRectToDisplays: constrainRectToDisplays,
     weatherText: weatherText,
     weatherFx: weatherFx,
     classifyTask: classifyTask,

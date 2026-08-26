@@ -128,3 +128,31 @@ test("pointer throws use recent velocity, cap speed and bounce inside bounds", (
   assert.ok(bounced.vx < 0);
   assert.equal(bounced.hitY, false);
 });
+
+test("floating pets are constrained to real display rectangles instead of virtual desktop gaps", () => {
+  const displays = [
+    { x: 0, y: 0, width: 2560, height: 1440 },
+    { x: 2560, y: 0, width: 1920, height: 1080 }
+  ];
+  const onSmallDisplay = core.constrainRectToDisplays(
+    { x: 3900, y: 1200 },
+    { width: 200, height: 200 },
+    displays,
+    { x: 4000, y: 900 },
+    8
+  );
+  assert.equal(onSmallDisplay.displayIndex, 1);
+  assert.equal(onSmallDisplay.y, 872);
+  assert.equal(onSmallDisplay.x, 3900);
+
+  const onLargeDisplay = core.constrainRectToDisplays(
+    { x: 2400, y: 1200 },
+    { width: 200, height: 200 },
+    displays,
+    { x: 2500, y: 1300 },
+    8
+  );
+  assert.equal(onLargeDisplay.displayIndex, 0);
+  assert.equal(onLargeDisplay.y, 1200);
+  assert.equal(onLargeDisplay.x, 2352);
+});

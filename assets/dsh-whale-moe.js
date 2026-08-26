@@ -415,11 +415,43 @@
   }
 
   var dragState = null;
-  var pointerThrowState = { active: false, raf: 0, x: 0, y: 0, vx: 0, vy: 0, lastAt: 0 };
+  var pointerThrowState = { active: false, raf: 0, x: 0, y: 0, vx: 0, vy: 0, lastAt: 0, displayIndex: -1 };
   var circleGesture = { lastAngle: null, total: 0, startedAt: 0, lastAt: 0, cooldownUntil: 0 };
   var entranceState = { started: false, active: false, timer: 0, greetingUntil: 0 };
   var autoWalkAssetsPreloaded = false;
   var autoWalkState = { active: false, raf: 0, x: 0, y: 0, nextAt: 0, direction: "right" };
+  var displayBounds = Array.isArray(root.__DSH_WHALE_DISPLAY_BOUNDS__) ? root.__DSH_WHALE_DISPLAY_BOUNDS__ : [];
+
+  function displayIndexAt(point) {
+    if (!point || !Number.isFinite(point.x) || !Number.isFinite(point.y)) return -1;
+    for (var index = 0; index < displayBounds.length; index += 1) {
+      var display = displayBounds[index];
+      if (point.x >= display.x && point.x < display.x + display.width
+        && point.y >= display.y && point.y < display.y + display.height) return index;
+    }
+    return -1;
+  }
+
+  function constrainFloatPosition(x, y, width, height, anchor, preferredDisplayIndex) {
+    if (!displayBounds.length) {
+      return {
+        x: clamp(x, 8, root.innerWidth - width - 8),
+        y: clamp(y, 8, root.innerHeight - height - 8)
+      };
+    }
+    var effectiveAnchor = anchor;
+    if (displayIndexAt(anchor) < 0 && preferredDisplayIndex >= 0 && displayBounds[preferredDisplayIndex]) {
+      var preferred = displayBounds[preferredDisplayIndex];
+      effectiveAnchor = { x: preferred.x + preferred.width / 2, y: preferred.y + preferred.height / 2 };
+    }
+    return core.constrainRectToDisplays(
+      { x: x, y: y },
+      { width: width, height: height },
+      displayBounds,
+      effectiveAnchor,
+      8
+    );
+  }
 
   function autoWalkSrc(direction) {
     var side = direction === "left" ? "left" : "right";
@@ -490,13 +522,22 @@
     var maxX = Math.max(minX, root.innerWidth - rect.width - 8);
     var minY = 8;
     var maxY = Math.max(minY, root.innerHeight - rect.height - 8);
-    var fromX = clamp(rect.left, minX, maxX);
-    var fromY = clamp(rect.top, minY, maxY);
+    var currentDisplayIndex = displayIndexAt({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
+    var currentDisplay = displayBounds[currentDisplayIndex];
+    var displayAnchor = currentDisplay
+      ? { x: currentDisplay.x + currentDisplay.width / 2, y: currentDisplay.y + currentDisplay.height / 2 }
+      : null;
+    var from = constrainFloatPosition(rect.left, rect.top, rect.width, rect.height, displayAnchor, currentDisplayIndex);
+    var fromX = from.x;
+    var fromY = from.y;
     var direction = Math.random() < 0.5 ? -1 : 1;
     var distance = 100 + Math.random() * Math.min(260, Math.max(100, root.innerWidth * 0.24));
     var toX = clamp(fromX + direction * distance, minX, maxX);
     if (Math.abs(toX - fromX) < 70) toX = clamp(fromX - direction * distance, minX, maxX);
     var toY = clamp(fromY + (Math.random() - 0.5) * 90, minY, maxY);
+    var destination = constrainFloatPosition(toX, toY, rect.width, rect.height, displayAnchor, from.displayIndex);
+    toX = destination.x;
+    toY = destination.y;
     if (Math.hypot(toX - fromX, toY - fromY) < 60) {
       autoWalkState.nextAt = now + 20000;
       return false;
@@ -599,6 +640,7 @@
     pointerThrowState.vx = velocity.vx;
     pointerThrowState.vy = velocity.vy;
     pointerThrowState.lastAt = 0;
+    pointerThrowState.displayIndex = displayIndexAt({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 });
     node.classList.add("dsh-whale-thrown");
     node.setAttribute("data-dsh-whale-throwing", "true");
     schedule();
@@ -616,6 +658,23 @@
         maxX: Math.max(8, root.innerWidth - currentRect.width - 8),
         maxY: Math.max(8, root.innerHeight - currentRect.height - 8)
       }, elapsed);
+      var constrained = constrainFloatPosition(
+        next.x,
+        next.y,
+        currentRect.width,
+        currentRect.height,
+        { x: next.x + currentRect.width / 2, y: next.y + currentRect.height / 2 },
+        pointerThrowState.displayIndex
+      );
+      var displayHitX = Math.abs(constrained.x - next.x) > 0.01;
+      var displayHitY = Math.abs(constrained.y - next.y) > 0.01;
+      if (displayHitX) next.vx *= -0.58;
+      if (displayHitY) next.vy *= -0.58;
+      next.x = constrained.x;
+      next.y = constrained.y;
+      next.hitX = next.hitX || displayHitX;
+      next.hitY = next.hitY || displayHitY;
+      pointerThrowState.displayIndex = constrained.displayIndex;
       pointerThrowState.x = next.x;
       pointerThrowState.y = next.y;
       pointerThrowState.vx = next.vx;
@@ -689,6 +748,7 @@
       startY: event.clientY,
       lastX: event.clientX,
       lastY: event.clientY,
+      displayIndex: displayIndexAt({ x: event.clientX, y: event.clientY }),
       samples: [{ x: event.clientX, y: event.clientY, at: Date.now() }]
     };
     root.addEventListener("pointermove", onDrag, true);
@@ -707,8 +767,13 @@
       node.classList.add("dsh-whale-dragging");
       schedule();
     }
-    node.style.left = Math.round(clamp(left, 8, root.innerWidth - width - 8)) + "px";
-    node.style.top = Math.round(clamp(top, 8, root.innerHeight - height - 8)) + "px";
+    var pointer = { x: event.clientX, y: event.clientY };
+    var pointerDisplayIndex = displayIndexAt(pointer);
+    if (pointerDisplayIndex >= 0) dragState.displayIndex = pointerDisplayIndex;
+    var constrained = constrainFloatPosition(left, top, width, height, pointer, dragState.displayIndex);
+    dragState.displayIndex = constrained.displayIndex;
+    node.style.left = Math.round(constrained.x) + "px";
+    node.style.top = Math.round(constrained.y) + "px";
     if (dragState.moved) {
       /* 摇摆跟随光标水平速度，而不是自动动画 */
       var motionNode = node.querySelector("[data-dsh-whale-motion]");
@@ -1942,11 +2007,12 @@
         fx = parseFloat(dragState.node.style.left) || fx;
         fy = parseFloat(dragState.node.style.top) || fy;
       }
+      var constrainedFloat = constrainFloatPosition(fx, fy, fw, fh);
       return {
         hidden: false, kind: "float", w: fw, h: fh,
         src: autoWalkState.active ? autoWalkSrc(autoWalkState.direction) : ASSET_ROOT + "dsh-whale-state-" + statePose(computed, view) + ".webp",
-        x: clamp(fx, 8, vw - fw - 8),
-        y: clamp(fy, 8, vh - fh - 8)
+        x: constrainedFloat.x,
+        y: constrainedFloat.y
       };
     }
 
@@ -1966,10 +2032,16 @@
   }
 
   function placeAt(rootNode, x, y, width, height) {
+    var constrained = readMode() === "float" ? constrainFloatPosition(x, y, width, height) : { x: x, y: y };
     rootNode.style.display = "block";
-    rootNode.style.left = Math.round(clamp(x, 8, root.innerWidth - width - 8)) + "px";
-    rootNode.style.top = Math.round(clamp(y, 8, root.innerHeight - height - 8)) + "px";
+    rootNode.style.left = Math.round(clamp(constrained.x, 8, root.innerWidth - width - 8)) + "px";
+    rootNode.style.top = Math.round(clamp(constrained.y, 8, root.innerHeight - height - 8)) + "px";
   }
+
+  root.addEventListener("whale-desktop-display-bounds", function (event) {
+    displayBounds = event && Array.isArray(event.detail) ? event.detail : [];
+    schedule();
+  });
 
   /* ---------- reconcile / lifecycle ---------- */
 
