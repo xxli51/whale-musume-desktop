@@ -10,6 +10,7 @@ let overlay = null;
 let tray = null;
 let quitting = false;
 let mouseInteractive = false;
+let overlayAlwaysOnTop = true;
 let cursorProbeTimer = null;
 let systemStateTimer = null;
 let computerStateTimer = null;
@@ -125,7 +126,7 @@ function clearTopmostTimers() {
 }
 
 function startTopmostTimers() {
-  if (systemPaused || !overlay || overlay.isDestroyed() || !overlay.isVisible()) return;
+  if (!overlayAlwaysOnTop || systemPaused || !overlay || overlay.isDestroyed() || !overlay.isVisible()) return;
   clearTopmostTimers();
   reinforceOverlayTopmost();
   [120, 800, 2200].forEach((delay) => {
@@ -135,7 +136,7 @@ function startTopmostTimers() {
 }
 
 function reinforceOverlayTopmost() {
-  if (!overlay || overlay.isDestroyed() || !overlay.isVisible()) return;
+  if (!overlayAlwaysOnTop || !overlay || overlay.isDestroyed() || !overlay.isVisible()) return;
   // Windows can briefly lose the TOPMOST z-order when the first transparent,
   // click-through window is shown while another app is taking foreground.
   // Reasserting the same non-fullscreen level fixes that race without focus.
@@ -647,6 +648,28 @@ if (!hasLock) {
       if (!overlay || mouseInteractive === next) return;
       mouseInteractive = next;
       overlay.setIgnoreMouseEvents(!next, { forward: true });
+    });
+    ipcMain.handle("whale:get-desktop-settings", (event) => {
+      if (!overlay || overlay.isDestroyed() || event.sender !== overlay.webContents) return null;
+      return {
+        launchAtLogin: app.getLoginItemSettings().openAtLogin,
+        alwaysOnTop: overlayAlwaysOnTop
+      };
+    });
+    ipcMain.on("whale:set-launch-at-login", (event, enabled) => {
+      if (!overlay || overlay.isDestroyed() || event.sender !== overlay.webContents) return;
+      app.setLoginItemSettings({ openAtLogin: Boolean(enabled) });
+      refreshTrayMenu();
+    });
+    ipcMain.on("whale:set-always-on-top", (event, enabled) => {
+      if (!overlay || overlay.isDestroyed() || event.sender !== overlay.webContents) return;
+      overlayAlwaysOnTop = Boolean(enabled);
+      if (!overlayAlwaysOnTop) {
+        clearTopmostTimers();
+        overlay.setAlwaysOnTop(false);
+        return;
+      }
+      startTopmostTimers();
     });
     ipcMain.on("whale:quit", () => {
       quitting = true;

@@ -39,6 +39,9 @@ test("storage repairs invalid values and emits validated changes", () => {
   assert.equal(raw.getItem("whale-moe:mood"), null);
   assert.deepEqual(changes, [["mood", null]]);
   assert.throws(() => storage.set("displayScale", 999), /无效的存储字段/);
+  assert.equal(storage.get("settingsTheme", "b"), "b");
+  assert.equal(storage.set("settingsTheme", "a"), "a");
+  assert.throws(() => storage.set("settingsTheme", "neon"), /无效的存储字段/);
 });
 
 test("save export uses version 2 and keeps the weather key private", () => {

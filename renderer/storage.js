@@ -29,6 +29,8 @@
     "zones",
     "computer-link",
     "positionLocked",
+    "always-on-top",
+    "power-saving",
     "reminders",
     "offwork-enabled",
     "quiet-mode",
@@ -53,10 +55,15 @@
     floatY: [-100000, 100000],
     desktopSettingsX: [-100000, 100000],
     desktopSettingsY: [-100000, 100000],
+    desktopSettingsWidth: [680, 1600],
+    desktopSettingsHeight: [430, 1200],
+    housePanelX: [-100000, 100000],
+    housePanelY: [-100000, 100000],
     weatherLat: [-90, 90],
     weatherLon: [-180, 180],
     displayScale: [60, 160],
     displayOpacity: [30, 100],
+    interactionFrequency: [0, 2],
     pomodoroWork: [1, 180],
     pomodoroBreak: [1, 180],
     postureMinutes: [10, 240],
@@ -82,6 +89,7 @@
     badge: 128,
     title: 32,
     petName: 32,
+    settingsTheme: 16,
     festivalShown: 32,
     "offwork-last": 32,
     "offwork-time": 8,
@@ -125,6 +133,7 @@
       }
     }
     if (value.length > STRING_RULES[name]) return false;
+    if (name === "settingsTheme") return ["a", "b", "c", "d"].indexOf(value) !== -1;
     if (name === "offwork-time" || name === "quiet-start" || name === "quiet-end") {
       return /^([01]?\d|2[0-3]):[0-5]\d$/.test(value);
     }

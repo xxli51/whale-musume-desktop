@@ -426,6 +426,42 @@
     head.appendChild(close);
     panel.appendChild(head);
 
+    var savedX = Number(storage.get("housePanelX", NaN));
+    var savedY = Number(storage.get("housePanelY", NaN));
+    if (Number.isFinite(savedX) && Number.isFinite(savedY)) {
+      panel.style.left = Math.max(8, Math.min(savedX, window.innerWidth - 320)) + "px";
+      panel.style.top = Math.max(8, Math.min(savedY, window.innerHeight - 120)) + "px";
+      panel.style.transform = "none";
+    }
+    var panelDrag = null;
+    head.addEventListener("pointerdown", function (event) {
+      if (event.button !== 0 || (event.target.closest && event.target.closest("button"))) return;
+      var rect = panel.getBoundingClientRect();
+      panel.style.left = rect.left + "px";
+      panel.style.top = rect.top + "px";
+      panel.style.transform = "none";
+      panelDrag = { pointerId: event.pointerId, dx: event.clientX - rect.left, dy: event.clientY - rect.top };
+      head.setPointerCapture(event.pointerId);
+      event.preventDefault();
+    });
+    head.addEventListener("pointermove", function (event) {
+      if (!panelDrag || panelDrag.pointerId !== event.pointerId) return;
+      var rect = panel.getBoundingClientRect();
+      var maxLeft = Math.max(8, window.innerWidth - rect.width - 8);
+      var maxTop = Math.max(8, window.innerHeight - rect.height - 8);
+      panel.style.left = Math.round(Math.max(8, Math.min(event.clientX - panelDrag.dx, maxLeft))) + "px";
+      panel.style.top = Math.round(Math.max(8, Math.min(event.clientY - panelDrag.dy, maxTop))) + "px";
+    });
+    function finishPanelDrag(event) {
+      if (!panelDrag || panelDrag.pointerId !== event.pointerId) return;
+      panelDrag = null;
+      if (head.hasPointerCapture(event.pointerId)) head.releasePointerCapture(event.pointerId);
+      storage.set("housePanelX", Math.round(parseFloat(panel.style.left)));
+      storage.set("housePanelY", Math.round(parseFloat(panel.style.top)));
+    }
+    head.addEventListener("pointerup", finishPanelDrag);
+    head.addEventListener("pointercancel", finishPanelDrag);
+
     var hour = new Date().getHours();
     var scene = element("div", "wm-house-scene " + (hour >= 19 || hour < 6 ? "night" : "day"));
     var windowView = element("div", "wm-house-window", hour >= 19 || hour < 6 ? "🌙  ·  ✦" : "☀️  ·  ☁️");

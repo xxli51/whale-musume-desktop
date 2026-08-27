@@ -17,6 +17,9 @@
   display: none;
 }
 .wm-house-panel {
+  position: fixed;
+  top: 50%;
+  left: 50%;
   width: min(760px, calc(100vw - 32px));
   max-height: min(900px, calc(100vh - 32px));
   overflow: hidden auto;
@@ -25,6 +28,7 @@
   border: 1px solid #39515c;
   border-radius: 22px;
   box-shadow: 0 30px 100px rgb(0 0 0 / 60%);
+  transform: translate(-50%, -50%);
 }
 .wm-house-head {
   display: flex;
@@ -33,6 +37,12 @@
   padding: 14px 18px;
   background: #1c2931;
   border-bottom: 1px solid #31434c;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.wm-house-head:active {
+  cursor: grabbing;
 }
 .wm-house-head strong,
 .wm-house-head span {

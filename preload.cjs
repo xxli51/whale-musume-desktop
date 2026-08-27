@@ -12,6 +12,15 @@ contextBridge.exposeInMainWorld("whaleDesktop", Object.freeze({
   setMouseInteractive(interactive) {
     ipcRenderer.send("whale:set-mouse-interactive", Boolean(interactive));
   },
+  getDesktopSettings() {
+    return ipcRenderer.invoke("whale:get-desktop-settings");
+  },
+  setLaunchAtLogin(enabled) {
+    ipcRenderer.send("whale:set-launch-at-login", Boolean(enabled));
+  },
+  setAlwaysOnTop(enabled) {
+    ipcRenderer.send("whale:set-always-on-top", Boolean(enabled));
+  },
   quit() {
     ipcRenderer.send("whale:quit");
   },

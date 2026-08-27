@@ -5,6 +5,19 @@
   var TOGGLES = window.WhaleSettingsData.TOGGLES;
   var POSE_GROUPS = window.WhaleSettingsData.POSE_GROUPS;
   var ACHIEVEMENTS = window.WhaleSettingsData.ACHIEVEMENTS;
+  var desktopApi = window.whaleDesktop;
+  var SETTINGS_THEMES = Object.freeze([
+    ["a", "海盐玻璃", "清透柔和"],
+    ["b", "深海控制台", "沉浸精致"],
+    ["c", "奶油手账", "温暖可爱"],
+    ["d", "极简原生", "克制高效"]
+  ]);
+  var SETTINGS_THEME_DETAILS = Object.freeze({
+    a: Object.freeze({ status: "空闲中", line: "心情很好，想和你一起发呆。", card: "settings-reference-a-card.png", navigation: "settings-reference-a-nav.png" }),
+    b: Object.freeze({ status: "专注中", line: "我会安静陪着你哦。", card: "settings-reference-b-card.png", navigation: "settings-reference-b-nav.png" }),
+    c: Object.freeze({ status: "开心", line: "哇～天气真好，一起摸鱼吧！", card: "settings-reference-c-card.png", navigation: "settings-reference-c-nav.png" }),
+    d: Object.freeze({ status: "空闲中", line: "随时等你哦。", card: "settings-reference-d-card.png", navigation: "settings-reference-d-nav.png" })
+  });
 
   function value(key, fallback) {
     return storage ? storage.get(key, fallback) : fallback;
@@ -12,6 +25,35 @@
 
   function save(key, next) {
     storage.set(key, next);
+  }
+
+  function settingsTheme() {
+    var theme = value("settingsTheme", "b");
+    return SETTINGS_THEMES.some(function (item) { return item[0] === theme; }) ? theme : "b";
+  }
+
+  function themeName(theme) {
+    var match = SETTINGS_THEMES.find(function (item) { return item[0] === theme; });
+    return match ? match[1] : SETTINGS_THEMES[1][1];
+  }
+
+  function applySettingsTheme(panel, theme) {
+    var next = SETTINGS_THEMES.some(function (item) { return item[0] === theme; }) ? theme : "b";
+    var details = SETTINGS_THEME_DETAILS[next];
+    panel.setAttribute("data-settings-theme", next);
+    panel.querySelectorAll("[data-settings-theme-option]").forEach(function (option) {
+      var selected = option.getAttribute("data-settings-theme-option") === next;
+      option.classList.toggle("selected", selected);
+      option.setAttribute("aria-pressed", selected ? "true" : "false");
+    });
+    panel.querySelectorAll("[data-theme-illustration]").forEach(function (image) {
+      var role = image.getAttribute("data-theme-illustration");
+      image.src = desktopApi.generated + (role === "navigation" ? details.navigation : details.card);
+    });
+    var status = panel.querySelector("[data-dashboard-status]");
+    var line = panel.querySelector("[data-dashboard-line]");
+    if (status) status.textContent = "●  " + details.status;
+    if (line) line.textContent = details.line;
   }
 
   function element(tag, className, text) {
@@ -32,11 +74,6 @@
     details.appendChild(content);
     details.addEventListener("toggle", function () {
       if (!details.open) return;
-      var panel = details.closest("[data-whale-desktop-settings]");
-      if (!panel) return;
-      panel.querySelectorAll("details.wm-card[open]").forEach(function (other) {
-        if (other !== details) other.open = false;
-      });
       requestAnimationFrame(function () {
         summary.scrollIntoView({ block: "nearest", behavior: "smooth" });
       });
@@ -57,17 +94,6 @@
     node.appendChild(element("strong", "", icon + " " + text));
     node.appendChild(element("small", "", label));
     return node;
-  }
-
-  function renderStats(container) {
-    var since = Number(value("companionSince", "0"));
-    var days = since ? Math.max(0, Math.floor((Date.now() - since) / 86400000)) : 0;
-    container.appendChild(stat("😊", "心情", value("mood", "70"), "mood"));
-    container.appendChild(stat("💗", "好感度", value("affinity", "0"), "affinity"));
-    container.appendChild(stat("🍰", "饱食度", value("satiety", "80"), "satiety"));
-    container.appendChild(stat("⭐", "等级", "Lv." + value("level", "1"), "level"));
-    container.appendChild(stat("📅", "连续签到", value("signinStreak", "0") + " 天", "signinStreak"));
-    container.appendChild(stat("⏳", "陪伴", days + " 天", "companionDays"));
   }
 
   function updateStats() {
@@ -148,6 +174,11 @@
   }
 
   function updatePreferenceView(key) {
+    if (key === "settingsTheme") {
+      var themePanel = document.querySelector("[data-whale-desktop-settings]");
+      if (themePanel) applySettingsTheme(themePanel, settingsTheme());
+      return;
+    }
     if (key === "growth") { updateStats(); return; }
     if (key === "quests") { refreshSection("🎯 今日任务", renderDaily); return; }
     if (key === "badge") {
@@ -155,6 +186,9 @@
       return;
     }
     if (TOGGLES.some(function (item) { return item[0] === key; })) {
+      document.querySelectorAll("[data-settings-toggle='" + key + "']").forEach(function (input) {
+        input.checked = value(key, "1") !== "0";
+      });
       var enabledCount = TOGGLES.filter(function (item) { return value(item[0], item[2] ? "1" : "0") !== "0"; }).length;
       updateSectionMeta("🎛️ 陪伴表现", enabledCount + "/" + TOGGLES.length + " 已启用");
       return;
@@ -213,6 +247,7 @@
       var label = element("label", "wm-row wm-switch");
       var input = document.createElement("input");
       input.type = "checkbox";
+      input.setAttribute("data-settings-toggle", item[0]);
       input.checked = value(item[0], item[2] ? "1" : "0") !== "0";
       input.addEventListener("change", function () { save(item[0], input.checked ? "1" : "0"); });
       label.appendChild(input);
@@ -722,6 +757,128 @@
     container.appendChild(element("p", "wm-note", "缩放后会自动限制在可见桌面范围内；锁定后仍可通过托盘恢复位置。"));
   }
 
+  function renderThemePicker(container, panel) {
+    var heading = element("div", "wm-theme-heading");
+    heading.appendChild(element("strong", "", "界面主题"));
+    heading.appendChild(element("span", "", "当前：" + themeName(settingsTheme())));
+    container.appendChild(heading);
+    var picker = element("div", "wm-theme-picker");
+    SETTINGS_THEMES.forEach(function (theme) {
+      var option = element("button", "wm-theme-option wm-theme-option-" + theme[0]);
+      option.type = "button";
+      option.setAttribute("data-settings-theme-option", theme[0]);
+      option.setAttribute("aria-label", theme[1] + "主题");
+      var preview = element("span", "wm-theme-preview");
+      preview.appendChild(element("i", ""));
+      preview.appendChild(element("i", ""));
+      preview.appendChild(element("i", ""));
+      option.appendChild(preview);
+      option.appendChild(element("strong", "", theme[0].toUpperCase() + " · " + theme[1]));
+      option.appendChild(element("small", "", theme[2]));
+      option.addEventListener("click", function () {
+        applySettingsTheme(panel, theme[0]);
+        heading.lastChild.textContent = "当前：" + theme[1];
+        save("settingsTheme", theme[0]);
+      });
+      picker.appendChild(option);
+    });
+    container.appendChild(picker);
+    applySettingsTheme(panel, settingsTheme());
+  }
+
+  function dashboardSwitch(label, note, checked, onChange) {
+    var control = element("label", "wm-dashboard-switch");
+    var copy = element("span", "");
+    copy.appendChild(element("strong", "", label));
+    copy.appendChild(element("small", "", note));
+    var input = document.createElement("input");
+    input.type = "checkbox";
+    input.checked = Boolean(checked);
+    input.addEventListener("change", function () { onChange(input.checked); });
+    control.appendChild(copy);
+    control.appendChild(input);
+    return input;
+  }
+
+  function dashboardCard(title, className) {
+    var card = element("section", "wm-dashboard-card " + (className || ""));
+    card.appendChild(element("strong", "wm-dashboard-card-title", title));
+    return card;
+  }
+
+  function renderGeneralDashboard(container) {
+    var dashboard = element("div", "wm-general-dashboard");
+
+    var companionCard = dashboardCard("伴随状态", "wm-dashboard-companion");
+    var status = element("span", "wm-dashboard-status", "●  空闲中");
+    status.setAttribute("data-dashboard-status", "true");
+    companionCard.appendChild(status);
+    var statusLine = element("p", "", "心情很好，想和你一起发呆。");
+    statusLine.setAttribute("data-dashboard-line", "true");
+    companionCard.appendChild(statusLine);
+    var mascot = document.createElement("img");
+    mascot.setAttribute("data-theme-illustration", "card");
+    mascot.alt = value("petName", "鲸鱼娘");
+    companionCard.appendChild(mascot);
+    dashboard.appendChild(companionCard);
+
+    var desktopCard = dashboardCard("桌面行为", "wm-dashboard-desktop");
+    var launchInput = dashboardSwitch("开机启动", "随系统启动鲸鱼娘", false, function (enabled) {
+      desktopApi.setLaunchAtLogin(enabled);
+    });
+    desktopCard.appendChild(launchInput.closest("label"));
+    var topInput = dashboardSwitch("始终置顶", "保持在其他窗口之上", value("always-on-top", "1") !== "0", function (enabled) {
+      save("always-on-top", enabled ? "1" : "0");
+      desktopApi.setAlwaysOnTop(enabled);
+    });
+    desktopCard.appendChild(topInput.closest("label"));
+    desktopApi.getDesktopSettings().then(function (state) {
+      if (!state) return;
+      launchInput.checked = Boolean(state.launchAtLogin);
+      topInput.checked = Boolean(state.alwaysOnTop);
+    });
+    dashboard.appendChild(desktopCard);
+
+    var frequencyCard = dashboardCard("互动频率", "wm-dashboard-frequency");
+    frequencyCard.appendChild(element("p", "", "调整小鲸主动互动的频率"));
+    var frequency = document.createElement("input");
+    frequency.type = "range";
+    frequency.min = "0";
+    frequency.max = "2";
+    frequency.step = "1";
+    frequency.value = value("interactionFrequency", "1");
+    frequency.addEventListener("change", function () { save("interactionFrequency", frequency.value); });
+    frequencyCard.appendChild(frequency);
+    var frequencyLabels = element("div", "wm-dashboard-range-labels");
+    ["安静", "适中", "活跃"].forEach(function (label) { frequencyLabels.appendChild(element("span", "", label)); });
+    frequencyCard.appendChild(frequencyLabels);
+    dashboard.appendChild(frequencyCard);
+
+    var powerCard = dashboardCard("节能模式", "wm-dashboard-power");
+    var powerInput = dashboardSwitch("降低动画和特效", "减少资源占用", value("power-saving", "0") === "1", function (enabled) {
+      save("power-saving", enabled ? "1" : "0");
+    });
+    powerCard.appendChild(powerInput.closest("label"));
+    dashboard.appendChild(powerCard);
+
+    var todayCard = dashboardCard("今日数据", "wm-dashboard-today");
+    var todayMetrics = element("div", "wm-dashboard-metrics");
+    var since = Number(value("companionSince", "0"));
+    var days = since ? Math.max(0, Math.floor((Date.now() - since) / 86400000)) : 0;
+    todayMetrics.appendChild(stat("◷", "陪伴记录", days + " 天"));
+    todayMetrics.appendChild(stat("♧", "好感积累", value("affinity", "0")));
+    todayCard.appendChild(todayMetrics);
+    dashboard.appendChild(todayCard);
+
+    var versionCard = dashboardCard("版本信息", "wm-dashboard-version");
+    versionCard.appendChild(element("span", "wm-dashboard-version-label", "当前版本"));
+    versionCard.appendChild(element("strong", "wm-dashboard-version-number", "2.4.0"));
+    versionCard.appendChild(element("span", "wm-dashboard-version-ok", "已是最新版本  ✓"));
+    dashboard.appendChild(versionCard);
+
+    container.appendChild(dashboard);
+  }
+
   function exportSave() {
     var payload = storage.exportPayload();
     var blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
@@ -858,21 +1015,43 @@
     var old = document.querySelector("[data-whale-desktop-settings]");
     var wasOpen = old && !old.hidden;
     if (old) old.remove();
-    var panel = element("div"); panel.setAttribute("data-whale-desktop-settings", "true"); panel.hidden = !wasOpen;
+    var panel = element("div"); panel.setAttribute("data-whale-desktop-settings", "true"); panel.setAttribute("data-settings-theme", settingsTheme()); panel.hidden = !wasOpen;
     var head = element("div", "wm-settings-head");
     var title = element("div", "wm-settings-title");
     title.appendChild(element("span", "wm-settings-mark", "🐳"));
     var titleCopy = element("div"); var panelTitle = element("strong", "", (value("petName", "鲸鱼娘").trim() || "鲸鱼娘") + " · 设置"); panelTitle.setAttribute("data-whale-pet-name", "true"); titleCopy.appendChild(panelTitle); titleCopy.appendChild(element("span", "wm-version", "Desktop v2.4.0")); title.appendChild(titleCopy); head.appendChild(title);
-    var close = element("button", "wm-settings-close", "×"); close.title = "关闭设置"; close.setAttribute("aria-label", "关闭设置"); close.addEventListener("click", function () { panel.hidden = true; window.whaleDesktop.setMouseInteractive(false); }); head.appendChild(close); panel.appendChild(head);
+    var headActions = element("div", "wm-settings-head-actions");
+    headActions.appendChild(element("span", "wm-settings-window-control", "—"));
+    headActions.appendChild(element("span", "wm-settings-window-control wm-settings-window-control-max", "□"));
+    var close = element("button", "wm-settings-close", "×"); close.title = "关闭设置"; close.setAttribute("aria-label", "关闭设置"); close.addEventListener("click", function () { panel.hidden = true; window.whaleDesktop.setMouseInteractive(false); }); headActions.appendChild(close); head.appendChild(headActions); panel.appendChild(head);
+    var availableWidth = Math.max(680, window.innerWidth - 32);
+    var availableHeight = Math.max(430, window.innerHeight - 32);
+    var savedWidth = Number(storage.get("desktopSettingsWidth", "1055"));
+    var savedHeight = Number(storage.get("desktopSettingsHeight", "645"));
+    if (savedWidth === 900 && savedHeight === 580) {
+      savedWidth = 1055;
+      savedHeight = 645;
+    }
+    var panelWidth = Math.max(680, Math.min(Number.isFinite(savedWidth) ? savedWidth : 1055, availableWidth));
+    var panelHeight = Math.max(430, Math.min(Number.isFinite(savedHeight) ? savedHeight : 645, availableHeight));
+    panel.style.width = Math.round(panelWidth) + "px";
+    panel.style.height = Math.round(panelHeight) + "px";
     var rawSavedX = storage.get("desktopSettingsX", null);
     var rawSavedY = storage.get("desktopSettingsY", null);
     var savedX = rawSavedX === null ? NaN : Number(rawSavedX);
     var savedY = rawSavedY === null ? NaN : Number(rawSavedY);
     if (Number.isFinite(savedX) && Number.isFinite(savedY)) {
-      panel.style.left = Math.max(8, Math.min(savedX, window.innerWidth - 320)) + "px";
-      panel.style.top = Math.max(8, Math.min(savedY, window.innerHeight - 120)) + "px";
+      panel.style.left = Math.max(8, Math.min(savedX, window.innerWidth - panelWidth - 8)) + "px";
+      panel.style.top = Math.max(8, Math.min(savedY, window.innerHeight - panelHeight - 8)) + "px";
       panel.style.transform = "none";
     }
+    panel.addEventListener("pointerdown", function (event) {
+      var rect = panel.getBoundingClientRect();
+      if (event.clientX < rect.right - 20 || event.clientY < rect.bottom - 20) return;
+      panel.style.left = Math.round(rect.left) + "px";
+      panel.style.top = Math.round(rect.top) + "px";
+      panel.style.transform = "none";
+    }, true);
     var panelDrag = null;
     head.addEventListener("pointerdown", function (event) {
       if (event.button !== 0 || (event.target.closest && event.target.closest("button"))) return;
@@ -902,47 +1081,108 @@
     head.addEventListener("pointerup", finishPanelDrag);
     head.addEventListener("pointercancel", finishPanelDrag);
     var body = element("div", "wm-settings-body"); panel.appendChild(body);
+    var nav = element("nav", "wm-settings-nav");
+    nav.setAttribute("aria-label", "设置分类");
+    var content = element("div", "wm-settings-content");
+    var pageDefinitions = [
+      ["general", "⌂", "通用", "常用设置"],
+      ["companion", "♡", "互动", "陪伴与关系"],
+      ["appearance", "◉", "外观", "主题与动作"],
+      ["reminders", "♧", "提醒", "专注与健康"],
+      ["sound", "♫", "音量", "声音与安静"],
+      ["display", "▣", "显示", "桌面与天气"],
+      ["about", "ⓘ", "关于", "成长与数据"]
+    ];
+    var pages = {};
+    function activateSettingsPage(pageId) {
+      nav.querySelectorAll("[data-settings-page-target]").forEach(function (button) {
+        var selected = button.getAttribute("data-settings-page-target") === pageId;
+        button.classList.toggle("selected", selected);
+        button.setAttribute("aria-current", selected ? "page" : "false");
+      });
+      content.querySelectorAll("[data-settings-page]").forEach(function (page) {
+        var selected = page.getAttribute("data-settings-page") === pageId;
+        page.hidden = !selected;
+        if (selected) {
+          page.querySelectorAll("details.wm-card[data-page-default-open='true']").forEach(function (card) {
+            card.open = true;
+          });
+        }
+      });
+      content.scrollTop = 0;
+    }
+    pageDefinitions.forEach(function (definition) {
+      var button = element("button", "wm-settings-nav-item");
+      button.type = "button";
+      button.setAttribute("data-settings-page-target", definition[0]);
+      button.appendChild(element("span", "wm-settings-nav-icon", definition[1]));
+      var copy = element("span", "wm-settings-nav-copy");
+      copy.appendChild(element("strong", "", definition[2]));
+      copy.appendChild(element("small", "", definition[3]));
+      button.appendChild(copy);
+      button.addEventListener("click", function () { activateSettingsPage(definition[0]); });
+      nav.appendChild(button);
+      var page = element("section", "wm-settings-page");
+      page.setAttribute("data-settings-page", definition[0]);
+      page.hidden = definition[0] !== "general";
+      page.appendChild(element("h2", "wm-settings-page-title", definition[1] + "  " + (definition[0] === "general" ? "通用设置" : definition[2])));
+      page.appendChild(element("p", "wm-settings-page-note", definition[3]));
+      pages[definition[0]] = page;
+      content.appendChild(page);
+    });
+    var navMascot = document.createElement("img");
+    navMascot.className = "wm-settings-nav-mascot";
+    navMascot.setAttribute("data-theme-illustration", "navigation");
+    navMascot.alt = "";
+    nav.appendChild(navMascot);
+    body.appendChild(nav);
+    body.appendChild(content);
+    activateSettingsPage("general");
+    desktopApi.setAlwaysOnTop(value("always-on-top", "1") !== "0");
 
-    var overview = element("div", "wm-card wm-overview");
-    var stats = element("div", "wm-stats"); renderStats(stats); overview.appendChild(stats);
+    renderGeneralDashboard(pages.general);
+    applySettingsTheme(panel, settingsTheme());
+
+    var appearanceTheme = element("div", "wm-card wm-appearance-theme");
+    renderThemePicker(appearanceTheme, panel);
     var titleInput = document.createElement("input"); titleInput.type = "text"; titleInput.maxLength = 8; titleInput.value = value("title", "主人"); titleInput.addEventListener("input", function () { save("title", titleInput.value); });
-    overview.appendChild(row("如何称呼我", titleInput));
+    appearanceTheme.appendChild(row("如何称呼我", titleInput));
     var petNameInput = document.createElement("input"); petNameInput.type = "text"; petNameInput.maxLength = 8; petNameInput.placeholder = "鲸鱼娘"; petNameInput.value = value("petName", "鲸鱼娘"); petNameInput.addEventListener("input", function () {
       save("petName", petNameInput.value);
       panelTitle.textContent = (petNameInput.value.trim() || "鲸鱼娘") + " · 设置";
     });
-    overview.appendChild(row("如何称呼桌宠", petNameInput)); body.appendChild(overview);
+    appearanceTheme.appendChild(row("如何称呼桌宠", petNameInput)); pages.appearance.appendChild(appearanceTheme);
 
     var enabledCount = TOGGLES.filter(function (item) { return value(item[0], item[2] ? "1" : "0") !== "0"; }).length;
-    var companion = section("🎛️ 陪伴表现", true, enabledCount + "/" + TOGGLES.length + " 已启用"); var switches = element("div", "wm-switches"); renderSwitches(switches); companion[1].appendChild(switches); body.appendChild(companion[0]);
-    var pomodoro = section("⏱️ 番茄钟", false, "专注与休息"); renderPomodoro(pomodoro[1]); body.appendChild(pomodoro[0]);
-    var reminders = section("💧 健康与下班提醒", false, value("reminders", "1") === "0" ? "已关闭" : "已启用"); renderReminders(reminders[1]); body.appendChild(reminders[0]);
-    var quiet = section("🔕 安静模式", false, value("quiet-mode", "0") === "1" ? "已开启" : "可定时"); renderQuiet(quiet[1]); body.appendChild(quiet[0]);
-    var display = section("🖼️ 显示个性化", false, value("displayScale", "100") + "%"); renderDisplay(display[1]); body.appendChild(display[0]);
+    var companion = section("🎛️ 陪伴表现", true, enabledCount + "/" + TOGGLES.length + " 已启用"); companion[0].setAttribute("data-page-default-open", "true"); var switches = element("div", "wm-switches"); renderSwitches(switches); companion[1].appendChild(switches); pages.companion.appendChild(companion[0]);
+    var pomodoro = section("⏱️ 番茄钟", true, "专注与休息"); pomodoro[0].setAttribute("data-page-default-open", "true"); renderPomodoro(pomodoro[1]); pages.reminders.appendChild(pomodoro[0]);
+    var reminders = section("💧 健康与下班提醒", true, value("reminders", "1") === "0" ? "已关闭" : "已启用"); reminders[0].setAttribute("data-page-default-open", "true"); renderReminders(reminders[1]); pages.reminders.appendChild(reminders[0]);
+    var quiet = section("🔕 安静模式", true, value("quiet-mode", "0") === "1" ? "已开启" : "可定时"); quiet[0].setAttribute("data-page-default-open", "true"); renderQuiet(quiet[1]); pages.sound.appendChild(quiet[0]);
+    var display = section("🖼️ 显示个性化", true, value("displayScale", "100") + "%"); display[0].setAttribute("data-page-default-open", "true"); renderDisplay(display[1]); pages.display.appendChild(display[0]);
     var computerLinkOn = value("computer-link", "1") !== "0";
-    var computerLink = section("🖥️ 电脑状态联动", false, computerLinkOn ? "已启用" : "已关闭"); renderComputerLink(computerLink[1]); body.appendChild(computerLink[0]);
-    var weather = section("⛅ 天气", false, value("weatherCity", "") || "未设置"); renderWeather(weather[1]); body.appendChild(weather[0]);
+    var computerLink = section("🖥️ 电脑状态联动", true, computerLinkOn ? "已启用" : "已关闭"); computerLink[0].setAttribute("data-page-default-open", "true"); renderComputerLink(computerLink[1]); pages.display.appendChild(computerLink[0]);
+    var weather = section("⛅ 天气", true, value("weatherCity", "") || "未设置"); weather[0].setAttribute("data-page-default-open", "true"); renderWeather(weather[1]); pages.display.appendChild(weather[0]);
     var adventureStatusValue = adventureStatus();
-    var adventure = section("🗺️ 旅行与收藏", false, adventureMeta(adventureStatusValue)); renderAdventure(adventure[1]); body.appendChild(adventure[0]);
+    var adventure = section("🗺️ 旅行与收藏", true, adventureMeta(adventureStatusValue)); adventure[0].setAttribute("data-page-default-open", "true"); renderAdventure(adventure[1]); pages.about.appendChild(adventure[0]);
     var professionStatusValue = professionStatus();
-    var profession = section("🧭 职业成长", false, professionMeta(professionStatusValue)); renderProfession(profession[1]); body.appendChild(profession[0]);
+    var profession = section("🧭 职业成长", true, professionMeta(professionStatusValue)); profession[0].setAttribute("data-page-default-open", "true"); renderProfession(profession[1]); pages.about.appendChild(profession[0]);
     var relationshipStatusValue = relationshipStatus();
-    var relationship = section("💞 关系与性格", false, relationshipMeta(relationshipStatusValue)); renderRelationship(relationship[1]); body.appendChild(relationship[0]);
+    var relationship = section("💞 关系与性格", true, relationshipMeta(relationshipStatusValue)); relationship[0].setAttribute("data-page-default-open", "true"); renderRelationship(relationship[1]); pages.companion.appendChild(relationship[0]);
     var houseStatusValue = houseStatus();
-    var house = section("🏠 鲸鱼小屋", false, houseMeta(houseStatusValue)); renderHouseEntry(house[1]); body.appendChild(house[0]);
+    var house = section("🏠 鲸鱼小屋", true, houseMeta(houseStatusValue)); house[0].setAttribute("data-page-default-open", "true"); renderHouseEntry(house[1]); pages.about.appendChild(house[0]);
     var lifeStatusValue = lifeStatus();
-    var life = section("🌿 自主生活", false, lifeMeta(lifeStatusValue)); renderLife(life[1]); body.appendChild(life[0]);
+    var life = section("🌿 自主生活", true, lifeMeta(lifeStatusValue)); life[0].setAttribute("data-page-default-open", "true"); renderLife(life[1]); pages.companion.appendChild(life[0]);
     var dailySummaryStatusValue = dailySummaryStatus();
-    var dailySummary = section("📖 每日生活总结", false, dailySummaryMeta(dailySummaryStatusValue)); renderDailySummaryEntry(dailySummary[1]); body.appendChild(dailySummary[0]);
-    var daily = section("🎯 今日任务", false, "今日进度"); renderDaily(daily[1]); body.appendChild(daily[0]);
-    var week = section("📅 本周签到", false, "签到记录"); renderWeek(week[1]); body.appendChild(week[0]);
-    var badge = section("🎖️ 称号", false, value("badge", "") || "未佩戴"); renderBadge(badge[1]); body.appendChild(badge[0]);
+    var dailySummary = section("📖 每日生活总结", true, dailySummaryMeta(dailySummaryStatusValue)); renderDailySummaryEntry(dailySummary[1]); pages.about.appendChild(dailySummary[0]);
+    var daily = section("🎯 今日任务", true, "今日进度"); daily[0].setAttribute("data-page-default-open", "true"); renderDaily(daily[1]); pages.reminders.appendChild(daily[0]);
+    var week = section("📅 本周签到", true, "签到记录"); week[0].setAttribute("data-page-default-open", "true"); renderWeek(week[1]); pages.reminders.appendChild(week[0]);
+    var badge = section("🎖️ 称号", true, value("badge", "") || "未佩戴"); badge[0].setAttribute("data-page-default-open", "true"); renderBadge(badge[1]); pages.about.appendChild(badge[0]);
     var poseCount = 0;
     for (var pg = 0; pg < POSE_GROUPS.length; pg += 1) poseCount += POSE_GROUPS[pg].poses.length;
-    var actions = section("🎭 互动与全部动作", false, poseCount + " 个动作"); renderActions(actions[1]); body.appendChild(actions[0]);
+    var actions = section("🎭 互动与全部动作", false, poseCount + " 个动作"); renderActions(actions[1]); pages.appearance.appendChild(actions[0]);
     var achievementCount = value("achievements", "").split(",").filter(Boolean).length;
-    var achievements = section("🏅 成就墙", false, achievementCount + "/" + ACHIEVEMENTS.length + " 已解锁"); renderAchievements(achievements[1]); body.appendChild(achievements[0]);
-    var reset = section("🗂️ 数据与重置", false, "位置与养成数据");
+    var achievements = section("🏅 成就墙", true, achievementCount + "/" + ACHIEVEMENTS.length + " 已解锁"); achievements[0].setAttribute("data-page-default-open", "true"); renderAchievements(achievements[1]); pages.about.appendChild(achievements[0]);
+    var reset = section("🗂️ 数据与重置", true, "位置与养成数据"); reset[0].setAttribute("data-page-default-open", "true");
     renderDataTools(reset[1]);
     var resetPosition = element("button", "", "重置到默认位置"); resetPosition.addEventListener("click", function () { storage.remove("floatX"); storage.remove("floatY"); save("float-reset", Date.now()); }); reset[1].appendChild(row("悬浮位置", resetPosition));
     var resetGrowth = element("button", "wm-danger", "重置养成"); resetGrowth.addEventListener("click", function () {
@@ -965,9 +1205,27 @@
       refreshSection("📅 本周签到", renderWeek);
       refreshSection("🎖️ 称号", renderBadge);
       refreshSection("🏅 成就墙", renderAchievements);
-    }); reset[1].appendChild(row("养成数据", resetGrowth)); body.appendChild(reset[0]);
+    }); reset[1].appendChild(row("养成数据", resetGrowth)); pages.about.appendChild(reset[0]);
 
+    var resizeHint = element("span", "wm-settings-resize-hint");
+    resizeHint.setAttribute("aria-hidden", "true");
+    panel.appendChild(resizeHint);
     document.body.appendChild(panel);
+    if (typeof ResizeObserver === "function") {
+      var resizeTimer = 0;
+      panel._wmResizeObserver = new ResizeObserver(function () {
+        if (panel.hidden) return;
+        window.clearTimeout(resizeTimer);
+        resizeTimer = window.setTimeout(function () {
+          var rect = panel.getBoundingClientRect();
+          if (rect.width >= 680 && rect.height >= 430) {
+            storage.set("desktopSettingsWidth", Math.round(rect.width));
+            storage.set("desktopSettingsHeight", Math.round(rect.height));
+          }
+        }, 120);
+      });
+      panel._wmResizeObserver.observe(panel);
+    }
     return panel;
   }
 
