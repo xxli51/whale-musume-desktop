@@ -14,6 +14,11 @@
     return node;
   }
 
+  function settingsTheme() {
+    var theme = storage.get("settingsTheme", "b");
+    return ["a", "b", "c", "d"].indexOf(theme) === -1 ? "b" : theme;
+  }
+
   function parse(key, fallback) {
     try {
       return JSON.parse(storage.get(key, JSON.stringify(fallback)));
@@ -192,7 +197,9 @@
 
   function renderDaily(modal) {
     modal.innerHTML = "";
+    modal.setAttribute("data-settings-theme", settingsTheme());
     var panel = element("div", "wm-daily-panel");
+    panel.style.position = "absolute";
     var head = element("div", "wm-daily-head");
     var heading = element("div");
     heading.appendChild(element("strong", "", "📖 每日生活手账"));
@@ -203,6 +210,37 @@
     close.addEventListener("click", closeDaily);
     head.appendChild(close);
     panel.appendChild(head);
+    setTimeout(function () {
+      panel.style.left = Math.round(Math.max(0, (modal.clientWidth - panel.offsetWidth) / 2)) + "px";
+      panel.style.top = Math.round(Math.max(0, (modal.clientHeight - panel.offsetHeight) / 2)) + "px";
+    }, 0);
+    var dailyDrag = null;
+    head.addEventListener("pointerdown", function (event) {
+      if (event.button !== 0 || (event.target.closest && event.target.closest("button"))) return;
+      var rect = panel.getBoundingClientRect();
+      panel.style.left = Math.round(rect.left) + "px";
+      panel.style.top = Math.round(rect.top) + "px";
+      panel.style.transform = "none";
+      dailyDrag = { pointerId: event.pointerId, dx: event.clientX - rect.left, dy: event.clientY - rect.top };
+      head.setPointerCapture(event.pointerId);
+      event.preventDefault();
+    });
+    head.addEventListener("pointermove", function (event) {
+      if (!dailyDrag || dailyDrag.pointerId !== event.pointerId) return;
+      var maxLeft = Math.max(0, window.innerWidth - panel.offsetWidth);
+      var maxTop = Math.max(0, window.innerHeight - panel.offsetHeight);
+      panel.style.left = Math.round(Math.max(0, Math.min(event.clientX - dailyDrag.dx, maxLeft))) + "px";
+      panel.style.top = Math.round(Math.max(0, Math.min(event.clientY - dailyDrag.dy, maxTop))) + "px";
+    });
+    function finishDailyDrag(event) {
+      if (!dailyDrag || dailyDrag.pointerId !== event.pointerId) return;
+      dailyDrag = null;
+      if (head.hasPointerCapture(event.pointerId)) head.releasePointerCapture(event.pointerId);
+      storage.set("dailyPanelX", Math.round(parseFloat(panel.style.left)));
+      storage.set("dailyPanelY", Math.round(parseFloat(panel.style.top)));
+    }
+    head.addEventListener("pointerup", finishDailyDrag);
+    head.addEventListener("pointercancel", finishDailyDrag);
     if (state.current) panel.appendChild(renderReport(state.current, true, true));
     var historyTitle = element("div", "wm-daily-history-title");
     historyTitle.appendChild(element("strong", "", "过往日子"));
@@ -267,6 +305,14 @@
   );
   window.addEventListener("whale-moe-prefs-change", function (event) {
     var key = event && event.detail ? event.detail.key : "";
+    if (key === "settingsTheme") {
+      var dailyModal = document.querySelector("[data-whale-daily]");
+      if (dailyModal) {
+        dailyModal.setAttribute("data-settings-theme", settingsTheme());
+        refreshVisible();
+      }
+      return;
+    }
     if (key === "dailySummaryState") {
       state = loadState();
       refreshVisible();

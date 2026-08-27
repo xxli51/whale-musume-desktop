@@ -10,13 +10,19 @@
     ["a", "海盐玻璃", "清透柔和"],
     ["b", "深海控制台", "沉浸精致"],
     ["c", "奶油手账", "温暖可爱"],
-    ["d", "极简原生", "克制高效"]
+    ["d", "极简原生", "克制高效"],
+    ["e", "薄荷渐变", "清新薄荷"],
+    ["f", "暖阳橙", "暖橙蜜桃"],
+    ["g", "樱花粉", "柔粉浪漫"]
   ]);
   var SETTINGS_THEME_DETAILS = Object.freeze({
-    a: Object.freeze({ status: "空闲中", line: "心情很好，想和你一起发呆。", card: "settings-reference-a-card.png", navigation: "settings-reference-a-nav.png" }),
-    b: Object.freeze({ status: "专注中", line: "我会安静陪着你哦。", card: "settings-reference-b-card.png", navigation: "settings-reference-b-nav.png" }),
-    c: Object.freeze({ status: "开心", line: "哇～天气真好，一起摸鱼吧！", card: "settings-reference-c-card.png", navigation: "settings-reference-c-nav.png" }),
-    d: Object.freeze({ status: "空闲中", line: "随时等你哦。", card: "settings-reference-d-card.png", navigation: "settings-reference-d-nav.png" })
+    a: Object.freeze({ status: "空闲中", line: "心情很好，想和你一起发呆。", card: "dsh-whale-settings-peek.webp", navigation: "dsh-whale-state-idle-cute.webp" }),
+    b: Object.freeze({ status: "专注中", line: "我会安静陪着你哦。", card: "dsh-whale-state-idle-cute.webp", navigation: "dsh-whale-state-idle-cute.webp" }),
+    c: Object.freeze({ status: "开心", line: "哇～天气真好，一起摸鱼吧！", card: "dsh-whale-state-blush.webp", navigation: "dsh-whale-state-blush.webp" }),
+    d: Object.freeze({ status: "空闲中", line: "随时等你哦。", card: "dsh-whale-state-waiting.webp", navigation: "dsh-whale-state-waiting.webp" }),
+    e: Object.freeze({ status: "空闲中", line: "薄荷色午后，想和你聊聊。", card: "dsh-whale-state-idle-cute.webp", navigation: "dsh-whale-settings-peek.webp" }),
+    f: Object.freeze({ status: "开心", line: "阳光正好，一起出去走走吧！", card: "dsh-whale-state-daily-coffee.webp", navigation: "dsh-whale-state-daily-coffee.webp" }),
+    g: Object.freeze({ status: "开心", line: "樱花开了，好想和你一起看。", card: "dsh-whale-state-blush.webp", navigation: "dsh-whale-state-blush.webp" })
   });
 
   function value(key, fallback) {
@@ -179,7 +185,10 @@
       if (themePanel) applySettingsTheme(themePanel, settingsTheme());
       return;
     }
-    if (key === "growth") { updateStats(); return; }
+    if (key === "growth" || key === "mood" || key === "affinity" || key === "satiety" || key === "level" || key === "signinStreak") {
+      updateStats();
+      return;
+    }
     if (key === "quests") { refreshSection("🎯 今日任务", renderDaily); return; }
     if (key === "badge") {
       updateSectionMeta("🎖️ 称号", value("badge", "") || "未佩戴");
@@ -578,12 +587,22 @@
   }
 
   function lifeStatus() {
-    if (window.WhaleLife) return window.WhaleLife.status();
+    var status = window.WhaleLife ? window.WhaleLife.status() : null;
     var core = window.WhaleLifeCore;
-    var parsed = {};
-    try { parsed = JSON.parse(value("lifeState", "{}")); } catch (_error) {}
-    var state = core ? core.normalizeState(parsed) : { current: null, history: [], stats: { completed: 0 } };
-    return { state: state, enabled: value("life-enabled", "1") !== "0", activity: core && state.current ? core.activity(state.current.activityId) : null };
+    var state;
+    if (status) {
+      state = status.state;
+    } else {
+      var parsed = {};
+      try { parsed = JSON.parse(value("lifeState", "{}")); } catch (_error) {}
+      state = core ? core.normalizeState(parsed) : { current: null, history: [], stats: { completed: 0 } };
+    }
+    var enabled = status ? status.enabled : value("life-enabled", "1") !== "0";
+    /* an activity whose end time has passed must not keep showing "正在…" */
+    if (state && state.current && Number(state.current.endsAt) <= Date.now()) {
+      state = Object.assign({}, state, { current: null });
+    }
+    return { state: state, enabled: enabled, activity: state.current && core ? core.activity(state.current.activityId) : null };
   }
 
   function lifeMeta(status) {
@@ -861,14 +880,18 @@
     powerCard.appendChild(powerInput.closest("label"));
     dashboard.appendChild(powerCard);
 
-    var todayCard = dashboardCard("今日数据", "wm-dashboard-today");
-    var todayMetrics = element("div", "wm-dashboard-metrics");
     var since = Number(value("companionSince", "0"));
     var days = since ? Math.max(0, Math.floor((Date.now() - since) / 86400000)) : 0;
-    todayMetrics.appendChild(stat("◷", "陪伴记录", days + " 天"));
-    todayMetrics.appendChild(stat("♧", "好感积累", value("affinity", "0")));
-    todayCard.appendChild(todayMetrics);
-    dashboard.appendChild(todayCard);
+    var statsCard = dashboardCard("今日数据", "wm-dashboard-growth");
+    var todayMetrics = element("div", "wm-stats");
+    todayMetrics.appendChild(stat("😊", "心情", value("mood", "70"), "mood"));
+    todayMetrics.appendChild(stat("💗", "好感度", value("affinity", "0"), "affinity"));
+    todayMetrics.appendChild(stat("🍰", "饱食度", value("satiety", "80"), "satiety"));
+    todayMetrics.appendChild(stat("⭐", "等级", "Lv." + value("level", "1"), "level"));
+    todayMetrics.appendChild(stat("📅", "连续签到", value("signinStreak", "0") + " 天", "signinStreak"));
+    todayMetrics.appendChild(stat("⏳", "陪伴", days + " 天", "companionDays"));
+    statsCard.appendChild(todayMetrics);
+    container.appendChild(statsCard);
 
     var versionCard = dashboardCard("版本信息", "wm-dashboard-version");
     versionCard.appendChild(element("span", "wm-dashboard-version-label", "当前版本"));
@@ -1021,9 +1044,7 @@
     title.appendChild(element("span", "wm-settings-mark", "🐳"));
     var titleCopy = element("div"); var panelTitle = element("strong", "", (value("petName", "鲸鱼娘").trim() || "鲸鱼娘") + " · 设置"); panelTitle.setAttribute("data-whale-pet-name", "true"); titleCopy.appendChild(panelTitle); titleCopy.appendChild(element("span", "wm-version", "Desktop v2.4.0")); title.appendChild(titleCopy); head.appendChild(title);
     var headActions = element("div", "wm-settings-head-actions");
-    headActions.appendChild(element("span", "wm-settings-window-control", "—"));
-    headActions.appendChild(element("span", "wm-settings-window-control wm-settings-window-control-max", "□"));
-    var close = element("button", "wm-settings-close", "×"); close.title = "关闭设置"; close.setAttribute("aria-label", "关闭设置"); close.addEventListener("click", function () { panel.hidden = true; window.whaleDesktop.setMouseInteractive(false); }); headActions.appendChild(close); head.appendChild(headActions); panel.appendChild(head);
+    var close = element("button", "wm-settings-close", "×"); close.title = "关闭设置"; close.setAttribute("aria-label", "关闭设置"); close.addEventListener("click", function () { panel.hidden = true; window.whaleDesktop.setMouseInteractive(false); window.whaleDesktop.setSettingsVisible(false); }); headActions.appendChild(close); head.appendChild(headActions); panel.appendChild(head);
     var availableWidth = Math.max(680, window.innerWidth - 32);
     var availableHeight = Math.max(430, window.innerHeight - 32);
     var savedWidth = Number(storage.get("desktopSettingsWidth", "1055"));
@@ -1152,6 +1173,8 @@
       panelTitle.textContent = (petNameInput.value.trim() || "鲸鱼娘") + " · 设置";
     });
     appearanceTheme.appendChild(row("如何称呼桌宠", petNameInput)); pages.appearance.appendChild(appearanceTheme);
+    /* 外观页的主题选择需要在挂载到面板后再次应用，否则初始「当前主题」不会被默认选中 */
+    applySettingsTheme(panel, settingsTheme());
 
     var enabledCount = TOGGLES.filter(function (item) { return value(item[0], item[2] ? "1" : "0") !== "0"; }).length;
     var companion = section("🎛️ 陪伴表现", true, enabledCount + "/" + TOGGLES.length + " 已启用"); companion[0].setAttribute("data-page-default-open", "true"); var switches = element("div", "wm-switches"); renderSwitches(switches); companion[1].appendChild(switches); pages.companion.appendChild(companion[0]);
@@ -1232,6 +1255,19 @@
   function openSettings() {
     var panel = document.querySelector("[data-whale-desktop-settings]") || renderPanel();
     panel.hidden = false;
+    window.whaleDesktop.setSettingsVisible(true);
+    updateStats();
+    refreshSection("🌿 自主生活", renderLife); updateLifeMeta();
+    refreshSection("🗺️ 旅行与收藏", renderAdventure); updateAdventureMeta();
+    refreshSection("🧭 职业成长", renderProfession); updateProfessionMeta();
+    refreshSection("💞 关系与性格", renderRelationship); updateRelationshipMeta();
+    refreshSection("🏠 鲸鱼小屋", renderHouseEntry); updateHouseMeta();
+    refreshSection("📖 每日生活总结", renderDailySummaryEntry); updateDailySummaryMeta();
+    refreshSection("🎯 今日任务", renderDaily);
+    refreshSection("🎖️ 称号", renderBadge);
+    updateSectionMeta("🎖️ 称号", value("badge", "") || "未佩戴");
+    refreshSection("📅 本周签到", renderWeek);
+    refreshSection("🏅 成就墙", renderAchievements);
     window.whaleDesktop.setMouseInteractive(true);
   }
 

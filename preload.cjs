@@ -21,6 +21,9 @@ contextBridge.exposeInMainWorld("whaleDesktop", Object.freeze({
   setAlwaysOnTop(enabled) {
     ipcRenderer.send("whale:set-always-on-top", Boolean(enabled));
   },
+  setSettingsVisible(visible) {
+    ipcRenderer.send("whale:settings-visible", Boolean(visible));
+  },
   quit() {
     ipcRenderer.send("whale:quit");
   },

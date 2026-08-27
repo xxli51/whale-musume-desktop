@@ -133,7 +133,7 @@
       }
     }
     if (value.length > STRING_RULES[name]) return false;
-    if (name === "settingsTheme") return ["a", "b", "c", "d"].indexOf(value) !== -1;
+    if (name === "settingsTheme") return ["a", "b", "c", "d", "e", "f", "g"].indexOf(value) !== -1;
     if (name === "offwork-time" || name === "quiet-start" || name === "quiet-end") {
       return /^([01]?\d|2[0-3]):[0-5]\d$/.test(value);
     }

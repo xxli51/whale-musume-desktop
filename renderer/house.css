@@ -396,3 +396,110 @@
     grid-template-columns: 1fr;
   }
 }
+/* ============================================================
+   House theme — follows the settings theme (a/b/c/d).
+   Style-only; scene/furniture art unchanged.
+   ============================================================ */
+[data-whale-house] {
+  --hh-backdrop: rgb(5 10 18 / 48%);
+  --hh-panel-bg: #172027;
+  --hh-panel-border: #39515c;
+  --hh-text: #edf7f8;
+  --hh-head-bg: #1c2931;
+  --hh-head-line: #31434c;
+  --hh-sub: #9db0b8;
+  --hh-close-bg: #283840;
+  --hh-close-border: #3c535e;
+  --hh-close-ink: #e8f2f4;
+  --hh-float-bg: rgb(20 36 50 / 88%);
+  --hh-float-border: #49616b;
+  --hh-accent-bg: #a8e4d1;
+  --hh-accent-ink: #17352e;
+  --hh-accent-border: #69bca2;
+}
+
+[data-whale-house][data-settings-theme="a"] {
+  --hh-backdrop: rgba(20, 90, 110, 0.26);
+  --hh-panel-bg: linear-gradient(150deg, #eef9fd, #dceef6);
+  --hh-panel-border: rgba(255, 255, 255, 0.9);
+  --hh-text: #1f4a5c;
+  --hh-head-bg: rgba(255, 255, 255, 0.66);
+  --hh-head-line: rgba(255, 255, 255, 0.85);
+  --hh-sub: #5d8ba0;
+  --hh-close-bg: rgba(255, 255, 255, 0.7);
+  --hh-close-border: rgba(255, 255, 255, 0.9);
+  --hh-close-ink: #1f4a5c;
+  --hh-float-bg: rgba(246, 251, 253, 0.92);
+  --hh-float-border: rgba(255, 255, 255, 0.9);
+  --hh-accent-bg: #54b6df;
+  --hh-accent-ink: #073943;
+  --hh-accent-border: #2f9fca;
+}
+
+[data-whale-house][data-settings-theme="c"] {
+  --hh-backdrop: rgba(90, 66, 43, 0.3);
+  --hh-panel-bg: linear-gradient(150deg, #fdf7ec, #f8ecd8);
+  --hh-panel-border: #d9c09b;
+  --hh-text: #4e3527;
+  --hh-head-bg: #fbf2e3;
+  --hh-head-line: #eeddc3;
+  --hh-sub: #b58f6c;
+  --hh-close-bg: #fffaf2;
+  --hh-close-border: #ddc8a9;
+  --hh-close-ink: #8a5a3b;
+  --hh-float-bg: rgba(255, 250, 240, 0.95);
+  --hh-float-border: #ddc8a9;
+  --hh-accent-bg: #ec8f76;
+  --hh-accent-ink: #51261d;
+  --hh-accent-border: #e36f5d;
+}
+
+[data-whale-house][data-settings-theme="d"] {
+  --hh-backdrop: rgba(0, 0, 0, 0.5);
+  --hh-panel-bg: #17191b;
+  --hh-panel-border: #292d31;
+  --hh-text: #dde3e7;
+  --hh-head-bg: #1c1f21;
+  --hh-head-line: #26292d;
+  --hh-sub: #79828a;
+  --hh-close-bg: #202429;
+  --hh-close-border: #2a2f33;
+  --hh-close-ink: #dde3e7;
+  --hh-float-bg: rgba(22, 24, 27, 0.94);
+  --hh-float-border: #2a2f33;
+  --hh-accent-bg: #7bd9a0;
+  --hh-accent-ink: #09291f;
+  --hh-accent-border: #54cba9;
+}
+
+[data-whale-house] .wm-house-panel {
+  background: var(--hh-panel-bg);
+  border-color: var(--hh-panel-border);
+  color: var(--hh-text);
+}
+[data-whale-house] .wm-house-head {
+  background: var(--hh-head-bg);
+  border-bottom: 1px solid var(--hh-head-line);
+}
+[data-whale-house] .wm-house-head span { color: var(--hh-sub); }
+[data-whale-house] .wm-house-close {
+  color: var(--hh-close-ink);
+  background: var(--hh-close-bg);
+  border-color: var(--hh-close-border);
+}
+[data-whale-house] .wm-house-travel-panel,
+[data-whale-house] .wm-house-away,
+[data-whale-house] .wm-house-life-badge,
+[data-whale-house] .wm-house-caption {
+  background: var(--hh-float-bg);
+  border-color: var(--hh-float-border);
+  color: var(--hh-text);
+}
+[data-whale-house] .wm-house-travel-routes button.primary,
+[data-whale-house] .wm-house-away-recall,
+[data-whale-house] .wm-house-options button.selected {
+  background: var(--hh-accent-bg);
+  border-color: var(--hh-accent-border);
+  color: var(--hh-accent-ink);
+}
+

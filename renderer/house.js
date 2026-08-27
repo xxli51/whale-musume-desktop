@@ -4,6 +4,13 @@
   var storage = window.WhaleStorage;
   var core = window.WhaleHouseCore;
   if (!storage || !core) return;
+  function houseSettingsTheme() {
+    var theme = storage.get("settingsTheme", "b");
+    return ["a", "b", "c", "d"].indexOf(theme) === -1 ? "b" : theme;
+  }
+  function applyHouseTheme(house) {
+    if (house) house.setAttribute("data-settings-theme", houseSettingsTheme());
+  }
   var WALK_DURATION = 1600;
   var FURNITURE_STAY_DURATION = 10000;
   var renderGeneration = 0;
@@ -569,6 +576,7 @@
       });
       document.body.appendChild(house);
     }
+    applyHouseTheme(house);
     var state = loadState();
     state.visits += 1;
     state.lastOpenedAt = Date.now();
@@ -653,6 +661,9 @@
   });
   window.addEventListener("whale-moe-prefs-change", function (event) {
     var key = event && event.detail ? event.detail.key : "";
+    if (key === "settingsTheme") {
+      applyHouseTheme(document.querySelector("[data-whale-house]"));
+    }
     if (key === "petName" || key === "houseState") refreshVisibleHouse();
   });
   window.addEventListener("keydown", function (event) {
