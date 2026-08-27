@@ -81,7 +81,8 @@
     details.addEventListener("toggle", function () {
       if (!details.open) return;
       requestAnimationFrame(function () {
-        summary.scrollIntoView({ block: "nearest", behavior: "smooth" });
+        var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        summary.scrollIntoView({ block: "nearest", behavior: reduceMotion ? "auto" : "smooth" });
       });
     });
     return [details, content];

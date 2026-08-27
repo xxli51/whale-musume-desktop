@@ -66,15 +66,15 @@
 }
 
 [data-whale-desktop-settings][data-settings-theme="a"] {
-  --wm-panel: #e6f5f9;
-  --wm-head: #eef8fc;
-  --wm-nav: #d3e7f0;
-  --wm-content: #f5fcfe;
-  --wm-surface: #f6fcfe;
-  --wm-surface-hover: #ffffff;
-  --wm-elevated: #ffffff;
-  --wm-control: rgb(255 255 255 / 78%);
-  --wm-control-hover: #eaf9fc;
+  --wm-panel: rgb(236 250 253 / .55);
+  --wm-head: rgb(255 255 255 / .5);
+  --wm-nav: rgb(232 247 252 / .48);
+  --wm-content: rgb(249 252 254 / .4);
+  --wm-surface: rgb(255 255 255 / .56);
+  --wm-surface-hover: rgb(255 255 255 / .72);
+  --wm-elevated: rgb(255 255 255 / .62);
+  --wm-control: rgb(255 255 255 / .55);
+  --wm-control-hover: rgb(255 255 255 / .74);
   --wm-control-border: #b8dce6;
   --wm-line: #cfe7f0;
   --wm-line-soft: #d6e9ef;
@@ -89,24 +89,43 @@
   --wm-switch-track: #a9cdda;
   --wm-switch-thumb: #ffffff;
   --wm-scroll: #9bcbd6;
-  --wm-panel-border: rgb(255 255 255 / 86%);
-  --wm-panel-radius: 22px;
-  --wm-card-radius: 15px;
-  --wm-panel-shadow: 0 22px 42px rgb(30 78 101 / 28%), inset 0 1px 0 rgb(255 255 255 / 84%);
+  --wm-panel-border: rgb(255 255 255 / .62);
+  --wm-panel-radius: 26px;
+  --wm-card-radius: 17px;
+  --wm-control-radius: 12px;
+  --wm-panel-shadow: 0 30px 60px rgb(31 84 110 / .3), inset 0 1px 0 rgb(255 255 255 / .9);
   background:
-    radial-gradient(circle at 8% 92%, rgb(255 255 255 / 72%) 0 4px, transparent 5px),
-    radial-gradient(circle at 91% 86%, rgb(92 194 220 / 18%) 0 6px, transparent 7px),
-    linear-gradient(135deg, #edf9fc 0%, #e5f4f8 52%, #d9eef5 100%);
+    radial-gradient(circle at 6% 92%, rgb(255 255 255 / .85) 0 4px, transparent 5px),
+    radial-gradient(circle at 94% 86%, rgb(105 205 232 / .25) 0 6px, transparent 7px),
+    radial-gradient(circle at 72% 8%, rgb(255 255 255 / .55) 0 2px, transparent 3px),
+    radial-gradient(circle at 44% 96%, rgb(255 255 255 / .4) 0 2px, transparent 3px),
+    linear-gradient(135deg, rgb(240 251 254 / .72), rgb(222 242 250 / .62) 52%, rgb(203 235 246 / .58) 100%);
+  backdrop-filter: blur(26px) saturate(1.3);
   color-scheme: light;
 }
 
-[data-whale-desktop-settings][data-settings-theme="b"] { color-scheme: dark; }
+[data-whale-desktop-settings][data-settings-theme="b"] {
+  --wm-panel-radius: 8px;
+  --wm-card-radius: 4px;
+  --wm-control-radius: 3px;
+  --wm-panel-border: #17435f;
+  --wm-line: #16435c;
+  --wm-line-soft: #123248;
+  --wm-accent-deep: #38cfe8;
+  --wm-accent-border: #2f96b8;
+  background:
+    repeating-linear-gradient(0deg, rgb(0 255 255 / .04) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(90deg, rgb(0 255 255 / .025) 0 1px, transparent 1px 4px),
+    linear-gradient(180deg, #05121e, #030d18);
+  font-family: "Cascadia Mono", "JetBrains Mono", "Consolas", "Microsoft YaHei UI", "PingFang SC", monospace;
+  color-scheme: dark;
+}
 
 [data-whale-desktop-settings][data-settings-theme="c"] {
-  --wm-panel: #f8f1e6;
-  --wm-head: #fdf4e6;
+  --wm-panel: #f7ecd8;
+  --wm-head: rgb(253 246 232 / .92);
   --wm-nav: #faf1e1;
-  --wm-content: #faf2e6;
+  --wm-content: #f8efdd;
   --wm-surface: #fefcf7;
   --wm-surface-hover: #fffaf0;
   --wm-elevated: #fffaf0;
@@ -127,22 +146,22 @@
   --wm-switch-thumb: #fffbf4;
   --wm-scroll: #cdb796;
   --wm-panel-border: #d9c09b;
-  --wm-panel-radius: 20px;
-  --wm-card-radius: 14px;
+  --wm-panel-radius: 12px;
+  --wm-card-radius: 8px;
+  --wm-control-radius: 8px;
   --wm-panel-shadow: 0 22px 42px rgb(93 66 43 / 28%), inset 0 0 0 4px rgb(255 255 255 / 34%);
   background:
-    radial-gradient(circle at 14% 20%, rgb(154 108 74 / 4%) 0 1px, transparent 2px) 0 0 / 19px 21px,
-    radial-gradient(circle at 70% 78%, rgb(154 108 74 / 3%) 0 1px, transparent 2px) 0 0 / 24px 29px,
-    #f8f1e6;
+    repeating-linear-gradient(0deg, rgb(190 132 92 / .07) 0 1px, transparent 1px 30px),
+    linear-gradient(135deg, #f9f0dd, #f3e6cc);
   font-family: "KaiTi", "STKaiti", "Microsoft YaHei UI", serif;
   color-scheme: light;
 }
 
 [data-whale-desktop-settings][data-settings-theme="d"] {
-  --wm-panel: #2e3235;
-  --wm-head: #2f3336;
-  --wm-nav: #313538;
-  --wm-content: #252b2d;
+  --wm-panel: #25282b;
+  --wm-head: #2a2d30;
+  --wm-nav: #282b2e;
+  --wm-content: #222629;
   --wm-surface: #35393d;
   --wm-surface-hover: #3b4043;
   --wm-elevated: #3a3e42;
@@ -154,19 +173,20 @@
   --wm-text: #e3e2e1;
   --wm-row-text: #c2c3c4;
   --wm-muted: #9c9fa2;
-  --wm-accent: #6acfb1;
-  --wm-accent-deep: #54cba9;
-  --wm-accent-soft: #3d4145;
-  --wm-accent-border: #58736b;
+  --wm-accent: #9aa4ad;
+  --wm-accent-deep: #b7c0c7;
+  --wm-accent-soft: #33383b;
+  --wm-accent-border: #4a5156;
   --wm-primary-text: #09291f;
   --wm-switch-track: #50575d;
   --wm-switch-thumb: #e5e7e8;
   --wm-scroll: #5a6064;
-  --wm-panel-border: #505559;
-  --wm-panel-radius: 18px;
+  --wm-panel-border: #3a3e42;
+  --wm-panel-radius: 8px;
   --wm-card-radius: 6px;
-  --wm-control-radius: 5px;
-  --wm-panel-shadow: 0 22px 42px rgb(0 0 0 / 44%);
+  --wm-control-radius: 4px;
+  --wm-panel-shadow: 0 14px 30px rgb(0 0 0 / .5);
+  font-family: "Segoe UI", system-ui, "Microsoft YaHei UI", sans-serif;
   color-scheme: dark;
 }
 
@@ -334,12 +354,6 @@ body:has([data-whale-desktop-settings]:not([hidden])) > [data-dsh-whale-root] {
   align-content: stretch;
 }
 [data-settings-page="general"] > .wm-settings-page-title { display: none; }
-[data-settings-theme="a"] [data-settings-page="general"] {
-  grid-template-rows: 33px minmax(0, 1fr);
-}
-[data-settings-theme="a"] [data-settings-page="general"] > .wm-settings-page-title {
-  display: block;
-}
 
 .wm-general-dashboard {
   display: grid;
@@ -366,7 +380,6 @@ body:has([data-whale-desktop-settings]:not([hidden])) > [data-dsh-whale-root] {
   border: 1px solid var(--wm-line);
   border-radius: var(--wm-card-radius);
 }
-.wm-dashboard-card:hover { background: var(--wm-surface-hover); }
 .wm-dashboard-card-title { display: block; margin-bottom: 8px; font-size: var(--wm-font-section-title); font-weight: 500; }
 .wm-dashboard-card p { position: relative; z-index: 1; margin: 8px 0 0; color: var(--wm-row-text); font-size: var(--wm-font-caption); }
 .wm-dashboard-status {
@@ -492,7 +505,7 @@ body:has([data-whale-desktop-settings]:not([hidden])) > [data-dsh-whale-root] {
   min-height: 52px;
   align-items: center;
   gap: 14px;
-  padding: 0 46px 0 17px;
+  padding: 0 17px;
   cursor: pointer;
   list-style: none;
 }
@@ -500,16 +513,7 @@ body:has([data-whale-desktop-settings]:not([hidden])) > [data-dsh-whale-root] {
 .wm-card > summary::-webkit-details-marker { display: none; }
 .wm-summary-title { color: var(--wm-text); font-size: var(--wm-font-section-title); font-weight: 500; }
 .wm-summary-meta { margin-left: auto; color: var(--wm-muted); font-size: var(--wm-font-caption); white-space: nowrap; }
-.wm-card > summary::after {
-  position: absolute;
-  right: 17px;
-  color: var(--wm-muted);
-  content: "⌄";
-  font-size: 21px;
-  transition: transform 150ms ease;
-}
 .wm-card[open] > summary { border-bottom: 1px solid var(--wm-line-soft); }
-.wm-card[open] > summary::after { transform: rotate(180deg); }
 details.wm-card:not([open]) { min-height: 52px; max-height: 52px; }
 details.wm-card:not([open]) > .wm-card-content { display: none !important; }
 .wm-card-content { padding: 13px 17px 16px; }
@@ -885,39 +889,6 @@ details.wm-card:not([open]) > .wm-card-content { display: none !important; }
 [data-whale-desktop-settings] .wm-card > summary { border-radius: inherit; }
 [data-whale-desktop-settings] .wm-summary-title { font-weight: 650; }
 [data-whale-desktop-settings] .wm-summary-meta { font-weight: 500; }
-[data-whale-desktop-settings] .wm-card > summary::after {
-  position: absolute;
-  right: 17px; top: 50%;
-  width: 26px; height: 26px;
-  box-sizing: border-box;
-  transform: translateY(-50%);
-  border: 1px solid color-mix(in srgb, var(--wm-accent) 30%, transparent);
-  border-radius: 9px;
-  background: color-mix(in srgb, var(--wm-accent) 12%, transparent);
-  content: "";
-  transition: background 150ms ease, border-color 150ms ease;
-}
-[data-whale-desktop-settings] .wm-card > summary::before {
-  content: "";
-  position: absolute;
-  right: 26px; top: 50%;
-  width: 8px; height: 8px;
-  transform: translateY(-50%) rotate(45deg);
-  border-right: 2px solid var(--wm-accent-deep);
-  border-bottom: 2px solid var(--wm-accent-deep);
-  border-radius: 1px;
-  transition: transform 200ms ease;
-}
-[data-whale-desktop-settings] .wm-card > summary:hover::after {
-  background: color-mix(in srgb, var(--wm-accent) 20%, transparent);
-  border-color: color-mix(in srgb, var(--wm-accent) 44%, transparent);
-}
-[data-whale-desktop-settings] .wm-card[open] > summary::before {
-  transform: translateY(-50%) rotate(225deg);
-}
-[data-whale-desktop-settings] .wm-card[open] > summary::after {
-  transform: translateY(-50%);
-}
 [data-whale-desktop-settings] .wm-dashboard-status { font-weight: 600; }
 
 /* switches */
@@ -1003,27 +974,9 @@ details.wm-card:not([open]) > .wm-card-content { display: none !important; }
 /* give rows / button groups air so content isn't pressed against divider lines */
 [data-whale-desktop-settings] .wm-card-content { padding: 14px 18px 18px; }
 [data-whale-desktop-settings] .wm-row { min-height: 50px; padding: 4px 0; }
-[data-whale-desktop-settings] .wm-inline-control,
-[data-whale-desktop-settings] .wm-range-control,
 [data-whale-desktop-settings] .wm-button-row { margin-top: 14px; }
 [data-whale-desktop-settings] .wm-button-row:first-child { margin-top: 10px; }
 [data-whale-desktop-settings] .wm-pomodoro { margin: 4px 0 16px; }
-/* 全部卡片常开展开，去掉展开/收缩箭头 */
-[data-whale-desktop-settings] details.wm-card { min-height: 0; max-height: none; }
-[data-whale-desktop-settings] details.wm-card:not([open]) > .wm-card-content { display: block !important; }
-[data-whale-desktop-settings] .wm-card > summary {
-  cursor: default;
-  padding: 0 18px 0 17px;
-  border-bottom: 1px solid var(--wm-line-soft);
-}
-[data-whale-desktop-settings] .wm-card > summary::after,
-[data-whale-desktop-settings] .wm-card > summary::before,
-[data-whale-desktop-settings] .wm-card[open] > summary::after,
-[data-whale-desktop-settings] .wm-card[open] > summary::before {
-  display: none !important;
-}
-[data-whale-desktop-settings] .wm-card[open] > summary { border-bottom: 1px solid var(--wm-line-soft); }
-
 /* 外观页的「互动与全部动作」占满整行 */
 [data-whale-desktop-settings] [data-settings-page="appearance"] > .wm-card:not(.wm-appearance-theme) {
   grid-column: 1 / -1;
@@ -1032,20 +985,13 @@ details.wm-card:not([open]) > .wm-card-content { display: none !important; }
    Premium style pass — component + layout polish (all themes)
    ============================================================ */
 
-/* card hover lift + accent glow */
-[data-whale-desktop-settings] .wm-dashboard-card,
-[data-whale-desktop-settings] .wm-card {
+/* only expandable cards lift on hover; dashboard cards are informational */
+[data-whale-desktop-settings] details.wm-card {
   transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
 }
-[data-whale-desktop-settings] .wm-dashboard-card:hover,
-[data-whale-desktop-settings] .wm-card:hover {
+[data-whale-desktop-settings] details.wm-card:hover {
   transform: translateY(-2px);
   border-color: color-mix(in srgb, var(--wm-accent) 42%, transparent);
-}
-
-/* sidebar selected: left accent bar */
-[data-whale-desktop-settings] .wm-settings-body .wm-settings-nav-item.selected {
-  box-shadow: inset 3px 0 0 var(--wm-accent-deep);
 }
 
 /* gradient primary buttons */
@@ -1099,16 +1045,6 @@ details.wm-card:not([open]) > .wm-card-content { display: none !important; }
   background: linear-gradient(90deg, var(--wm-accent-deep), var(--wm-accent));
 }
 
-/* glassmorphism for light themes */
-[data-whale-desktop-settings][data-settings-theme="a"] .wm-dashboard-card,
-[data-whale-desktop-settings][data-settings-theme="a"] .wm-card,
-[data-whale-desktop-settings][data-settings-theme="a"] .wm-stat,
-[data-whale-desktop-settings][data-settings-theme="c"] .wm-dashboard-card,
-[data-whale-desktop-settings][data-settings-theme="c"] .wm-card {
-  background: color-mix(in srgb, var(--wm-surface) 78%, transparent);
-  backdrop-filter: blur(8px);
-}
-
 /* page note as a callout pill (non-general pages) */
 [data-whale-desktop-settings] [data-settings-page]:not([data-settings-page="general"]) .wm-settings-page-note {
   display: inline-flex;
@@ -1156,12 +1092,13 @@ details.wm-card:not([open]) > .wm-card-content { display: none !important; }
   --wm-scroll: #a4d3c1;
   --wm-panel-border: rgb(255 255 255 / 88%);
   --wm-panel-radius: 22px;
-  --wm-card-radius: 15px;
+  --wm-card-radius: 14px;
+  --wm-control-radius: 11px;
   --wm-panel-shadow: 0 22px 42px rgb(31 122 92 / 26%), inset 0 1px 0 rgb(255 255 255 / 84%);
   background:
-    radial-gradient(circle at 12% 88%, rgb(255 255 255 / 70%) 0 4px, transparent 5px),
-    radial-gradient(circle at 88% 82%, rgb(53 195 154 / 16%) 0 6px, transparent 7px),
-    linear-gradient(135deg, #effcf6 0%, #e4f8ef 52%, #d8f2e8 100%);
+    radial-gradient(circle at 6% 88%, rgb(255 255 255 / .8) 0 4px, transparent 5px),
+    radial-gradient(circle at 92% 12%, rgb(53 195 154 / .2) 0 6px, transparent 7px),
+    linear-gradient(135deg, #effcf6, #e0f7ec 52%, #cdf0e1 100%);
   color-scheme: light;
 }
 [data-whale-desktop-settings][data-settings-theme="f"] {
@@ -1189,10 +1126,14 @@ details.wm-card:not([open]) > .wm-card-content { display: none !important; }
   --wm-switch-thumb: #fffbf6;
   --wm-scroll: #d9b295;
   --wm-panel-border: #e3c3a5;
-  --wm-panel-radius: 20px;
-  --wm-card-radius: 14px;
+  --wm-panel-radius: 22px;
+  --wm-card-radius: 16px;
+  --wm-control-radius: 12px;
   --wm-panel-shadow: 0 22px 42px rgb(173 112 66 / 26%), inset 0 1px 0 rgb(255 255 255 / 84%);
-  background: linear-gradient(135deg, #fef7f1 0%, #fceadb 55%, #f9ddc8 100%);
+  background:
+    radial-gradient(circle at 82% 8%, rgb(255 220 160 / .6) 0 2px, transparent 3px),
+    radial-gradient(circle at 20% 92%, rgb(255 255 255 / .7) 0 4px, transparent 5px),
+    linear-gradient(150deg, #fff6ee, #fde7d2 52%, #f8d3b4 100%);
   color-scheme: light;
 }
 [data-whale-desktop-settings][data-settings-theme="g"] {
@@ -1220,34 +1161,16 @@ details.wm-card:not([open]) > .wm-card-content { display: none !important; }
   --wm-switch-thumb: #ffffff;
   --wm-scroll: #dca7bf;
   --wm-panel-border: #ecc3d4;
-  --wm-panel-radius: 22px;
-  --wm-card-radius: 15px;
+  --wm-panel-radius: 24px;
+  --wm-card-radius: 16px;
+  --wm-control-radius: 12px;
   --wm-panel-shadow: 0 22px 42px rgb(201 93 143 / 24%), inset 0 1px 0 rgb(255 255 255 / 86%);
-  background: linear-gradient(135deg, #fff6fa 0%, #fce8f1 52%, #f9dbe8 100%);
+  background:
+    radial-gradient(circle at 12% 18%, rgb(255 255 255 / .7) 0 2px, transparent 3px),
+    radial-gradient(circle at 85% 75%, rgb(240 130 180 / .16) 0 3px, transparent 4px),
+    radial-gradient(circle at 30% 88%, rgb(255 255 255 / .55) 0 2px, transparent 3px),
+    linear-gradient(135deg, #fff6fa, #fbdfea 52%, #f6c9de 100%);
   color-scheme: light;
-}
-
-/* light themes: show a compact page title on the general page */
-[data-whale-desktop-settings][data-settings-theme="e"] [data-settings-page="general"],
-[data-whale-desktop-settings][data-settings-theme="f"] [data-settings-page="general"],
-[data-whale-desktop-settings][data-settings-theme="g"] [data-settings-page="general"] {
-  grid-template-rows: 33px minmax(0, 1fr);
-}
-[data-whale-desktop-settings][data-settings-theme="e"] [data-settings-page="general"] > .wm-settings-page-title,
-[data-whale-desktop-settings][data-settings-theme="f"] [data-settings-page="general"] > .wm-settings-page-title,
-[data-whale-desktop-settings][data-settings-theme="g"] [data-settings-page="general"] > .wm-settings-page-title {
-  display: block;
-}
-
-/* glassmorphism for the new light themes */
-[data-whale-desktop-settings][data-settings-theme="e"] .wm-dashboard-card,
-[data-whale-desktop-settings][data-settings-theme="e"] .wm-card,
-[data-whale-desktop-settings][data-settings-theme="f"] .wm-dashboard-card,
-[data-whale-desktop-settings][data-settings-theme="f"] .wm-card,
-[data-whale-desktop-settings][data-settings-theme="g"] .wm-dashboard-card,
-[data-whale-desktop-settings][data-settings-theme="g"] .wm-card {
-  background: color-mix(in srgb, var(--wm-surface) 78%, transparent);
-  backdrop-filter: blur(8px);
 }
 
 /* theme picker previews for the new themes */
@@ -1328,20 +1251,44 @@ details.wm-card:not([open]) > .wm-card-content { display: none !important; }
   align-items: center;
 }
 [data-whale-desktop-settings] .wm-range-control {
-  height: 26px;
-  min-height: 26px;
+  height: 32px;
+  min-height: 32px;
 }
 [data-whale-desktop-settings] .wm-range-control input[type="range"] {
-  height: 26px;
-  min-height: 26px;
+  height: 4px;
+  min-height: 4px;
   margin: 0;
   padding: 0;
   display: block;
   align-self: center;
-  vertical-align: middle;
+  appearance: none;
+  background: var(--wm-switch-track);
+  border: 0;
+  border-radius: 999px;
+  outline: none;
+}
+[data-whale-desktop-settings] .wm-range-control input[type="range"]::-webkit-slider-thumb {
+  width: 16px;
+  height: 16px;
+  appearance: none;
+  background: var(--wm-accent-deep);
+  border: 2px solid var(--wm-switch-thumb);
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 28%);
+}
+[data-whale-desktop-settings] .wm-range-control input[type="range"]::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  background: var(--wm-accent-deep);
+  border: 2px solid var(--wm-switch-thumb);
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgb(0 0 0 / 28%);
+}
+[data-whale-desktop-settings] .wm-range-control input[type="range"]:focus-visible {
+  box-shadow: 0 0 0 3px var(--wm-accent-soft);
 }
 [data-whale-desktop-settings] .wm-range-control > span {
-  line-height: 26px;
+  line-height: 32px;
   align-self: center;
   display: block;
 }
@@ -1369,29 +1316,6 @@ details.wm-card:not([open]) > .wm-card-content { display: none !important; }
    ============================================================ */
 
 /* ---------- A 海盐玻璃：真实毛玻璃，清透气泡 ---------- */
-[data-whale-desktop-settings][data-settings-theme="a"] {
-  --wm-panel-radius: 26px;
-  --wm-card-radius: 17px;
-  --wm-control-radius: 12px;
-  --wm-panel: rgb(236 250 253 / .55);
-  --wm-head: rgb(255 255 255 / .5);
-  --wm-nav: rgb(232 247 252 / .48);
-  --wm-content: rgb(249 252 254 / .4);
-  --wm-surface: rgb(255 255 255 / .56);
-  --wm-surface-hover: rgb(255 255 255 / .72);
-  --wm-elevated: rgb(255 255 255 / .62);
-  --wm-control: rgb(255 255 255 / .55);
-  --wm-control-hover: rgb(255 255 255 / .74);
-  --wm-panel-border: rgb(255 255 255 / .62);
-  --wm-panel-shadow: 0 30px 60px rgb(31 84 110 / .3), inset 0 1px 0 rgb(255 255 255 / .9);
-  background:
-    radial-gradient(circle at 6% 92%, rgb(255 255 255 / .85) 0 4px, transparent 5px),
-    radial-gradient(circle at 94% 86%, rgb(105 205 232 / .25) 0 6px, transparent 7px),
-    radial-gradient(circle at 72% 8%, rgb(255 255 255 / .55) 0 2px, transparent 3px),
-    radial-gradient(circle at 44% 96%, rgb(255 255 255 / .4) 0 2px, transparent 3px),
-    linear-gradient(135deg, rgb(240 251 254 / .72), rgb(222 242 250 / .62) 52%, rgb(203 235 246 / .58) 100%);
-  backdrop-filter: blur(26px) saturate(1.3);
-}
 [data-whale-desktop-settings][data-settings-theme="a"] .wm-settings-head,
 [data-whale-desktop-settings][data-settings-theme="a"] .wm-settings-nav,
 [data-whale-desktop-settings][data-settings-theme="a"] .wm-settings-content { backdrop-filter: blur(6px); }
@@ -1404,27 +1328,10 @@ details.wm-card:not([open]) > .wm-card-content { display: none !important; }
   border-color: rgb(255 255 255 / .9);
   box-shadow: 0 6px 18px rgb(58 133 161 / .16), inset 0 1px 0 rgb(255 255 255 / .9);
 }
-[data-whale-desktop-settings][data-settings-theme="a"] .wm-card,
-[data-whale-desktop-settings][data-settings-theme="a"] .wm-dashboard-card { backdrop-filter: blur(10px); }
 [data-whale-desktop-settings][data-settings-theme="a"] .wm-summary-title,
 [data-whale-desktop-settings][data-settings-theme="a"] .wm-dashboard-card-title { font-weight: 600; letter-spacing: .02em; }
 
 /* ---------- B 深海控制台：终端 / 单色扫描线 / 青色荧光 ---------- */
-[data-whale-desktop-settings][data-settings-theme="b"] {
-  --wm-panel-radius: 8px;
-  --wm-card-radius: 4px;
-  --wm-control-radius: 3px;
-  --wm-panel-border: #17435f;
-  --wm-line: #16435c;
-  --wm-line-soft: #123248;
-  --wm-accent-deep: #38cfe8;
-  --wm-accent-border: #2f96b8;
-  font-family: "Cascadia Mono", "JetBrains Mono", "Consolas", "Microsoft YaHei UI", "PingFang SC", monospace;
-  background:
-    repeating-linear-gradient(0deg, rgb(0 255 255 / .04) 0 1px, transparent 1px 3px),
-    repeating-linear-gradient(90deg, rgb(0 255 255 / .025) 0 1px, transparent 1px 4px),
-    linear-gradient(180deg, #05121e, #030d18);
-}
 [data-whale-desktop-settings][data-settings-theme="b"] .wm-settings-head {
   background: linear-gradient(180deg, #071a2c, #04121f);
   border-bottom: 1px solid #17435f;
@@ -1517,17 +1424,6 @@ details.wm-card:not([open]) > .wm-card-content { display: none !important; }
 }
 
 /* ---------- C 奶油手账：纸纹 / 虚线 / 手账 ---------- */
-[data-whale-desktop-settings][data-settings-theme="c"] {
-  --wm-panel-radius: 12px;
-  --wm-card-radius: 8px;
-  --wm-control-radius: 8px;
-  --wm-panel: #f7ecd8;
-  --wm-head: rgb(253 246 232 / .92);
-  --wm-content: #f8efdd;
-  background:
-    repeating-linear-gradient(0deg, rgb(190 132 92 / .07) 0 1px, transparent 1px 30px),
-    linear-gradient(135deg, #f9f0dd, #f3e6cc);
-}
 [data-whale-desktop-settings][data-settings-theme="c"] .wm-settings-content {
   background-image: repeating-linear-gradient(0deg, rgb(196 139 100 / .08) 0 1px, transparent 1px 30px);
 }
@@ -1573,22 +1469,6 @@ details.wm-card:not([open]) > .wm-card-content { display: none !important; }
 }
 
 /* ---------- D 极简原生：中性灰 / 扁平 / 无装饰 / 系统字体 ---------- */
-[data-whale-desktop-settings][data-settings-theme="d"] {
-  --wm-panel-radius: 8px;
-  --wm-card-radius: 6px;
-  --wm-control-radius: 4px;
-  --wm-panel: #25282b;
-  --wm-head: #2a2d30;
-  --wm-nav: #282b2e;
-  --wm-content: #222629;
-  --wm-accent: #9aa4ad;
-  --wm-accent-deep: #b7c0c7;
-  --wm-accent-soft: #33383b;
-  --wm-accent-border: #4a5156;
-  --wm-panel-border: #3a3e42;
-  --wm-panel-shadow: 0 14px 30px rgb(0 0 0 / .5);
-  font-family: "Segoe UI", system-ui, "Microsoft YaHei UI", sans-serif;
-}
 [data-whale-desktop-settings][data-settings-theme="d"] .wm-settings-head {
   background: #2a2d30;
   border-bottom: 1px solid #383c40;
@@ -1621,8 +1501,7 @@ details.wm-card:not([open]) > .wm-card-content { display: none !important; }
   border: 1px solid #3a3e42;
   box-shadow: none;
 }
-[data-whale-desktop-settings][data-settings-theme="d"] .wm-dashboard-card:hover,
-[data-whale-desktop-settings][data-settings-theme="d"] .wm-card:hover {
+[data-whale-desktop-settings][data-settings-theme="d"] details.wm-card:hover {
   transform: none;
   border-color: #4a5055;
 }
@@ -1635,15 +1514,6 @@ details.wm-card:not([open]) > .wm-card-content { display: none !important; }
 [data-whale-desktop-settings][data-settings-theme="d"] .wm-switch::before { border: 1px solid #3f4448; }
 
 /* ---------- E 薄荷渐变：清新绿意 + 卡片描边渐变 ---------- */
-[data-whale-desktop-settings][data-settings-theme="e"] {
-  --wm-panel-radius: 22px;
-  --wm-card-radius: 14px;
-  --wm-control-radius: 11px;
-  background:
-    radial-gradient(circle at 6% 88%, rgb(255 255 255 / .8) 0 4px, transparent 5px),
-    radial-gradient(circle at 92% 12%, rgb(53 195 154 / .2) 0 6px, transparent 7px),
-    linear-gradient(135deg, #effcf6, #e0f7ec 52%, #cdf0e1 100%);
-}
 [data-whale-desktop-settings][data-settings-theme="e"] .wm-dashboard-card,
 [data-whale-desktop-settings][data-settings-theme="e"] .wm-card {
   border-top: 2px solid color-mix(in srgb, var(--wm-accent) 55%, transparent);
@@ -1652,15 +1522,6 @@ details.wm-card:not([open]) > .wm-card-content { display: none !important; }
 [data-whale-desktop-settings][data-settings-theme="e"] .wm-dashboard-card-title { color: #0f6a4f; }
 
 /* ---------- F 暖阳橙：暖橙渐变 + 阳光 ---------- */
-[data-whale-desktop-settings][data-settings-theme="f"] {
-  --wm-panel-radius: 22px;
-  --wm-card-radius: 16px;
-  --wm-control-radius: 12px;
-  background:
-    radial-gradient(circle at 82% 8%, rgb(255 220 160 / .6) 0 2px, transparent 3px),
-    radial-gradient(circle at 20% 92%, rgb(255 255 255 / .7) 0 4px, transparent 5px),
-    linear-gradient(150deg, #fff6ee, #fde7d2 52%, #f8d3b4 100%);
-}
 [data-whale-desktop-settings][data-settings-theme="f"] .wm-dashboard-card,
 [data-whale-desktop-settings][data-settings-theme="f"] .wm-card {
   background: linear-gradient(180deg, color-mix(in srgb, var(--wm-surface) 96%, #fff), var(--wm-surface));
@@ -1670,16 +1531,6 @@ details.wm-card:not([open]) > .wm-card-content { display: none !important; }
 [data-whale-desktop-settings][data-settings-theme="f"] .wm-dashboard-card-title { color: #7a4526; }
 
 /* ---------- G 樱花粉：柔粉渐变 + 飘落花瓣 ---------- */
-[data-whale-desktop-settings][data-settings-theme="g"] {
-  --wm-panel-radius: 24px;
-  --wm-card-radius: 16px;
-  --wm-control-radius: 12px;
-  background:
-    radial-gradient(circle at 12% 18%, rgb(255 255 255 / .7) 0 2px, transparent 3px),
-    radial-gradient(circle at 85% 75%, rgb(240 130 180 / .16) 0 3px, transparent 4px),
-    radial-gradient(circle at 30% 88%, rgb(255 255 255 / .55) 0 2px, transparent 3px),
-    linear-gradient(135deg, #fff6fa, #fbdfea 52%, #f6c9de 100%);
-}
 [data-whale-desktop-settings][data-settings-theme="g"] .wm-settings-content {
   background-image:
     radial-gradient(circle at 8% 20%, rgb(255 160 200 / .25) 0 2px, transparent 3px),
@@ -1719,11 +1570,28 @@ details.wm-card:not([open]) > .wm-card-content { display: none !important; }
 }
 .wm-theme-option-g .wm-theme-preview i { border-radius: 50% 50% 50% 0; }
 
+/* Short windows scroll their content instead of compressing dashboard cards. */
+@container (min-width: 561px) and (max-height: 560px) {
+  [data-whale-desktop-settings] [data-settings-page="general"] {
+    height: auto;
+  }
 
+  [data-whale-desktop-settings] .wm-general-dashboard {
+    flex: 0 0 auto;
+    height: auto;
+    grid-template-rows: repeat(3, minmax(118px, auto));
+  }
+}
 
+@media (prefers-reduced-motion: reduce) {
+  [data-whale-desktop-settings] *,
+  [data-whale-desktop-settings] *::before,
+  [data-whale-desktop-settings] *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
 
-
-
-
-
-
+  [data-whale-desktop-settings] details.wm-card:hover {
+    transform: none;
+  }
+}

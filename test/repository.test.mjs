@@ -377,14 +377,20 @@ test("settings preferences update in place without rebuilding the panel", () => 
   assert.match(settings, /updateSectionMeta\("🎛️ 陪伴表现"/);
 });
 
-test("settings offer four persistent themes and default to deep ocean", () => {
+test("settings offer seven persistent themes and default to deep ocean", () => {
   const settings = read("renderer/settings.js");
   const settingsCss = read("renderer/settings.css");
   const storage = read("renderer/storage.js");
-  assert.match(settings, /\["a", "海盐玻璃"/);
-  assert.match(settings, /\["b", "深海控制台"/);
-  assert.match(settings, /\["c", "奶油手账"/);
-  assert.match(settings, /\["d", "极简原生"/);
+  const themes = ["a", "b", "c", "d", "e", "f", "g"];
+  [
+    ["a", "海盐玻璃"],
+    ["b", "深海控制台"],
+    ["c", "奶油手账"],
+    ["d", "极简原生"],
+    ["e", "薄荷渐变"],
+    ["f", "暖阳橙"],
+    ["g", "樱花粉"]
+  ].forEach(([id, name]) => assert.match(settings, new RegExp(`\\["${id}", "${name}"`)));
   assert.match(settings, /value\("settingsTheme", "b"\)/);
   assert.match(settings, /data-settings-theme-option/);
   assert.match(settings, /wm-settings-nav/);
@@ -392,30 +398,37 @@ test("settings offer four persistent themes and default to deep ocean", () => {
   assert.match(settings, /activateSettingsPage\("general"\)/);
   assert.match(settings, /\["sound", "♫", "音量"/);
   assert.match(settings, /wm-general-dashboard/);
-  assert.match(settings, /settings-reference-a-card\.png/);
+  assert.match(settings, /dsh-whale-settings-peek\.webp/);
+  assert.match(settings, /dsh-whale-state-daily-coffee\.webp/);
   assert.match(settings, /"伴随状态"/);
   assert.match(settings, /"开机启动"/);
   assert.match(settings, /"互动频率"/);
   assert.match(settings, /"节能模式"/);
-  assert.match(settingsCss, /grid-template-rows: 1fr 1fr 0\.88fr/);
-  assert.match(settingsCss, /grid-template-columns: 158px minmax\(0, 1fr\)/);
+  assert.match(settingsCss, /grid-template-columns: repeat\(6, 1fr\)/);
+  assert.match(settingsCss, /@container \(min-width: 561px\) and \(max-height: 560px\)/);
+  assert.match(settingsCss, /grid-template-rows: repeat\(3, minmax\(118px, auto\)\)/);
+  assert.match(settingsCss, /details\.wm-card:not\(\[open\]\) > \.wm-card-content \{ display: none !important; \}/);
   assert.match(settingsCss, /grid-template-columns: repeat\(2, minmax\(0, 1fr\)\)/);
-  assert.match(settingsCss, /width: min\(900px/);
+  assert.match(settingsCss, /width: min\(1055px/);
   assert.match(settingsCss, /resize: both/);
   assert.match(settingsCss, /@container \(max-width: 760px\)/);
   assert.match(settings, /new ResizeObserver/);
   assert.match(storage, /desktopSettingsWidth: \[680, 1600\]/);
   assert.match(storage, /desktopSettingsHeight: \[430, 1200\]/);
   assert.match(storage, /settingsTheme: 16/);
-  ["a", "b", "c", "d"].forEach((theme) => {
+  assert.match(storage, /\["a", "b", "c", "d", "e", "f", "g"\]/);
+  themes.forEach((theme) => {
     assert.match(settingsCss, new RegExp('data-settings-theme="' + theme + '"'));
   });
-  ["a", "b", "c", "d"].forEach((theme) => {
-    ["card", "nav"].forEach((role) => {
-      const assetName = `settings-reference-${theme}-${role}.png`;
-      assert.match(settings, new RegExp(assetName.replace(".", "\\.")));
-      assert.ok(existsSync(path.join(root, "assets", "generated", assetName)), `${assetName} must exist`);
-    });
+  [
+    "dsh-whale-settings-peek.webp",
+    "dsh-whale-state-idle-cute.webp",
+    "dsh-whale-state-blush.webp",
+    "dsh-whale-state-waiting.webp",
+    "dsh-whale-state-daily-coffee.webp"
+  ].forEach((assetName) => {
+    assert.match(settings, new RegExp(assetName.replace(".", "\\.")));
+    assert.ok(existsSync(path.join(root, "assets", "generated", assetName)), `${assetName} must exist`);
   });
 });
 
