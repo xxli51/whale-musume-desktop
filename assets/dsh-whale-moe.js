@@ -679,6 +679,9 @@
       cancelDepartureExit();
       if (!wasVisible) beginAdventureArrival();
       else schedule();
+      /* A journey can outlast the normal weather cache window. Refresh on
+         every return so the restored effect follows the latest condition. */
+      weatherEnsure(true);
     }
   }
 
@@ -3089,7 +3092,7 @@
 
   /* ---------- weather visual fx (gated canvas layer) ----------
      rAF 门控例外(相对文件头 "no ambient rAF" 约定):
-     仅在 motion/flash kind 激活 && 特效开关开 && 城市已填 && 天气新鲜(<2h)
+     仅在桌宠节点存在 && motion/flash kind 激活 && 特效开关开 && 城市已填 && 天气新鲜(<2h)
      && 非 forced-colors && 非 reduced-motion && 页面可见时运行;
      任一条件翻转即 weatherFxStop() 取消循环并摘除节点,不养常驻循环。 */
 
@@ -3126,6 +3129,7 @@
   }
   function weatherFxGate(computed) {
     var enabled =
+      !!doc.querySelector("[data-dsh-whale-root]") &&
       readPref("weatherFx") &&
       readWeather("weatherCity").trim().length > 0 &&
       weatherState.current &&

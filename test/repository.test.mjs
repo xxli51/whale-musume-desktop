@@ -195,6 +195,16 @@ test("procedural adventures persist deterministic memories and collectibles", ()
   assert.match(presenter, /beginAdventureArrival/);
   assert.match(presenter, /whale-adventure-change", onAdventureChange/);
   assert.match(presenter, /WhaleAdventureCore\.isAway/);
+  assert.match(
+    presenter,
+    /change\.type === "returned" \|\| change\.type === "recalled"\)[\s\S]*?weatherEnsure\(true\)/,
+    "returning from travel must refresh the current weather code"
+  );
+  assert.match(
+    presenter,
+    /function weatherFxGate\(computed\) \{[\s\S]*?!!doc\.querySelector\("\[data-dsh-whale-root\]"\)/,
+    "weather effects must stay off after the travelling mascot leaves the desktop"
+  );
   assert.match(main, /提前召回鲸鱼娘/);
   assert.match(main, /if \(adventureAway\)/);
   assert.match(main, /whale:recall-adventure/);
