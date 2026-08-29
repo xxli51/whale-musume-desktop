@@ -440,6 +440,21 @@ function logDiagnostic(level, event, details) {
   if (diagnostics && typeof diagnostics[level] === "function") diagnostics[level](event, details);
 }
 
+function flushRendererStorage() {
+  if (!overlay || overlay.isDestroyed() || overlay.webContents.isDestroyed()) return;
+  try {
+    overlay.webContents.session.flushStorageData();
+  } catch (error) {
+    logDiagnostic("warn", "renderer-storage-flush-failed", { error: String(error) });
+  }
+}
+
+function quitApplication() {
+  quitting = true;
+  flushRendererStorage();
+  app.quit();
+}
+
 function recoverRenderer() {
   if (quitting || !overlay || overlay.isDestroyed()) return;
   const now = Date.now();
@@ -594,10 +609,7 @@ function refreshTrayMenu() {
     { type: "separator" },
     {
       label: "退出",
-      click: () => {
-        quitting = true;
-        app.quit();
-      }
+      click: quitApplication
     }
   ];
   if (adventureAway) {
@@ -684,8 +696,7 @@ if (!hasLock) {
       }
     });
     ipcMain.on("whale:quit", () => {
-      quitting = true;
-      app.quit();
+      quitApplication();
     });
     ipcMain.on("whale:set-computer-link-enabled", (_event, enabled) => {
       setComputerLinkEnabled(enabled);
@@ -729,6 +740,7 @@ app.on("window-all-closed", () => {
 
 app.on("before-quit", () => {
   quitting = true;
+  flushRendererStorage();
   logDiagnostic("info", "app-before-quit", null);
   stopCursorProbe();
   stopSystemStateSamples();

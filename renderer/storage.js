@@ -80,7 +80,8 @@
     "relationshipState",
     "houseState",
     "dailySummaryState",
-    "lifeState"
+    "lifeState",
+    "settingsAccordionState"
   ]);
   var STRING_RULES = Object.freeze({
     mode: 32,

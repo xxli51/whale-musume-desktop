@@ -42,6 +42,10 @@ test("storage repairs invalid values and emits validated changes", () => {
   assert.equal(storage.get("settingsTheme", "b"), "b");
   assert.equal(storage.set("settingsTheme", "a"), "a");
   assert.throws(() => storage.set("settingsTheme", "neon"), /无效的存储字段/);
+  assert.equal(
+    storage.set("settingsAccordionState", JSON.stringify({ display: "🖥️ 电脑状态联动" })),
+    '{"display":"🖥️ 电脑状态联动"}'
+  );
 });
 
 test("save export uses version 2 and keeps the weather key private", () => {

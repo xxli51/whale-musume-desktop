@@ -65,6 +65,14 @@ test("desktop package is self-contained", () => {
   assert.doesNotMatch(main, /path\.join\(__dirname, "\.\.", "assets"\)/);
 });
 
+test("desktop flushes persistent renderer state before quitting", () => {
+  const main = read("main.cjs");
+  assert.match(main, /function flushRendererStorage\(\)/);
+  assert.match(main, /session\.flushStorageData\(\)/);
+  assert.match(main, /function quitApplication\(\)[\s\S]*flushRendererStorage\(\);[\s\S]*app\.quit\(\);/);
+  assert.match(main, /app\.on\("before-quit"[\s\S]*flushRendererStorage\(\);/);
+});
+
 test("all pose assets and desktop safety fixes are present", () => {
   const generated = path.join(root, "assets", "generated");
   const poses = readdirSync(generated).filter((name) => /^dsh-whale-state-.*\.webp$/.test(name));
@@ -387,6 +395,35 @@ test("settings preferences update in place without rebuilding the panel", () => 
   assert.match(settings, /updateSectionMeta\("🎛️ 陪伴表现"/);
 });
 
+test("settings use a remembered single-open accordion outside the dashboard", () => {
+  const settings = read("renderer/settings.js");
+  const settingsCss = read("renderer/settings.css");
+  const storage = read("renderer/storage.js");
+  assert.match(settings, /savedAccordionState/);
+  assert.match(settings, /preferredAccordionCard/);
+  assert.match(settings, /if \(other !== card\) other\.open = false/);
+  assert.match(settings, /save\("settingsAccordionState"/);
+  assert.match(settings, /pageId === "general"/);
+  assert.match(settings, /wm-accordion-search-hit/);
+  assert.match(settingsCss, /Layered accordion/);
+  assert.match(settingsCss, /details\.wm-card\[open\] > \.wm-card-content/);
+  assert.match(storage, /"settingsAccordionState"/);
+});
+
+test("settings themes have distinct geometry, material and density recipes", () => {
+  const settingsCss = read("renderer/settings.css");
+  assert.match(settingsCss, /Shared theme recipe system/);
+  assert.match(settingsCss, /--theme-card-background/);
+  assert.match(settingsCss, /--theme-nav-item-height/);
+  assert.match(settingsCss, /--theme-card-hover-transform/);
+  ["a", "b", "c", "d", "e", "f", "g"].forEach((theme) => {
+    const definitions = settingsCss.match(new RegExp(`data-settings-theme="${theme}"`, "g")) || [];
+    assert.equal(definitions.length, 1, `theme ${theme} should have one authoritative definition`);
+  });
+  assert.match(settingsCss, /--wm-card-radius: 8px/);
+  assert.match(settingsCss, /--wm-card-radius: 20px/);
+});
+
 test("settings offer seven persistent themes and default to deep ocean", () => {
   const settings = read("renderer/settings.js");
   const settingsCss = read("renderer/settings.css");
@@ -397,7 +434,7 @@ test("settings offer seven persistent themes and default to deep ocean", () => {
     ["b", "深海控制台"],
     ["c", "奶油手账"],
     ["d", "极简原生"],
-    ["e", "薄荷渐变"],
+    ["e", "月光紫"],
     ["f", "暖阳橙"],
     ["g", "樱花粉"]
   ].forEach(([id, name]) => assert.match(settings, new RegExp(`\\["${id}", "${name}"`)));

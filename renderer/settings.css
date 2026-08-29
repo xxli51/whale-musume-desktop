@@ -65,130 +65,6 @@
   box-sizing: border-box;
 }
 
-[data-whale-desktop-settings][data-settings-theme="a"] {
-  --wm-panel: rgb(236 250 253 / .55);
-  --wm-head: rgb(255 255 255 / .5);
-  --wm-nav: rgb(232 247 252 / .48);
-  --wm-content: rgb(249 252 254 / .4);
-  --wm-surface: rgb(255 255 255 / .56);
-  --wm-surface-hover: rgb(255 255 255 / .72);
-  --wm-elevated: rgb(255 255 255 / .62);
-  --wm-control: rgb(255 255 255 / .55);
-  --wm-control-hover: rgb(255 255 255 / .74);
-  --wm-control-border: #b8dce6;
-  --wm-line: #cfe7f0;
-  --wm-line-soft: #d6e9ef;
-  --wm-text: #18334f;
-  --wm-row-text: #2f4d68;
-  --wm-muted: #56748c;
-  --wm-accent: #26b2c8;
-  --wm-accent-deep: #229bb1;
-  --wm-accent-soft: #c4eaf4;
-  --wm-accent-border: #9fd9e6;
-  --wm-primary-text: #073943;
-  --wm-switch-track: #a9cdda;
-  --wm-switch-thumb: #ffffff;
-  --wm-scroll: #9bcbd6;
-  --wm-panel-border: rgb(255 255 255 / .62);
-  --wm-panel-radius: 26px;
-  --wm-card-radius: 17px;
-  --wm-control-radius: 12px;
-  --wm-panel-shadow: 0 30px 60px rgb(31 84 110 / .3), inset 0 1px 0 rgb(255 255 255 / .9);
-  background:
-    radial-gradient(circle at 6% 92%, rgb(255 255 255 / .85) 0 4px, transparent 5px),
-    radial-gradient(circle at 94% 86%, rgb(105 205 232 / .25) 0 6px, transparent 7px),
-    radial-gradient(circle at 72% 8%, rgb(255 255 255 / .55) 0 2px, transparent 3px),
-    radial-gradient(circle at 44% 96%, rgb(255 255 255 / .4) 0 2px, transparent 3px),
-    linear-gradient(135deg, rgb(240 251 254 / .72), rgb(222 242 250 / .62) 52%, rgb(203 235 246 / .58) 100%);
-  backdrop-filter: blur(26px) saturate(1.3);
-  color-scheme: light;
-}
-
-[data-whale-desktop-settings][data-settings-theme="b"] {
-  --wm-panel-radius: 8px;
-  --wm-card-radius: 4px;
-  --wm-control-radius: 3px;
-  --wm-panel-border: #17435f;
-  --wm-line: #16435c;
-  --wm-line-soft: #123248;
-  --wm-accent-deep: #38cfe8;
-  --wm-accent-border: #2f96b8;
-  background:
-    repeating-linear-gradient(0deg, rgb(0 255 255 / .04) 0 1px, transparent 1px 3px),
-    repeating-linear-gradient(90deg, rgb(0 255 255 / .025) 0 1px, transparent 1px 4px),
-    linear-gradient(180deg, #05121e, #030d18);
-  font-family: "Cascadia Mono", "JetBrains Mono", "Consolas", "Microsoft YaHei UI", "PingFang SC", monospace;
-  color-scheme: dark;
-}
-
-[data-whale-desktop-settings][data-settings-theme="c"] {
-  --wm-panel: #f7ecd8;
-  --wm-head: rgb(253 246 232 / .92);
-  --wm-nav: #faf1e1;
-  --wm-content: #f8efdd;
-  --wm-surface: #fefcf7;
-  --wm-surface-hover: #fffaf0;
-  --wm-elevated: #fffaf0;
-  --wm-control: #fffaf2;
-  --wm-control-hover: #fff4e4;
-  --wm-control-border: #ddc8a9;
-  --wm-line: #e3cdb4;
-  --wm-line-soft: #e7d8c6;
-  --wm-text: #4e3527;
-  --wm-row-text: #6e5f55;
-  --wm-muted: #8d7362;
-  --wm-accent: #ec8f76;
-  --wm-accent-deep: #e36f5d;
-  --wm-accent-soft: #f8ddce;
-  --wm-accent-border: #e4b59f;
-  --wm-primary-text: #51261d;
-  --wm-switch-track: #e7d5b8;
-  --wm-switch-thumb: #fffbf4;
-  --wm-scroll: #cdb796;
-  --wm-panel-border: #d9c09b;
-  --wm-panel-radius: 12px;
-  --wm-card-radius: 8px;
-  --wm-control-radius: 8px;
-  --wm-panel-shadow: 0 22px 42px rgb(93 66 43 / 28%), inset 0 0 0 4px rgb(255 255 255 / 34%);
-  background:
-    repeating-linear-gradient(0deg, rgb(190 132 92 / .07) 0 1px, transparent 1px 30px),
-    linear-gradient(135deg, #f9f0dd, #f3e6cc);
-  font-family: "KaiTi", "STKaiti", "Microsoft YaHei UI", serif;
-  color-scheme: light;
-}
-
-[data-whale-desktop-settings][data-settings-theme="d"] {
-  --wm-panel: #25282b;
-  --wm-head: #2a2d30;
-  --wm-nav: #282b2e;
-  --wm-content: #222629;
-  --wm-surface: #35393d;
-  --wm-surface-hover: #3b4043;
-  --wm-elevated: #3a3e42;
-  --wm-control: #3b4043;
-  --wm-control-hover: #444a4e;
-  --wm-control-border: #555b5f;
-  --wm-line: #505559;
-  --wm-line-soft: #44494c;
-  --wm-text: #e3e2e1;
-  --wm-row-text: #c2c3c4;
-  --wm-muted: #9c9fa2;
-  --wm-accent: #9aa4ad;
-  --wm-accent-deep: #b7c0c7;
-  --wm-accent-soft: #33383b;
-  --wm-accent-border: #4a5156;
-  --wm-primary-text: #09291f;
-  --wm-switch-track: #50575d;
-  --wm-switch-thumb: #e5e7e8;
-  --wm-scroll: #5a6064;
-  --wm-panel-border: #3a3e42;
-  --wm-panel-radius: 8px;
-  --wm-card-radius: 6px;
-  --wm-control-radius: 4px;
-  --wm-panel-shadow: 0 14px 30px rgb(0 0 0 / .5);
-  font-family: "Segoe UI", system-ui, "Microsoft YaHei UI", sans-serif;
-  color-scheme: dark;
-}
 
 [data-whale-desktop-settings][hidden] { display: none; }
 body:has([data-whale-desktop-settings]:not([hidden])) > [data-dsh-whale-root] {
@@ -364,10 +240,6 @@ body:has([data-whale-desktop-settings]:not([hidden])) > [data-dsh-whale-root] {
   grid-template-rows: 1.12fr 1fr 0.8fr;
   gap: 16px 20px;
 }
-[data-settings-theme="a"] .wm-general-dashboard {
-  grid-template-rows: 1fr 1fr 0.78fr;
-  gap: 15px;
-}
 
 .wm-dashboard-card {
   position: relative;
@@ -466,29 +338,6 @@ body:has([data-whale-desktop-settings]:not([hidden])) > [data-dsh-whale-root] {
   font-size: var(--wm-font-caption);
   white-space: nowrap;
 }
-
-[data-settings-theme="a"] .wm-settings-content { padding: 28px 33px 27px; }
-[data-settings-theme="a"] .wm-dashboard-companion img { width: 158px; height: 143px; }
-[data-settings-theme="a"] .wm-dashboard-card { box-shadow: inset 0 1px 0 rgb(255 255 255 / 82%); }
-[data-settings-theme="c"] .wm-dashboard-card,
-[data-settings-theme="c"] .wm-card { border-style: dashed; box-shadow: inset 0 0 0 3px rgb(255 255 255 / 26%); }
-[data-settings-theme="c"] .wm-dashboard-companion img,
-[data-settings-theme="c"] .wm-settings-nav-mascot { mix-blend-mode: multiply; }
-[data-settings-theme="c"] .wm-settings-head { border-bottom-style: dashed; }
-[data-settings-theme="c"] .wm-settings-nav { border-right-style: dashed; }
-[data-settings-theme="c"] .wm-settings-body .wm-settings-nav-item.selected {
-  color: #603b31;
-  background: linear-gradient(#f6ae98, #ef9984);
-  border: 1px dashed #d77963;
-  box-shadow: inset 0 0 0 2px rgb(255 255 255 / 35%);
-}
-[data-settings-theme="d"] .wm-settings-body .wm-settings-nav-item.selected {
-  background: #3d4145;
-  border-left: 4px solid var(--wm-accent);
-  border-radius: 5px;
-}
-[data-settings-theme="d"] .wm-dashboard-status,
-[data-settings-theme="d"] .wm-dashboard-version-ok { border-radius: 5px; }
 
 .wm-card {
   min-width: 0;
@@ -771,7 +620,6 @@ details.wm-card:not([open]) > .wm-card-content { display: none !important; }
   .wm-dashboard-switch input::after { width: 18px; height: 18px; }
   .wm-dashboard-switch input:checked::after { transform: translateX(19px); }
   .wm-dashboard-power .wm-dashboard-switch { min-height: 78px; }
-  [data-settings-theme="a"] .wm-settings-content { padding: 23px 27px 22px; }
 }
 
 @container (max-width: 760px) {
@@ -1063,126 +911,6 @@ details.wm-card:not([open]) > .wm-card-content { display: none !important; }
   content: "●";
   font-size: 8px;
 }
-/* ============================================================
-   New themes: e 薄荷渐变 / f 暖阳橙 / g 樱花粉
-   ============================================================ */
-[data-whale-desktop-settings][data-settings-theme="e"] {
-  --wm-panel: #e9fbf3;
-  --wm-head: #f0fcf6;
-  --wm-nav: #dbf3e8;
-  --wm-content: #f4fcf8;
-  --wm-surface: #f6fdf9;
-  --wm-surface-hover: #ffffff;
-  --wm-elevated: #ffffff;
-  --wm-control: rgb(255 255 255 / 80%);
-  --wm-control-hover: #eafaf2;
-  --wm-control-border: #bfe3d2;
-  --wm-line: #cfe9dc;
-  --wm-line-soft: #d8efe4;
-  --wm-text: #14423a;
-  --wm-row-text: #31564e;
-  --wm-muted: #5f7f76;
-  --wm-accent: #35c39a;
-  --wm-accent-deep: #1fa884;
-  --wm-accent-soft: #c9f0e0;
-  --wm-accent-border: #a9dcc8;
-  --wm-primary-text: #06392d;
-  --wm-switch-track: #add9c9;
-  --wm-switch-thumb: #ffffff;
-  --wm-scroll: #a4d3c1;
-  --wm-panel-border: rgb(255 255 255 / 88%);
-  --wm-panel-radius: 22px;
-  --wm-card-radius: 14px;
-  --wm-control-radius: 11px;
-  --wm-panel-shadow: 0 22px 42px rgb(31 122 92 / 26%), inset 0 1px 0 rgb(255 255 255 / 84%);
-  background:
-    radial-gradient(circle at 6% 88%, rgb(255 255 255 / .8) 0 4px, transparent 5px),
-    radial-gradient(circle at 92% 12%, rgb(53 195 154 / .2) 0 6px, transparent 7px),
-    linear-gradient(135deg, #effcf6, #e0f7ec 52%, #cdf0e1 100%);
-  color-scheme: light;
-}
-[data-whale-desktop-settings][data-settings-theme="f"] {
-  --wm-panel: #fdf3ec;
-  --wm-head: #fff7f0;
-  --wm-nav: #fbeee2;
-  --wm-content: #fff6ef;
-  --wm-surface: #fffaf5;
-  --wm-surface-hover: #fff2e8;
-  --wm-elevated: #ffffff;
-  --wm-control: #fff6ef;
-  --wm-control-hover: #ffefe3;
-  --wm-control-border: #ecc4a5;
-  --wm-line: #f0d6bf;
-  --wm-line-soft: #f3e0cd;
-  --wm-text: #6b3f2a;
-  --wm-row-text: #8a5f47;
-  --wm-muted: #a97f63;
-  --wm-accent: #f28a5c;
-  --wm-accent-deep: #e26a3e;
-  --wm-accent-soft: #fbdfcf;
-  --wm-accent-border: #eab092;
-  --wm-primary-text: #6a2c14;
-  --wm-switch-track: #eed5bd;
-  --wm-switch-thumb: #fffbf6;
-  --wm-scroll: #d9b295;
-  --wm-panel-border: #e3c3a5;
-  --wm-panel-radius: 22px;
-  --wm-card-radius: 16px;
-  --wm-control-radius: 12px;
-  --wm-panel-shadow: 0 22px 42px rgb(173 112 66 / 26%), inset 0 1px 0 rgb(255 255 255 / 84%);
-  background:
-    radial-gradient(circle at 82% 8%, rgb(255 220 160 / .6) 0 2px, transparent 3px),
-    radial-gradient(circle at 20% 92%, rgb(255 255 255 / .7) 0 4px, transparent 5px),
-    linear-gradient(150deg, #fff6ee, #fde7d2 52%, #f8d3b4 100%);
-  color-scheme: light;
-}
-[data-whale-desktop-settings][data-settings-theme="g"] {
-  --wm-panel: #fdeef4;
-  --wm-head: #fff6f9;
-  --wm-nav: #fbe3ed;
-  --wm-content: #fff6fa;
-  --wm-surface: #fff9fb;
-  --wm-surface-hover: #fff0f6;
-  --wm-elevated: #ffffff;
-  --wm-control: #fff6f9;
-  --wm-control-hover: #ffeef4;
-  --wm-control-border: #edb9cf;
-  --wm-line: #f3d3e0;
-  --wm-line-soft: #f6dde7;
-  --wm-text: #7c3a55;
-  --wm-row-text: #9c5a72;
-  --wm-muted: #b9829a;
-  --wm-accent: #ef7fb2;
-  --wm-accent-deep: #e05d97;
-  --wm-accent-soft: #fbdbe9;
-  --wm-accent-border: #eeb0cb;
-  --wm-primary-text: #7a1c47;
-  --wm-switch-track: #edc4d6;
-  --wm-switch-thumb: #ffffff;
-  --wm-scroll: #dca7bf;
-  --wm-panel-border: #ecc3d4;
-  --wm-panel-radius: 24px;
-  --wm-card-radius: 16px;
-  --wm-control-radius: 12px;
-  --wm-panel-shadow: 0 22px 42px rgb(201 93 143 / 24%), inset 0 1px 0 rgb(255 255 255 / 86%);
-  background:
-    radial-gradient(circle at 12% 18%, rgb(255 255 255 / .7) 0 2px, transparent 3px),
-    radial-gradient(circle at 85% 75%, rgb(240 130 180 / .16) 0 3px, transparent 4px),
-    radial-gradient(circle at 30% 88%, rgb(255 255 255 / .55) 0 2px, transparent 3px),
-    linear-gradient(135deg, #fff6fa, #fbdfea 52%, #f6c9de 100%);
-  color-scheme: light;
-}
-
-/* theme picker previews for the new themes */
-.wm-theme-option-e .wm-theme-preview { background: linear-gradient(135deg, #eafcf3, #cdeede); border-color: #fff; }
-.wm-theme-option-e .wm-theme-preview i { background: rgb(255 255 255 / 74%); border: 1px solid #aedcc9; }
-.wm-theme-option-e .wm-theme-preview i:first-child { background: #c4ecd9; }
-.wm-theme-option-f .wm-theme-preview { background: linear-gradient(135deg, #fef7f1, #f9dcc6); border-color: #fff; }
-.wm-theme-option-f .wm-theme-preview i { background: rgb(255 255 255 / 72%); border: 1px solid #ecc4a5; }
-.wm-theme-option-f .wm-theme-preview i:first-child { background: #f8c9a8; }
-.wm-theme-option-g .wm-theme-preview { background: linear-gradient(135deg, #fff6fa, #f9d3e3); border-color: #fff; }
-.wm-theme-option-g .wm-theme-preview i { background: rgb(255 255 255 / 72%); border: 1px solid #edb9cf; }
-.wm-theme-option-g .wm-theme-preview i:first-child { background: #f6c3d9; }
 
 /* ============================================================
    通用页：顶部整行「今日数据」卡片 + 下方仪表盘弹性填充
@@ -1310,265 +1038,31 @@ details.wm-card:not([open]) > .wm-card-content { display: none !important; }
   flex: 0 0 auto;
 }
 
-/* ============================================================
-   真正的主题差异化 —— 每个主题拥有独立的气质
-   （仅样式，菜单/内容/功能结构不变）
-   ============================================================ */
-
-/* ---------- A 海盐玻璃：真实毛玻璃，清透气泡 ---------- */
-[data-whale-desktop-settings][data-settings-theme="a"] .wm-settings-head,
-[data-whale-desktop-settings][data-settings-theme="a"] .wm-settings-nav,
-[data-whale-desktop-settings][data-settings-theme="a"] .wm-settings-content { backdrop-filter: blur(6px); }
-[data-whale-desktop-settings][data-settings-theme="a"] .wm-settings-head { border-bottom-color: rgb(255 255 255 / .5); }
-[data-whale-desktop-settings][data-settings-theme="a"] .wm-settings-nav { border-right-color: rgb(255 255 255 / .5); }
-[data-whale-desktop-settings][data-settings-theme="a"] .wm-settings-body .wm-settings-nav-item { border-radius: 12px; }
-[data-whale-desktop-settings][data-settings-theme="a"] .wm-settings-body .wm-settings-nav-item:hover { background: rgb(255 255 255 / .55); }
-[data-whale-desktop-settings][data-settings-theme="a"] .wm-settings-body .wm-settings-nav-item.selected {
-  background: rgb(255 255 255 / .72);
-  border-color: rgb(255 255 255 / .9);
-  box-shadow: 0 6px 18px rgb(58 133 161 / .16), inset 0 1px 0 rgb(255 255 255 / .9);
-}
-[data-whale-desktop-settings][data-settings-theme="a"] .wm-summary-title,
-[data-whale-desktop-settings][data-settings-theme="a"] .wm-dashboard-card-title { font-weight: 600; letter-spacing: .02em; }
-
-/* ---------- B 深海控制台：终端 / 单色扫描线 / 青色荧光 ---------- */
-[data-whale-desktop-settings][data-settings-theme="b"] .wm-settings-head {
-  background: linear-gradient(180deg, #071a2c, #04121f);
-  border-bottom: 1px solid #17435f;
-  letter-spacing: .08em;
-  text-transform: uppercase;
-}
-[data-whale-desktop-settings][data-settings-theme="b"] .wm-settings-mark {
-  color: #38cfe8;
-  background: rgb(0 255 255 / .08);
-  border: 1px solid rgb(0 255 255 / .2);
-  border-radius: 4px;
-}
-[data-whale-desktop-settings][data-settings-theme="b"] .wm-settings-nav {
-  background: linear-gradient(180deg, #051220, #04101b);
-  border-right-color: #12324a;
-}
-[data-whale-desktop-settings][data-settings-theme="b"] .wm-settings-body .wm-settings-nav-item { border-radius: 3px; }
-[data-whale-desktop-settings][data-settings-theme="b"] .wm-settings-body .wm-settings-nav-item:hover {
-  background: rgb(0 255 255 / .06);
-  border: 1px solid rgb(0 255 255 / .18);
-}
-[data-whale-desktop-settings][data-settings-theme="b"] .wm-settings-body .wm-settings-nav-item.selected {
-  background: rgb(56 207 232 / .12);
-  border: 1px solid rgb(56 207 232 / .45);
-  color: #b6f0ff;
-  box-shadow: inset 3px 0 0 #38cfe8, 0 0 10px rgb(56 207 232 / .18);
-  text-shadow: 0 0 6px rgb(56 207 232 / .35);
-}
-[data-whale-desktop-settings][data-settings-theme="b"] .wm-settings-nav-icon {
-  color: #38cfe8;
-  background: transparent;
-  border: 1px solid rgb(0 255 255 / .18);
-  border-radius: 3px;
-}
-[data-whale-desktop-settings][data-settings-theme="b"] .wm-dashboard-card,
-[data-whale-desktop-settings][data-settings-theme="b"] .wm-card {
-  background: #081826;
-  border: 1px solid #17435f;
-  box-shadow: 0 0 0 1px rgb(0 255 255 / .05), inset 0 0 18px rgb(0 0 0 / .45);
-}
-[data-whale-desktop-settings][data-settings-theme="b"] .wm-card > summary { border-bottom-color: #12324a; }
-[data-whale-desktop-settings][data-settings-theme="b"] .wm-summary-title,
-[data-whale-desktop-settings][data-settings-theme="b"] .wm-dashboard-card-title {
-  text-transform: uppercase;
-  letter-spacing: .12em;
-  padding-left: 0;
-}
-[data-whale-desktop-settings][data-settings-theme="b"] .wm-summary-title::before,
-[data-whale-desktop-settings][data-settings-theme="b"] .wm-dashboard-card-title::before {
-  content: "> ";
-  position: static;
-  width: auto;
-  height: auto;
-  left: auto;
-  top: auto;
-  transform: none;
-  background: none;
-  box-shadow: none;
-  color: #38cfe8;
-  font-size: inherit;
-  text-shadow: 0 0 6px rgb(56 207 232 / .5);
-}
-[data-whale-desktop-settings][data-settings-theme="b"] .wm-settings-body button,
-[data-whale-desktop-settings][data-settings-theme="b"] .wm-row input[type="text"],
-[data-whale-desktop-settings][data-settings-theme="b"] .wm-row input[type="password"],
-[data-whale-desktop-settings][data-settings-theme="b"] .wm-row input[type="number"],
-[data-whale-desktop-settings][data-settings-theme="b"] .wm-row input[type="time"],
-[data-whale-desktop-settings][data-settings-theme="b"] .wm-row select {
-  background: #06131f;
-  border: 1px solid #1a4a66;
-  border-radius: 3px;
-  color: #d6f2ff;
-}
-[data-whale-desktop-settings][data-settings-theme="b"] .wm-settings-body button:hover {
-  background: rgb(0 255 255 / .08);
-  border-color: #2f96b8;
-  color: #c8f2ff;
-}
-[data-whale-desktop-settings][data-settings-theme="b"] .wm-switch::before { border: 1px solid #1a4a66; }
-[data-whale-desktop-settings][data-settings-theme="b"] .wm-dashboard-status,
-[data-whale-desktop-settings][data-settings-theme="b"] .wm-dashboard-version-ok {
-  border-radius: 3px;
-  color: #38cfe8;
-  background: rgb(56 207 232 / .12);
-  border: 1px solid rgb(56 207 232 / .35);
-}
-[data-whale-desktop-settings][data-settings-theme="b"] .wm-dashboard-companion img,
-[data-whale-desktop-settings][data-settings-theme="b"] .wm-settings-nav-mascot {
-  filter: saturate(1.15) contrast(1.05) brightness(.95) drop-shadow(0 0 8px rgb(56 207 232 / .25));
-}
-
-/* ---------- C 奶油手账：纸纹 / 虚线 / 手账 ---------- */
-[data-whale-desktop-settings][data-settings-theme="c"] .wm-settings-content {
-  background-image: repeating-linear-gradient(0deg, rgb(196 139 100 / .08) 0 1px, transparent 1px 30px);
-}
-[data-whale-desktop-settings][data-settings-theme="c"] .wm-settings-head {
-  border-bottom: 2px dashed #d9b483;
-  background: rgb(253 246 232 / .92);
-}
-[data-whale-desktop-settings][data-settings-theme="c"] .wm-settings-mark {
-  color: #c25a3b;
-  background: #ffe9cf;
-  border: 1px dashed #e0b684;
-  border-radius: 8px;
-}
-[data-whale-desktop-settings][data-settings-theme="c"] .wm-settings-nav {
-  border-right: 2px dashed #dcc49e;
-  background: rgb(250 240 222 / .92);
-}
-[data-whale-desktop-settings][data-settings-theme="c"] .wm-settings-body .wm-settings-nav-item.selected {
-  background: linear-gradient(#f6ae98, #ef9984);
-  border: 1px dashed #d77963;
-}
-[data-whale-desktop-settings][data-settings-theme="c"] .wm-dashboard-card,
-[data-whale-desktop-settings][data-settings-theme="c"] .wm-card {
-  background: #fdf9f0;
-  border: 1px dashed #d8bd93;
-  box-shadow: 0 4px 10px rgb(140 94 60 / .12);
-}
-[data-whale-desktop-settings][data-settings-theme="c"] .wm-card > summary { border-bottom: 1px dashed #e0cca6; }
-[data-whale-desktop-settings][data-settings-theme="c"] .wm-summary-title,
-[data-whale-desktop-settings][data-settings-theme="c"] .wm-dashboard-card-title {
-  font-family: "KaiTi", "STKaiti", "Microsoft YaHei UI", serif;
-  font-size: 19px;
-  letter-spacing: .02em;
-}
-[data-whale-desktop-settings][data-settings-theme="c"] .wm-settings-body button,
-[data-whale-desktop-settings][data-settings-theme="c"] .wm-row input[type="text"],
-[data-whale-desktop-settings][data-settings-theme="c"] .wm-row input[type="password"],
-[data-whale-desktop-settings][data-settings-theme="c"] .wm-row input[type="number"],
-[data-whale-desktop-settings][data-settings-theme="c"] .wm-row input[type="time"],
-[data-whale-desktop-settings][data-settings-theme="c"] .wm-row select {
-  border: 1px dashed #d9ba8b;
-  background: #fffaf2;
-}
-
-/* ---------- D 极简原生：中性灰 / 扁平 / 无装饰 / 系统字体 ---------- */
-[data-whale-desktop-settings][data-settings-theme="d"] .wm-settings-head {
-  background: #2a2d30;
-  border-bottom: 1px solid #383c40;
-}
-[data-whale-desktop-settings][data-settings-theme="d"] .wm-settings-body .wm-settings-nav-item.selected {
-  background: #34383c;
-  border: 1px solid #45494e;
-  font-weight: 600;
-  box-shadow: none;
-}
-[data-whale-desktop-settings][data-settings-theme="d"] .wm-settings-body .wm-settings-nav-item.selected .wm-settings-nav-icon {
-  background: #34383c;
-  color: #c3ccd3;
-}
-[data-whale-desktop-settings][data-settings-theme="d"] .wm-dashboard-card-title,
-[data-whale-desktop-settings][data-settings-theme="d"] .wm-summary-title {
-  padding-left: 0;
-  font-weight: 600;
-}
-[data-whale-desktop-settings][data-settings-theme="d"] .wm-dashboard-card-title::before,
-[data-whale-desktop-settings][data-settings-theme="d"] .wm-summary-title::before { display: none; }
-[data-whale-desktop-settings][data-settings-theme="d"] .wm-summary-meta,
-[data-whale-desktop-settings][data-settings-theme="d"] .wm-theme-heading span {
-  background: transparent;
-  color: var(--wm-muted);
-}
-[data-whale-desktop-settings][data-settings-theme="d"] .wm-dashboard-card,
-[data-whale-desktop-settings][data-settings-theme="d"] .wm-card {
-  background: #2b2f32;
-  border: 1px solid #3a3e42;
-  box-shadow: none;
-}
-[data-whale-desktop-settings][data-settings-theme="d"] details.wm-card:hover {
-  transform: none;
-  border-color: #4a5055;
-}
-[data-whale-desktop-settings][data-settings-theme="d"] .wm-settings-body button.wm-primary {
-  background: #565d64;
-  border-color: #565d64;
-  box-shadow: none;
-}
-[data-whale-desktop-settings][data-settings-theme="d"] .wm-settings-body .wm-theme-option.selected { box-shadow: 0 0 0 2px #8b959e; }
-[data-whale-desktop-settings][data-settings-theme="d"] .wm-switch::before { border: 1px solid #3f4448; }
-
-/* ---------- E 薄荷渐变：清新绿意 + 卡片描边渐变 ---------- */
-[data-whale-desktop-settings][data-settings-theme="e"] .wm-dashboard-card,
-[data-whale-desktop-settings][data-settings-theme="e"] .wm-card {
-  border-top: 2px solid color-mix(in srgb, var(--wm-accent) 55%, transparent);
-}
-[data-whale-desktop-settings][data-settings-theme="e"] .wm-summary-title,
-[data-whale-desktop-settings][data-settings-theme="e"] .wm-dashboard-card-title { color: #0f6a4f; }
-
-/* ---------- F 暖阳橙：暖橙渐变 + 阳光 ---------- */
-[data-whale-desktop-settings][data-settings-theme="f"] .wm-dashboard-card,
-[data-whale-desktop-settings][data-settings-theme="f"] .wm-card {
-  background: linear-gradient(180deg, color-mix(in srgb, var(--wm-surface) 96%, #fff), var(--wm-surface));
-  border: 1px solid color-mix(in srgb, var(--wm-accent) 26%, var(--wm-line));
-}
-[data-whale-desktop-settings][data-settings-theme="f"] .wm-summary-title,
-[data-whale-desktop-settings][data-settings-theme="f"] .wm-dashboard-card-title { color: #7a4526; }
-
-/* ---------- G 樱花粉：柔粉渐变 + 飘落花瓣 ---------- */
-[data-whale-desktop-settings][data-settings-theme="g"] .wm-settings-content {
-  background-image:
-    radial-gradient(circle at 8% 20%, rgb(255 160 200 / .25) 0 2px, transparent 3px),
-    radial-gradient(circle at 80% 40%, rgb(255 160 200 / .22) 0 2px, transparent 3px),
-    radial-gradient(circle at 20% 80%, rgb(255 160 200 / .2) 0 2px, transparent 3px),
-    radial-gradient(circle at 68% 88%, rgb(255 160 200 / .18) 0 2px, transparent 3px);
-}
-[data-whale-desktop-settings][data-settings-theme="g"] .wm-dashboard-card,
-[data-whale-desktop-settings][data-settings-theme="g"] .wm-card {
-  border-color: color-mix(in srgb, var(--wm-accent) 25%, var(--wm-line));
-}
-[data-whale-desktop-settings][data-settings-theme="g"] .wm-summary-title,
-[data-whale-desktop-settings][data-settings-theme="g"] .wm-dashboard-card-title { color: #8a2f55; }
-
-/* 主题选择微缩预览也体现各主题气质（仅改预览色块样式） */
+/* Theme picker miniature identities stay local to the previews. */
 .wm-theme-option-a .wm-theme-preview {
-  backdrop-filter: blur(4px);
-  background: linear-gradient(135deg, rgb(255 255 255 / .72), rgb(207 237 245 / .6));
-  border-color: rgb(255 255 255 / .85);
+  background: linear-gradient(135deg, rgb(255 255 255 / 72%), rgb(207 237 245 / 60%));
+  border-color: rgb(255 255 255 / 85%);
 }
 .wm-theme-option-b .wm-theme-preview {
-  background:
-    repeating-linear-gradient(0deg, rgb(0 255 255 / .05) 0 1px, transparent 1px 3px),
-    #071c2b;
-  border-color: #22536b;
-  border-radius: 3px;
+  background: #071c2b;
+  border: 0;
 }
-.wm-theme-option-b .wm-theme-preview i { border-radius: 0; }
+.wm-theme-option-b .wm-theme-preview i { border-radius: 2px; }
+.wm-theme-option-c .wm-theme-preview {
+  background: repeating-linear-gradient(0deg, #fff8ec 0 9px, #ead7b8 10px);
+  border-style: dashed;
+}
 .wm-theme-option-c .wm-theme-preview i { border-style: dashed; }
-.wm-theme-option-d .wm-theme-preview { border-radius: 3px; }
-.wm-theme-option-d .wm-theme-preview i { border-radius: 0; }
-.wm-theme-option-e .wm-theme-preview { border-top: 2px solid #35c39a; }
-.wm-theme-option-g .wm-theme-preview {
-  background:
-    radial-gradient(circle at 30% 30%, rgb(255 160 200 / .3) 0 2px, transparent 3px),
-    linear-gradient(135deg, #fff6fa, #f9d3e3);
+.wm-theme-option-d .wm-theme-preview,
+.wm-theme-option-d .wm-theme-preview i { border-radius: 2px; }
+.wm-theme-option-e .wm-theme-preview {
+  background: radial-gradient(circle at 80% 15%, rgb(139 122 235 / 20%), transparent 35%), linear-gradient(135deg, #faf9ff, #ddd7fa);
 }
-.wm-theme-option-g .wm-theme-preview i { border-radius: 50% 50% 50% 0; }
+.wm-theme-option-f .wm-theme-preview { border-left: 3px solid #ed8b54; }
+.wm-theme-option-g .wm-theme-preview {
+  background: radial-gradient(circle at 30% 30%, rgb(255 160 200 / 30%) 0 2px, transparent 3px), linear-gradient(135deg, #fff6fa, #f9d3e3);
+  border-radius: 14px;
+}
 
 /* Short windows scroll their content instead of compressing dashboard cards. */
 @container (min-width: 561px) and (max-height: 560px) {
@@ -1594,4 +1088,1143 @@ details.wm-card:not([open]) > .wm-card-content { display: none !important; }
   [data-whale-desktop-settings] details.wm-card:hover {
     transform: none;
   }
+}
+
+/* ============================================================
+   Whale Control Center / 2026 visual system
+   A layered settings workspace with restrained ambient motion.
+   ============================================================ */
+[data-whale-desktop-settings] {
+  --wm-panel-radius: 28px;
+  --wm-card-radius: 18px;
+  --wm-control-radius: 12px;
+  isolation: isolate;
+  width: min(1140px, calc(100vw - 32px));
+  height: min(720px, calc(100vh - 32px));
+  border-color: color-mix(in srgb, var(--wm-accent) 24%, var(--wm-panel-border));
+  box-shadow:
+    0 42px 90px rgb(0 9 18 / 56%),
+    0 8px 28px rgb(0 12 24 / 28%),
+    inset 0 1px 0 rgb(255 255 255 / 8%);
+}
+
+[data-whale-desktop-settings]::after {
+  position: absolute;
+  z-index: 20;
+  inset: 0;
+  border: 1px solid rgb(255 255 255 / 7%);
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 12%);
+  content: "";
+  pointer-events: none;
+}
+
+[data-whale-desktop-settings] .wm-settings-ambience {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+[data-whale-desktop-settings] .wm-settings-ambience::before {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(color-mix(in srgb, var(--wm-accent) 4%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in srgb, var(--wm-accent) 4%, transparent) 1px, transparent 1px);
+  background-size: 34px 34px;
+  mask-image: linear-gradient(115deg, transparent 0%, #000 36%, transparent 82%);
+  content: "";
+  opacity: .45;
+}
+
+[data-whale-desktop-settings] .wm-settings-orb {
+  position: absolute;
+  width: 330px;
+  height: 330px;
+  background: var(--wm-accent);
+  border-radius: 50%;
+  filter: blur(110px);
+  opacity: .1;
+  animation: wm-ambient-drift 14s ease-in-out infinite alternate;
+}
+
+[data-whale-desktop-settings] .wm-settings-orb-one { top: -210px; right: 6%; }
+[data-whale-desktop-settings] .wm-settings-orb-two {
+  bottom: -250px;
+  left: 14%;
+  animation-delay: -7s;
+  opacity: .07;
+}
+
+@keyframes wm-ambient-drift {
+  from { transform: translate3d(-18px, -8px, 0) scale(.92); }
+  to { transform: translate3d(34px, 22px, 0) scale(1.08); }
+}
+
+[data-whale-desktop-settings] .wm-settings-head {
+  z-index: 3;
+  min-height: 72px;
+  flex-basis: 72px;
+  padding: 0 16px 0 22px;
+  background: color-mix(in srgb, var(--wm-head) 88%, transparent);
+  border-bottom-color: color-mix(in srgb, var(--wm-accent) 12%, var(--wm-line-soft));
+  backdrop-filter: blur(24px) saturate(1.25);
+}
+
+[data-whale-desktop-settings] .wm-settings-title { gap: 13px; }
+
+[data-whale-desktop-settings] .wm-settings-mark {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  overflow: hidden;
+  color: var(--wm-accent-deep);
+  background: linear-gradient(145deg, color-mix(in srgb, var(--wm-accent) 24%, var(--wm-surface)), var(--wm-surface));
+  border: 1px solid color-mix(in srgb, var(--wm-accent) 38%, var(--wm-line));
+  border-radius: 14px;
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 13%), 0 8px 22px color-mix(in srgb, var(--wm-accent) 13%, transparent);
+}
+
+[data-whale-desktop-settings] .wm-settings-mark::after {
+  position: absolute;
+  top: -50%;
+  left: -70%;
+  width: 45%;
+  height: 200%;
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 34%), transparent);
+  content: "";
+  transform: rotate(24deg);
+  animation: wm-mark-shine 7s ease-in-out infinite;
+}
+
+@keyframes wm-mark-shine {
+  0%, 70% { left: -70%; }
+  88%, 100% { left: 140%; }
+}
+
+[data-whale-desktop-settings] .wm-settings-title-copy {
+  display: grid;
+  gap: 1px;
+}
+
+[data-whale-desktop-settings] .wm-settings-eyebrow {
+  color: var(--wm-accent-deep);
+  font: 700 9px/1.2 "Cascadia Mono", "Segoe UI", sans-serif;
+  letter-spacing: .18em;
+  opacity: .78;
+}
+
+[data-whale-desktop-settings] .wm-settings-head strong {
+  font-size: 17px;
+  font-weight: 650;
+  letter-spacing: .01em;
+}
+
+[data-whale-desktop-settings] .wm-settings-sync-state {
+  display: inline-flex;
+  min-height: 28px;
+  align-items: center;
+  gap: 7px;
+  padding: 0 10px;
+  color: var(--wm-muted);
+  background: color-mix(in srgb, var(--wm-surface) 72%, transparent);
+  border: 1px solid var(--wm-line-soft);
+  border-radius: 999px;
+  font-size: 11px;
+}
+
+[data-whale-desktop-settings] .wm-settings-sync-state::before {
+  width: 6px;
+  height: 6px;
+  background: #50d89a;
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px rgb(80 216 154 / 11%), 0 0 10px rgb(80 216 154 / 45%);
+  content: "";
+}
+
+[data-whale-desktop-settings] .wm-settings-close {
+  width: 38px;
+  height: 38px;
+  border: 1px solid transparent !important;
+  border-radius: 12px !important;
+  transition: color 160ms ease, background 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+[data-whale-desktop-settings] .wm-settings-close:hover {
+  background: rgb(255 89 113 / 13%) !important;
+  border-color: rgb(255 89 113 / 24%) !important;
+  color: #ff7187 !important;
+  transform: rotate(4deg);
+}
+
+[data-whale-desktop-settings] .wm-settings-body {
+  z-index: 2;
+  grid-template-columns: 250px minmax(0, 1fr);
+}
+
+[data-whale-desktop-settings] .wm-settings-nav {
+  gap: 6px;
+  padding: 18px 14px 12px;
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--wm-nav) 92%, transparent), color-mix(in srgb, var(--wm-nav) 98%, transparent));
+  border-right-color: color-mix(in srgb, var(--wm-accent) 12%, var(--wm-line-soft));
+  backdrop-filter: blur(20px);
+}
+
+[data-whale-desktop-settings] .wm-settings-nav-brand {
+  display: flex;
+  min-height: 46px;
+  align-items: center;
+  gap: 11px;
+  padding: 0 8px 5px;
+}
+
+[data-whale-desktop-settings] .wm-settings-nav-brand-mark {
+  display: grid;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  place-items: center;
+  color: var(--wm-primary-text);
+  background: linear-gradient(135deg, var(--wm-accent-deep), var(--wm-accent));
+  border-radius: 11px 11px 11px 4px;
+  box-shadow: 0 7px 18px color-mix(in srgb, var(--wm-accent) 24%, transparent);
+  font: 800 15px/1 "Cascadia Mono", sans-serif;
+}
+
+[data-whale-desktop-settings] .wm-settings-nav-brand-copy {
+  display: grid;
+  min-width: 0;
+}
+
+[data-whale-desktop-settings] .wm-settings-nav-brand-copy strong {
+  overflow: hidden;
+  color: var(--wm-text);
+  font-size: 14px;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+[data-whale-desktop-settings] .wm-settings-nav-brand-copy small {
+  color: var(--wm-muted);
+  font: 600 8px/1.4 "Cascadia Mono", sans-serif;
+  letter-spacing: .14em;
+}
+
+[data-whale-desktop-settings] .wm-settings-search {
+  display: flex;
+  min-height: 38px;
+  align-items: center;
+  gap: 7px;
+  padding: 0 9px 0 11px;
+  color: var(--wm-muted);
+  background: color-mix(in srgb, var(--wm-control) 76%, transparent);
+  border: 1px solid color-mix(in srgb, var(--wm-accent) 10%, var(--wm-control-border));
+  border-radius: 12px;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+[data-whale-desktop-settings] .wm-settings-search:focus-within {
+  background: var(--wm-control);
+  border-color: color-mix(in srgb, var(--wm-accent) 62%, var(--wm-control-border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--wm-accent) 12%, transparent);
+}
+
+[data-whale-desktop-settings] .wm-settings-search > span {
+  color: var(--wm-accent-deep);
+  font-size: 18px;
+  line-height: 1;
+}
+
+[data-whale-desktop-settings] .wm-settings-search input {
+  width: 100%;
+  min-width: 0;
+  height: 34px;
+  padding: 0;
+  color: var(--wm-text);
+  background: transparent;
+  border: 0;
+  outline: 0;
+  font: inherit;
+  font-size: 12px;
+}
+
+[data-whale-desktop-settings] .wm-settings-search input::placeholder { color: var(--wm-muted); }
+[data-whale-desktop-settings] .wm-settings-search input::-webkit-search-cancel-button { display: none; }
+
+[data-whale-desktop-settings] .wm-settings-search kbd {
+  flex: 0 0 auto;
+  padding: 2px 5px;
+  color: var(--wm-muted);
+  background: color-mix(in srgb, var(--wm-elevated) 74%, transparent);
+  border: 1px solid var(--wm-line-soft);
+  border-radius: 5px;
+  font: 600 8px/1.4 "Cascadia Mono", sans-serif;
+}
+
+[data-whale-desktop-settings] .wm-settings-nav-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 9px 3px;
+  color: var(--wm-muted);
+  font: 700 9px/1 "Cascadia Mono", "Microsoft YaHei UI", sans-serif;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+[data-whale-desktop-settings] .wm-settings-nav-label small {
+  display: grid;
+  width: 19px;
+  height: 19px;
+  place-items: center;
+  color: var(--wm-accent-deep);
+  background: color-mix(in srgb, var(--wm-accent) 10%, transparent);
+  border-radius: 6px;
+  font-size: 8px;
+}
+
+[data-whale-desktop-settings] .wm-settings-body .wm-settings-nav-item {
+  position: relative;
+  min-height: 47px;
+  gap: 11px;
+  padding: 0 11px;
+  overflow: hidden;
+  border-radius: 13px;
+  transition: color 160ms ease, background 160ms ease, border-color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+}
+
+[data-whale-desktop-settings] .wm-settings-body .wm-settings-nav-item[hidden] { display: none; }
+
+[data-whale-desktop-settings] .wm-settings-body .wm-settings-nav-item::after {
+  position: absolute;
+  top: 50%;
+  right: 9px;
+  width: 5px;
+  height: 5px;
+  background: var(--wm-accent-deep);
+  border-radius: 50%;
+  box-shadow: 0 0 10px var(--wm-accent);
+  content: "";
+  opacity: 0;
+  transform: translate(8px, -50%);
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+[data-whale-desktop-settings] .wm-settings-body .wm-settings-nav-item:hover {
+  background: color-mix(in srgb, var(--wm-surface-hover) 78%, transparent);
+  border-color: color-mix(in srgb, var(--wm-accent) 13%, transparent);
+  transform: translateX(2px);
+}
+
+[data-whale-desktop-settings] .wm-settings-body .wm-settings-nav-item.selected {
+  color: var(--wm-text);
+  background:
+    linear-gradient(90deg, color-mix(in srgb, var(--wm-accent) 18%, var(--wm-surface)), color-mix(in srgb, var(--wm-accent) 5%, var(--wm-surface)));
+  border-color: color-mix(in srgb, var(--wm-accent) 34%, var(--wm-line));
+  box-shadow: inset 3px 0 0 var(--wm-accent-deep), 0 8px 20px color-mix(in srgb, var(--wm-accent) 8%, transparent);
+}
+
+[data-whale-desktop-settings] .wm-settings-body .wm-settings-nav-item.selected::after {
+  opacity: 1;
+  transform: translate(0, -50%);
+}
+
+[data-whale-desktop-settings] .wm-settings-nav-icon {
+  width: 29px;
+  height: 29px;
+  flex-basis: 29px;
+  color: var(--wm-muted);
+  background: color-mix(in srgb, var(--wm-control) 74%, transparent);
+  border: 1px solid var(--wm-line-soft);
+  border-radius: 9px;
+  font-size: 15px;
+  transition: color 160ms ease, background 160ms ease, border-color 160ms ease, transform 160ms ease;
+}
+
+[data-whale-desktop-settings] .wm-settings-nav-item.selected .wm-settings-nav-icon {
+  color: var(--wm-accent-deep);
+  background: color-mix(in srgb, var(--wm-accent) 12%, var(--wm-control));
+  border-color: color-mix(in srgb, var(--wm-accent) 32%, var(--wm-line));
+  transform: rotate(-3deg);
+}
+
+[data-whale-desktop-settings] .wm-settings-nav-copy strong { font-size: 13px; font-weight: 620; }
+[data-whale-desktop-settings] .wm-settings-nav-copy small {
+  display: block;
+  color: var(--wm-muted);
+  font-size: 10px;
+  line-height: 1.3;
+}
+
+[data-whale-desktop-settings] .wm-settings-search-empty {
+  margin: 16px 8px;
+  color: var(--wm-muted);
+  font-size: 12px;
+  text-align: center;
+}
+
+[data-whale-desktop-settings] .wm-settings-search-empty[hidden] { display: none; }
+
+[data-whale-desktop-settings] .wm-settings-nav-mascot {
+  width: 160px;
+  height: 122px;
+  margin: auto auto -8px;
+  filter: drop-shadow(0 12px 18px color-mix(in srgb, var(--wm-accent) 14%, transparent));
+  animation: wm-mascot-float 5s ease-in-out infinite;
+}
+
+@keyframes wm-mascot-float {
+  0%, 100% { transform: translateY(0) rotate(-.5deg); }
+  50% { transform: translateY(-7px) rotate(.8deg); }
+}
+
+[data-whale-desktop-settings] .wm-settings-nav-footer {
+  display: flex;
+  min-height: 28px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  color: var(--wm-muted);
+  border-top: 1px solid var(--wm-line-soft);
+  font-size: 10px;
+}
+
+[data-whale-desktop-settings] .wm-settings-nav-footer > span {
+  color: #50d89a;
+  font-size: 7px;
+  text-shadow: 0 0 8px rgb(80 216 154 / 70%);
+}
+
+[data-whale-desktop-settings] .wm-settings-content {
+  position: relative;
+  padding: 24px 27px 28px;
+  background:
+    radial-gradient(circle at 94% 8%, color-mix(in srgb, var(--wm-accent) 9%, transparent), transparent 30%),
+    var(--wm-content);
+}
+
+[data-whale-desktop-settings] .wm-settings-page:not([hidden]) {
+  animation: wm-page-enter 260ms cubic-bezier(.2, .75, .2, 1) both;
+}
+
+@keyframes wm-page-enter {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+[data-whale-desktop-settings] .wm-settings-page-header {
+  position: relative;
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: 1fr auto;
+  gap: 2px 18px;
+  min-height: 63px;
+  align-items: center;
+  padding: 0 3px 13px;
+  border-bottom: 1px solid color-mix(in srgb, var(--wm-accent) 11%, var(--wm-line-soft));
+}
+
+[data-whale-desktop-settings] .wm-settings-page-index {
+  grid-column: 1 / -1;
+  color: var(--wm-accent-deep);
+  font: 700 8px/1 "Cascadia Mono", sans-serif;
+  letter-spacing: .18em;
+  opacity: .72;
+}
+
+[data-whale-desktop-settings] .wm-settings-page-heading { display: flex; min-width: 0; align-items: baseline; gap: 12px; }
+
+[data-whale-desktop-settings] .wm-settings-page-title {
+  margin: 0;
+  color: var(--wm-text);
+  font-size: 22px;
+  font-weight: 680;
+  letter-spacing: -.025em;
+  line-height: 1.25;
+}
+
+[data-whale-desktop-settings] .wm-settings-page-note {
+  display: block;
+  margin: 0;
+  color: var(--wm-muted);
+  font-size: 11px;
+}
+
+[data-whale-desktop-settings] .wm-settings-page-signal {
+  display: inline-flex;
+  min-height: 24px;
+  align-items: center;
+  gap: 6px;
+  padding: 0 9px;
+  color: var(--wm-accent-deep);
+  background: color-mix(in srgb, var(--wm-accent) 9%, transparent);
+  border: 1px solid color-mix(in srgb, var(--wm-accent) 20%, transparent);
+  border-radius: 999px;
+  font: 700 8px/1 "Cascadia Mono", sans-serif;
+  letter-spacing: .12em;
+}
+
+[data-whale-desktop-settings] .wm-settings-page-signal::before {
+  width: 5px;
+  height: 5px;
+  background: var(--wm-accent-deep);
+  border-radius: 50%;
+  box-shadow: 0 0 7px var(--wm-accent);
+  content: "";
+  animation: wm-signal-pulse 2s ease-in-out infinite;
+}
+
+@keyframes wm-signal-pulse { 50% { opacity: .3; transform: scale(.75); } }
+
+[data-whale-desktop-settings] [data-settings-page="general"] > .wm-settings-page-header {
+  display: grid;
+}
+
+[data-whale-desktop-settings] [data-settings-page="general"]:not([hidden]) {
+  gap: 16px;
+}
+
+[data-whale-desktop-settings] .wm-general-dashboard {
+  grid-template-rows: 1.12fr 1fr .82fr;
+  gap: 14px;
+}
+
+[data-whale-desktop-settings] .wm-dashboard-card,
+[data-whale-desktop-settings] .wm-card {
+  border-color: color-mix(in srgb, var(--wm-accent) 12%, var(--wm-line));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 4%), 0 9px 24px rgb(0 8 16 / 8%);
+}
+
+[data-whale-desktop-settings] .wm-dashboard-card {
+  transition: border-color 180ms ease, transform 180ms ease, box-shadow 180ms ease;
+}
+
+[data-whale-desktop-settings] .wm-dashboard-card::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 35%, rgb(255 255 255 / 4%) 48%, transparent 61%);
+  content: "";
+  pointer-events: none;
+  transform: translateX(-100%);
+  transition: transform 680ms ease;
+}
+
+[data-whale-desktop-settings] .wm-dashboard-card:hover {
+  border-color: color-mix(in srgb, var(--wm-accent) 35%, var(--wm-line));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 6%), 0 13px 30px color-mix(in srgb, var(--wm-accent) 8%, rgb(0 8 16 / 15%));
+  transform: translateY(-2px);
+}
+
+[data-whale-desktop-settings] .wm-dashboard-card:hover::after { transform: translateX(100%); }
+
+[data-whale-desktop-settings] details.wm-card {
+  transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+[data-whale-desktop-settings] details.wm-card:hover {
+  border-color: color-mix(in srgb, var(--wm-accent) 32%, var(--wm-line));
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 5%), 0 12px 30px color-mix(in srgb, var(--wm-accent) 7%, transparent);
+  transform: translateY(-1px);
+}
+
+[data-whale-desktop-settings] .wm-card > summary { transition: background 160ms ease; }
+[data-whale-desktop-settings] .wm-card > summary:hover { background: color-mix(in srgb, var(--wm-accent) 4%, transparent); }
+
+[data-whale-desktop-settings] .wm-dashboard-status {
+  gap: 7px;
+  border: 1px solid color-mix(in srgb, var(--wm-accent) 22%, transparent);
+  box-shadow: 0 0 20px color-mix(in srgb, var(--wm-accent) 8%, transparent);
+}
+
+[data-whale-desktop-settings] .wm-dashboard-companion img {
+  filter: drop-shadow(0 14px 16px color-mix(in srgb, var(--wm-accent) 16%, transparent));
+  transition: transform 300ms cubic-bezier(.2, .8, .2, 1), filter 300ms ease;
+}
+
+[data-whale-desktop-settings] .wm-dashboard-companion:hover img {
+  filter: drop-shadow(0 18px 21px color-mix(in srgb, var(--wm-accent) 24%, transparent));
+  transform: translateY(-4px) scale(1.025);
+}
+
+[data-whale-desktop-settings] .wm-dashboard-switch input::after,
+[data-whale-desktop-settings] .wm-switch::after { transition: transform 220ms cubic-bezier(.34, 1.56, .64, 1); }
+
+[data-whale-desktop-settings] .wm-row input:focus-visible,
+[data-whale-desktop-settings] .wm-row select:focus-visible,
+[data-whale-desktop-settings] .wm-settings-body button:focus-visible,
+[data-whale-desktop-settings] .wm-settings-nav-item:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--wm-accent) 70%, white);
+  outline-offset: 2px;
+}
+
+
+@container (max-width: 900px) {
+  [data-whale-desktop-settings] .wm-settings-body { grid-template-columns: 198px minmax(0, 1fr); }
+  [data-whale-desktop-settings] .wm-settings-nav { padding-inline: 10px; }
+  [data-whale-desktop-settings] .wm-settings-nav-brand-copy small,
+  [data-whale-desktop-settings] .wm-settings-nav-copy small,
+  [data-whale-desktop-settings] .wm-settings-search kbd { display: none; }
+  [data-whale-desktop-settings] .wm-settings-content { padding-inline: 19px; }
+  [data-whale-desktop-settings] .wm-settings-sync-state { display: none; }
+}
+
+@container (max-width: 700px) {
+  [data-whale-desktop-settings] .wm-settings-body { grid-template-columns: 78px minmax(0, 1fr); }
+  [data-whale-desktop-settings] .wm-settings-nav-brand { justify-content: center; padding-inline: 0; }
+  [data-whale-desktop-settings] .wm-settings-nav-brand-copy,
+  [data-whale-desktop-settings] .wm-settings-nav-label,
+  [data-whale-desktop-settings] .wm-settings-search,
+  [data-whale-desktop-settings] .wm-settings-nav-copy,
+  [data-whale-desktop-settings] .wm-settings-nav-mascot,
+  [data-whale-desktop-settings] .wm-settings-nav-footer { display: none; }
+  [data-whale-desktop-settings] .wm-settings-body .wm-settings-nav-item {
+    width: 48px;
+    min-height: 48px;
+    justify-content: center;
+    margin-inline: auto;
+    padding: 0;
+  }
+  [data-whale-desktop-settings] .wm-settings-body .wm-settings-nav-item::after { display: none; }
+  [data-whale-desktop-settings] .wm-settings-content { padding: 18px 16px 22px; }
+  [data-whale-desktop-settings] .wm-settings-page-heading { display: grid; gap: 1px; }
+  [data-whale-desktop-settings] .wm-settings-page-note { font-size: 10px; }
+}
+
+@container (max-height: 610px) {
+  [data-whale-desktop-settings] .wm-settings-nav-brand,
+  [data-whale-desktop-settings] .wm-settings-nav-mascot { display: none; }
+  [data-whale-desktop-settings] .wm-settings-nav {
+    padding-top: 12px;
+    overflow-y: auto;
+    scrollbar-width: none;
+  }
+  [data-whale-desktop-settings] .wm-settings-nav::-webkit-scrollbar { display: none; }
+  [data-whale-desktop-settings] .wm-settings-nav-footer { display: none; }
+  [data-whale-desktop-settings] .wm-settings-page-header { min-height: 54px; padding-bottom: 9px; }
+  [data-whale-desktop-settings] .wm-settings-page-title { font-size: 19px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-whale-desktop-settings] .wm-settings-orb,
+  [data-whale-desktop-settings] .wm-settings-mark::after,
+  [data-whale-desktop-settings] .wm-settings-nav-mascot,
+  [data-whale-desktop-settings] .wm-settings-page-signal::before,
+  [data-whale-desktop-settings] .wm-settings-page:not([hidden]) { animation: none !important; }
+}
+
+/* ============================================================
+   Layered accordion
+   General stays a dashboard; every other category becomes a
+   single-open, full-width detail stack with persistent context.
+   ============================================================ */
+[data-whale-desktop-settings] .wm-settings-page:not([data-settings-page="general"]) {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+}
+
+[data-whale-desktop-settings] .wm-settings-page:not([data-settings-page="general"]) > .wm-settings-page-header {
+  margin-bottom: 4px;
+}
+
+[data-whale-desktop-settings] .wm-settings-page:not([data-settings-page="general"]) > details.wm-card {
+  width: 100%;
+  grid-column: 1 / -1;
+}
+
+[data-whale-desktop-settings] details.wm-card[open] {
+  border-color: color-mix(in srgb, var(--wm-accent) 30%, var(--wm-line));
+  box-shadow:
+    inset 3px 0 0 color-mix(in srgb, var(--wm-accent) 76%, transparent),
+    inset 0 1px 0 rgb(255 255 255 / 5%),
+    0 14px 34px color-mix(in srgb, var(--wm-accent) 7%, transparent);
+}
+
+[data-whale-desktop-settings] details.wm-card[open] > .wm-card-content {
+  transform-origin: top center;
+  animation: wm-accordion-content-in 220ms cubic-bezier(.2, .75, .2, 1) both;
+}
+
+@keyframes wm-accordion-content-in {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+[data-whale-desktop-settings] details.wm-card:not([open]) > summary {
+  border-radius: inherit;
+}
+
+[data-whale-desktop-settings] details.wm-card.wm-accordion-search-hit {
+  animation: wm-accordion-search-hit 1.1s ease both;
+}
+
+@keyframes wm-accordion-search-hit {
+  0%, 100% { box-shadow: inset 3px 0 0 var(--wm-accent), 0 14px 34px color-mix(in srgb, var(--wm-accent) 7%, transparent); }
+  35% { box-shadow: inset 3px 0 0 var(--wm-accent-deep), 0 0 0 4px color-mix(in srgb, var(--wm-accent) 18%, transparent), 0 18px 42px color-mix(in srgb, var(--wm-accent) 18%, transparent); }
+}
+
+[data-whale-desktop-settings] .wm-appearance-theme .wm-theme-heading {
+  margin-top: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-whale-desktop-settings] details.wm-card[open] > .wm-card-content,
+  [data-whale-desktop-settings] details.wm-card.wm-accordion-search-hit { animation: none !important; }
+}
+
+/* ============================================================
+   Typography refresh
+   Use a native, proportional UI stack for Chinese content and
+   reserve monospace for tiny technical labels only.
+   ============================================================ */
+[data-whale-desktop-settings] {
+  --wm-font-ui: "Segoe UI Variable Text", "Microsoft YaHei UI", "PingFang SC", "Noto Sans CJK SC", system-ui, sans-serif;
+  --wm-font-tech: "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
+  font-family: var(--wm-font-ui);
+  font-kerning: normal;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
+[data-whale-desktop-settings] button,
+[data-whale-desktop-settings] input,
+[data-whale-desktop-settings] select,
+[data-whale-desktop-settings] textarea {
+  font-family: var(--wm-font-ui);
+}
+
+[data-whale-desktop-settings] .wm-settings-head strong,
+[data-whale-desktop-settings] .wm-settings-page-title,
+[data-whale-desktop-settings] .wm-dashboard-card-title,
+[data-whale-desktop-settings] .wm-summary-title,
+[data-whale-desktop-settings] .wm-settings-nav-copy strong,
+[data-whale-desktop-settings] .wm-theme-option strong {
+  font-family: var(--wm-font-ui);
+}
+
+[data-whale-desktop-settings] .wm-settings-page-title {
+  font-weight: 650;
+  letter-spacing: -.018em;
+}
+
+[data-whale-desktop-settings] .wm-dashboard-card-title,
+[data-whale-desktop-settings] .wm-summary-title {
+  font-weight: 620;
+  letter-spacing: 0;
+}
+
+[data-whale-desktop-settings] .wm-row,
+[data-whale-desktop-settings] .wm-note,
+[data-whale-desktop-settings] .wm-status,
+[data-whale-desktop-settings] .wm-settings-nav-copy small,
+[data-whale-desktop-settings] .wm-dashboard-switch small {
+  letter-spacing: .005em;
+}
+
+[data-whale-desktop-settings] .wm-settings-eyebrow,
+[data-whale-desktop-settings] .wm-settings-nav-brand-mark,
+[data-whale-desktop-settings] .wm-settings-nav-brand-copy small,
+[data-whale-desktop-settings] .wm-settings-search kbd,
+[data-whale-desktop-settings] .wm-settings-nav-label,
+[data-whale-desktop-settings] .wm-settings-page-index,
+[data-whale-desktop-settings] .wm-settings-page-signal {
+  font-family: var(--wm-font-tech);
+}
+
+[data-whale-desktop-settings] .wm-dashboard-card,
+[data-whale-desktop-settings] .wm-card {
+  border-radius: var(--wm-card-radius);
+}
+
+/* ============================================================
+   Balanced type scale
+   19 page / 15 section / 13 body / 11 supporting text.
+   ============================================================ */
+[data-whale-desktop-settings][data-settings-theme] {
+  --wm-font-page-title: 19px;
+  --wm-font-section-title: 15px;
+  --wm-font-body: 13px;
+  --wm-font-caption: 11px;
+}
+
+[data-whale-desktop-settings] .wm-settings-page-title {
+  font-size: var(--wm-font-page-title);
+  line-height: 1.35;
+}
+
+[data-whale-desktop-settings] .wm-dashboard-card-title,
+[data-whale-desktop-settings] .wm-summary-title {
+  font-size: var(--wm-font-section-title);
+  line-height: 1.45;
+}
+
+[data-whale-desktop-settings] .wm-theme-heading strong {
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+[data-whale-desktop-settings] .wm-theme-option strong,
+[data-whale-desktop-settings] .wm-dashboard-switch strong,
+[data-whale-desktop-settings] .wm-row,
+[data-whale-desktop-settings] .wm-settings-body button,
+[data-whale-desktop-settings] .wm-row input,
+[data-whale-desktop-settings] .wm-row select {
+  font-size: var(--wm-font-body);
+}
+
+[data-whale-desktop-settings] .wm-theme-option small,
+[data-whale-desktop-settings] .wm-dashboard-switch small,
+[data-whale-desktop-settings] .wm-summary-meta,
+[data-whale-desktop-settings] .wm-theme-heading span,
+[data-whale-desktop-settings] .wm-note,
+[data-whale-desktop-settings] .wm-status,
+[data-whale-desktop-settings] .wm-stat small,
+[data-whale-desktop-settings] .wm-achievement small {
+  font-size: var(--wm-font-caption);
+  line-height: 1.5;
+}
+
+[data-whale-desktop-settings] .wm-settings-nav-copy strong {
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+[data-whale-desktop-settings] .wm-settings-nav-copy small {
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+[data-whale-desktop-settings] .wm-settings-page-note {
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+[data-whale-desktop-settings] .wm-settings-page-index,
+[data-whale-desktop-settings] .wm-settings-page-signal {
+  font-size: 9px;
+}
+
+[data-whale-desktop-settings] .wm-theme-option {
+  line-height: 1.4;
+}
+
+/* ============================================================
+   Shared theme recipe system
+   Components are implemented once. Themes supply only material,
+   geometry, density and motion tokens.
+   ============================================================ */
+[data-whale-desktop-settings][data-settings-theme] {
+  --theme-panel-background: var(--wm-panel);
+  --theme-head-background: var(--wm-head);
+  --theme-head-border: 1px solid var(--wm-line-soft);
+  --theme-head-shadow: none;
+  --theme-head-height: 72px;
+  --theme-head-backdrop: none;
+  --theme-nav-background: var(--wm-nav);
+  --theme-nav-border: 1px solid var(--wm-line-soft);
+  --theme-nav-shadow: none;
+  --theme-nav-gap: 6px;
+  --theme-nav-padding: 18px 14px 12px;
+  --theme-nav-item-height: 47px;
+  --theme-nav-item-radius: 13px;
+  --theme-nav-selected-background: var(--wm-accent-soft);
+  --theme-nav-selected-border: 1px solid var(--wm-accent-border);
+  --theme-nav-selected-shadow: none;
+  --theme-nav-selected-transform: none;
+  --theme-nav-selected-color: var(--wm-text);
+  --theme-nav-icon-background: color-mix(in srgb, var(--wm-accent) 10%, transparent);
+  --theme-nav-icon-border: 1px solid var(--wm-line-soft);
+  --theme-nav-icon-radius: 9px;
+  --theme-nav-icon-size: 29px;
+  --theme-content-padding: 26px 28px;
+  --theme-content-background: var(--wm-content);
+  --theme-search-background: var(--wm-control);
+  --theme-search-border: 1px solid var(--wm-control-border);
+  --theme-search-shadow: none;
+  --theme-card-background: var(--wm-surface);
+  --theme-card-border: 1px solid var(--wm-line);
+  --theme-card-border-left: 0 solid transparent;
+  --theme-card-shadow: none;
+  --theme-card-open-shadow: var(--theme-card-shadow);
+  --theme-card-backdrop: none;
+  --theme-card-hover-shadow: var(--theme-card-shadow);
+  --theme-card-hover-transform: translateY(-2px);
+  --theme-control-background: var(--wm-control);
+  --theme-control-border: 1px solid var(--wm-control-border);
+  --theme-control-shadow: none;
+  --theme-tile-background: var(--wm-elevated);
+  --theme-tile-border: 1px solid var(--wm-line);
+  --theme-tile-shadow: none;
+  --theme-chip-background: var(--wm-accent-soft);
+  --theme-chip-color: var(--wm-accent-deep);
+  --theme-title-accent-display: block;
+  --theme-title-accent-width: 6px;
+  --theme-title-accent-height: 6px;
+  --theme-title-accent-radius: 50%;
+  --theme-title-accent-background: var(--wm-accent);
+  --theme-title-accent-shadow: 0 0 0 3px color-mix(in srgb, var(--wm-accent) 20%, transparent);
+  --theme-title-accent-transform: translateY(-50%);
+  --theme-ambient-display: block;
+  --theme-ambient-color: var(--wm-accent);
+  --theme-ambient-opacity: .1;
+  --theme-ambient-duration: 14s;
+  --theme-mascot-display: block;
+  --theme-page-animation: wm-page-enter 260ms cubic-bezier(.2, .75, .2, 1) both;
+  --theme-summary-divider: var(--wm-line-soft);
+  background: var(--theme-panel-background);
+  border-radius: var(--wm-panel-radius);
+}
+
+[data-whale-desktop-settings][data-settings-theme] .wm-settings-head {
+  min-height: var(--theme-head-height);
+  flex-basis: var(--theme-head-height);
+  background: var(--theme-head-background);
+  border-bottom: var(--theme-head-border);
+  box-shadow: var(--theme-head-shadow);
+  backdrop-filter: var(--theme-head-backdrop);
+}
+
+[data-whale-desktop-settings][data-settings-theme] .wm-settings-nav {
+  gap: var(--theme-nav-gap);
+  padding: var(--theme-nav-padding);
+  background: var(--theme-nav-background);
+  border-right: var(--theme-nav-border);
+  box-shadow: var(--theme-nav-shadow);
+}
+
+[data-whale-desktop-settings][data-settings-theme] .wm-settings-content {
+  padding: var(--theme-content-padding);
+  background: var(--theme-content-background);
+}
+
+[data-whale-desktop-settings][data-settings-theme] .wm-settings-search {
+  background: var(--theme-search-background);
+  border: var(--theme-search-border);
+  box-shadow: var(--theme-search-shadow);
+}
+
+[data-whale-desktop-settings][data-settings-theme] .wm-settings-body .wm-settings-nav-item {
+  min-height: var(--theme-nav-item-height);
+  color: var(--wm-row-text);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--theme-nav-item-radius);
+  box-shadow: none;
+}
+
+[data-whale-desktop-settings][data-settings-theme] .wm-settings-body .wm-settings-nav-item.selected {
+  color: var(--theme-nav-selected-color);
+  background: var(--theme-nav-selected-background);
+  border: var(--theme-nav-selected-border);
+  border-radius: var(--theme-nav-item-radius);
+  box-shadow: var(--theme-nav-selected-shadow);
+  text-shadow: none;
+  transform: var(--theme-nav-selected-transform);
+}
+
+[data-whale-desktop-settings][data-settings-theme] .wm-settings-nav-icon,
+[data-whale-desktop-settings][data-settings-theme] .wm-settings-nav-item.selected .wm-settings-nav-icon {
+  width: var(--theme-nav-icon-size);
+  height: var(--theme-nav-icon-size);
+  flex-basis: var(--theme-nav-icon-size);
+  color: var(--wm-accent-deep);
+  background: var(--theme-nav-icon-background);
+  border: var(--theme-nav-icon-border);
+  border-radius: var(--theme-nav-icon-radius);
+}
+
+[data-whale-desktop-settings][data-settings-theme] .wm-dashboard-card,
+[data-whale-desktop-settings][data-settings-theme] .wm-card,
+[data-whale-desktop-settings][data-settings-theme] details.wm-card[open] {
+  background: var(--theme-card-background);
+  border: var(--theme-card-border);
+  border-left: var(--theme-card-border-left);
+  border-radius: var(--wm-card-radius);
+  box-shadow: var(--theme-card-shadow);
+  backdrop-filter: var(--theme-card-backdrop);
+}
+
+[data-whale-desktop-settings][data-settings-theme] details.wm-card[open] {
+  box-shadow: var(--theme-card-open-shadow);
+}
+
+[data-whale-desktop-settings][data-settings-theme] .wm-dashboard-card:hover,
+[data-whale-desktop-settings][data-settings-theme] details.wm-card:hover {
+  box-shadow: var(--theme-card-hover-shadow);
+  transform: var(--theme-card-hover-transform);
+}
+
+[data-whale-desktop-settings][data-settings-theme] .wm-card[open] > summary {
+  border-bottom-color: var(--theme-summary-divider);
+}
+
+[data-whale-desktop-settings][data-settings-theme] .wm-settings-body button,
+[data-whale-desktop-settings][data-settings-theme] .wm-row input[type="text"],
+[data-whale-desktop-settings][data-settings-theme] .wm-row input[type="password"],
+[data-whale-desktop-settings][data-settings-theme] .wm-row input[type="number"],
+[data-whale-desktop-settings][data-settings-theme] .wm-row input[type="time"],
+[data-whale-desktop-settings][data-settings-theme] .wm-row select {
+  background: var(--theme-control-background);
+  border: var(--theme-control-border);
+  border-radius: var(--wm-control-radius);
+  box-shadow: var(--theme-control-shadow);
+}
+
+[data-whale-desktop-settings][data-settings-theme] .wm-stat,
+[data-whale-desktop-settings][data-settings-theme] .wm-achievement,
+[data-whale-desktop-settings][data-settings-theme] .wm-collectible,
+[data-whale-desktop-settings][data-settings-theme] .wm-profession,
+[data-whale-desktop-settings][data-settings-theme] .wm-trait,
+[data-whale-desktop-settings][data-settings-theme] .wm-adventure-away,
+[data-whale-desktop-settings][data-settings-theme] .wm-relationship-hero,
+[data-whale-desktop-settings][data-settings-theme] .wm-diary {
+  background: var(--theme-tile-background);
+  border: var(--theme-tile-border);
+  box-shadow: var(--theme-tile-shadow);
+}
+
+[data-whale-desktop-settings][data-settings-theme] .wm-summary-meta,
+[data-whale-desktop-settings][data-settings-theme] .wm-theme-heading span {
+  color: var(--theme-chip-color);
+  background: var(--theme-chip-background);
+}
+
+[data-whale-desktop-settings][data-settings-theme] .wm-summary-title::before,
+[data-whale-desktop-settings][data-settings-theme] .wm-dashboard-card-title::before {
+  display: var(--theme-title-accent-display);
+  width: var(--theme-title-accent-width);
+  height: var(--theme-title-accent-height);
+  background: var(--theme-title-accent-background);
+  border-radius: var(--theme-title-accent-radius);
+  box-shadow: var(--theme-title-accent-shadow);
+  transform: var(--theme-title-accent-transform);
+}
+
+[data-whale-desktop-settings][data-settings-theme] .wm-settings-ambience { display: var(--theme-ambient-display); }
+[data-whale-desktop-settings][data-settings-theme] .wm-settings-orb {
+  background: var(--theme-ambient-color);
+  opacity: var(--theme-ambient-opacity);
+  animation-duration: var(--theme-ambient-duration);
+}
+[data-whale-desktop-settings][data-settings-theme] .wm-settings-nav-mascot { display: var(--theme-mascot-display); }
+[data-whale-desktop-settings][data-settings-theme] .wm-settings-page:not([hidden]) { animation: var(--theme-page-animation); }
+
+/* A · 海盐玻璃 */
+[data-whale-desktop-settings][data-settings-theme="a"] {
+  --wm-panel-radius: 30px; --wm-card-radius: 20px; --wm-control-radius: 15px;
+  --wm-panel: rgb(236 250 253 / 55%); --wm-head: rgb(255 255 255 / 50%); --wm-nav: rgb(232 247 252 / 48%); --wm-content: rgb(249 252 254 / 40%);
+  --wm-surface: rgb(255 255 255 / 56%); --wm-surface-hover: rgb(255 255 255 / 72%); --wm-elevated: rgb(255 255 255 / 62%); --wm-control: rgb(255 255 255 / 55%); --wm-control-hover: rgb(255 255 255 / 74%);
+  --wm-control-border: #b8dce6; --wm-line: #cfe7f0; --wm-line-soft: #d6e9ef; --wm-text: #18334f; --wm-row-text: #2f4d68; --wm-muted: #56748c;
+  --wm-accent: #26b2c8; --wm-accent-deep: #229bb1; --wm-accent-soft: #c4eaf4; --wm-accent-border: #9fd9e6; --wm-primary-text: #073943;
+  --wm-switch-track: #a9cdda; --wm-switch-thumb: #fff; --wm-scroll: #9bcbd6; --wm-panel-border: rgb(255 255 255 / 62%); --wm-panel-shadow: 0 30px 60px rgb(31 84 110 / 30%), inset 0 1px 0 rgb(255 255 255 / 90%);
+  --theme-panel-background: radial-gradient(circle at 94% 12%, rgb(103 205 231 / 20%), transparent 32%), linear-gradient(135deg, rgb(242 252 255 / 82%), rgb(211 239 248 / 70%));
+  --theme-head-background: rgb(255 255 255 / 38%); --theme-head-border: 1px solid rgb(255 255 255 / 58%); --theme-head-shadow: 0 10px 30px rgb(55 128 153 / 7%); --theme-head-backdrop: blur(26px) saturate(1.25);
+  --theme-nav-background: rgb(230 246 251 / 42%); --theme-nav-border: 1px solid rgb(255 255 255 / 68%); --theme-nav-gap: 8px; --theme-nav-padding: 20px 15px 13px; --theme-nav-item-height: 50px; --theme-nav-item-radius: 16px;
+  --theme-nav-selected-background: rgb(255 255 255 / 72%); --theme-nav-selected-border: 1px solid rgb(255 255 255 / 94%); --theme-nav-selected-shadow: 0 10px 26px rgb(54 132 161 / 13%), inset 0 1px 0 #fff;
+  --theme-content-padding: 30px 32px; --theme-content-background: radial-gradient(circle at 92% 9%, rgb(104 206 231 / 13%), transparent 31%), rgb(249 253 255 / 42%);
+  --theme-search-background: rgb(255 255 255 / 48%); --theme-search-border: 1px solid rgb(255 255 255 / 78%); --theme-search-shadow: inset 0 1px 0 rgb(255 255 255 / 86%);
+  --theme-card-background: rgb(255 255 255 / 54%); --theme-card-border: 1px solid rgb(255 255 255 / 78%); --theme-card-shadow: 0 16px 34px rgb(64 132 158 / 10%), inset 0 1px 0 rgb(255 255 255 / 94%); --theme-card-backdrop: blur(20px) saturate(1.15); --theme-card-hover-shadow: 0 20px 42px rgb(64 132 158 / 16%), inset 0 1px 0 #fff; --theme-card-hover-transform: translateY(-3px);
+  --theme-control-background: rgb(255 255 255 / 58%); --theme-control-border: 1px solid rgb(255 255 255 / 82%); --theme-ambient-opacity: .14;
+}
+
+/* B · 深海控制台 */
+[data-whale-desktop-settings][data-settings-theme="b"] {
+  --wm-panel-radius: 28px; --wm-card-radius: 16px; --wm-control-radius: 12px;
+  --wm-panel: #071824; --wm-head: #071520; --wm-nav: #051521; --wm-content: #06131f; --wm-surface: #0d2737; --wm-surface-hover: #123247; --wm-elevated: #102c3c;
+  --wm-control: #0d2637; --wm-control-hover: #14364b; --wm-control-border: transparent; --wm-line: rgb(104 190 216 / 12%); --wm-line-soft: rgb(104 190 216 / 9%);
+  --wm-text: #e5f7fa; --wm-row-text: #c2dce2; --wm-muted: #7898a2; --wm-accent: #38cfe8; --wm-accent-deep: #72e4f4; --wm-accent-soft: rgb(56 207 232 / 10%); --wm-accent-border: transparent; --wm-primary-text: #041c25;
+  --wm-switch-track: #294555; --wm-switch-thumb: #f4f8f9; --wm-scroll: #315568; --wm-panel-border: rgb(104 207 235 / 12%); --wm-panel-shadow: 0 42px 90px rgb(0 9 18 / 56%), 0 8px 28px rgb(0 12 24 / 28%);
+  --theme-panel-background: radial-gradient(circle at 82% -12%, rgb(42 189 224 / 15%), transparent 38%), radial-gradient(circle at 8% 104%, rgb(24 114 151 / 12%), transparent 35%), linear-gradient(145deg, #071824, #04111c 68%, #020b13);
+  --theme-head-background: rgb(5 20 32 / 76%); --theme-head-border: 0 solid transparent; --theme-head-shadow: 0 10px 30px rgb(0 7 13 / 12%); --theme-head-backdrop: blur(22px);
+  --theme-nav-background: linear-gradient(180deg, rgb(5 21 33 / 72%), rgb(3 14 24 / 88%)); --theme-nav-border: 0 solid transparent; --theme-nav-shadow: 12px 0 34px rgb(0 7 13 / 8%);
+  --theme-nav-selected-background: linear-gradient(90deg, rgb(48 174 207 / 18%), rgb(31 113 144 / 7%)); --theme-nav-selected-border: 0 solid transparent; --theme-nav-selected-shadow: inset 3px 0 0 #42cce7, 0 10px 24px rgb(0 8 14 / 10%); --theme-nav-selected-color: #d8f7ff;
+  --theme-nav-icon-background: rgb(61 181 209 / 9%); --theme-nav-icon-border: 0 solid transparent;
+  --theme-content-background: radial-gradient(circle at 96% 5%, rgb(38 153 185 / 8%), transparent 32%), #06131f;
+  --theme-search-background: rgb(16 43 59 / 72%); --theme-search-border: 0 solid transparent; --theme-search-shadow: inset 0 1px 0 rgb(174 235 249 / 5%);
+  --theme-card-background: linear-gradient(145deg, rgb(13 39 55 / 94%), rgb(7 27 41 / 96%)); --theme-card-border: 0 solid transparent; --theme-card-shadow: inset 0 1px 0 rgb(174 235 249 / 5%), 0 16px 34px rgb(0 6 12 / 20%); --theme-card-open-shadow: inset 3px 0 0 rgb(66 204 231 / 45%), inset 0 1px 0 rgb(174 235 249 / 6%), 0 18px 38px rgb(0 6 12 / 24%); --theme-card-hover-shadow: var(--theme-card-open-shadow);
+  --theme-control-background: #0d2637; --theme-control-border: 0 solid transparent; --theme-control-shadow: inset 0 1px 0 rgb(175 234 247 / 5%);
+  --theme-tile-background: rgb(16 44 60 / 72%); --theme-tile-border: 0 solid transparent; --theme-tile-shadow: inset 0 1px 0 rgb(177 237 249 / 4%);
+  --theme-chip-background: rgb(56 207 232 / 10%); --theme-chip-color: #66d8ed;
+  --theme-title-accent-width: 4px; --theme-title-accent-height: 14px; --theme-title-accent-radius: 999px; --theme-title-accent-background: linear-gradient(180deg, #72e4f4, #279cbd); --theme-title-accent-shadow: 0 0 10px rgb(56 207 232 / 35%);
+  --theme-summary-divider: rgb(108 196 220 / 8%);
+}
+
+/* C · 奶油手账 */
+[data-whale-desktop-settings][data-settings-theme="c"] {
+  --wm-panel-radius: 20px; --wm-card-radius: 12px; --wm-control-radius: 10px;
+  --wm-panel: #f7ecd8; --wm-head: #fff8ea; --wm-nav: #faeed8; --wm-content: #f8eedc; --wm-surface: #fffaf0; --wm-surface-hover: #fff4e4; --wm-elevated: #fffaf0;
+  --wm-control: #fffaf2; --wm-control-hover: #fff4e4; --wm-control-border: #ddc8a9; --wm-line: #e3cdb4; --wm-line-soft: #e7d8c6;
+  --wm-text: #4e3527; --wm-row-text: #6e5f55; --wm-muted: #8d7362; --wm-accent: #ec8f76; --wm-accent-deep: #e36f5d; --wm-accent-soft: #f8ddce; --wm-accent-border: #e4b59f; --wm-primary-text: #51261d;
+  --wm-switch-track: #e7d5b8; --wm-switch-thumb: #fffbf4; --wm-scroll: #cdb796; --wm-panel-border: #d9c09b; --wm-panel-shadow: 0 22px 42px rgb(93 66 43 / 28%), inset 0 0 0 4px rgb(255 255 255 / 34%);
+  --theme-panel-background: linear-gradient(135deg, #fff7e7, #f3e4ca); --theme-head-background: #fff8ea; --theme-head-border: 2px dashed #ddbd91;
+  --theme-nav-background: #faeed8; --theme-nav-border: 2px dashed #dfc39c; --theme-nav-gap: 5px; --theme-nav-item-radius: 11px;
+  --theme-content-padding: 26px 29px; --theme-content-background: repeating-linear-gradient(0deg, rgb(185 128 88 / 8%) 0 1px, transparent 1px 30px), #f8eedc;
+  --theme-search-background: #fff9ed; --theme-search-border: 1px dashed #d7b985; --theme-search-shadow: 3px 3px 0 rgb(188 138 91 / 8%);
+  --theme-nav-selected-background: #f3a58f; --theme-nav-selected-border: 1px dashed #d47b64; --theme-nav-selected-shadow: 3px 3px 0 rgb(160 89 68 / 14%); --theme-nav-selected-transform: rotate(-.35deg); --theme-nav-selected-color: #5c3024;
+  --theme-card-background: #fffaf0; --theme-card-border: 1px solid #e0c6a0; --theme-card-shadow: 5px 5px 0 rgb(167 116 75 / 11%), inset 0 1px 0 #fff; --theme-card-hover-shadow: 7px 7px 0 rgb(167 116 75 / 14%), inset 0 1px 0 #fff; --theme-card-hover-transform: translate(-1px, -1px) rotate(.12deg);
+  --theme-control-background: #fffaf2; --theme-control-border: 1px dashed #d9ba8b; --theme-chip-background: #ffe3d5; --theme-chip-color: #a95746;
+  --theme-title-accent-width: 7px; --theme-title-accent-height: 7px; --theme-title-accent-radius: 2px; --theme-title-accent-background: #e67d68; --theme-title-accent-shadow: none; --theme-title-accent-transform: translateY(-50%) rotate(45deg); --theme-ambient-display: none;
+}
+
+/* D · 极简原生 */
+[data-whale-desktop-settings][data-settings-theme="d"] {
+  --wm-panel-radius: 12px; --wm-card-radius: 8px; --wm-control-radius: 8px;
+  --wm-panel: #25282b; --wm-head: #292c2f; --wm-nav: #272a2d; --wm-content: #222629; --wm-surface: #2d3134; --wm-surface-hover: #383d40; --wm-elevated: #34383c;
+  --wm-control: #3b4043; --wm-control-hover: #444a4e; --wm-control-border: #555b5f; --wm-line: #3b4043; --wm-line-soft: #383c40;
+  --wm-text: #e3e2e1; --wm-row-text: #c2c3c4; --wm-muted: #9c9fa2; --wm-accent: #9aa4ad; --wm-accent-deep: #b7c0c7; --wm-accent-soft: #34383c; --wm-accent-border: #4a5156; --wm-primary-text: #09291f;
+  --wm-switch-track: #50575d; --wm-switch-thumb: #e5e7e8; --wm-scroll: #5a6064; --wm-panel-border: #3a3e42; --wm-panel-shadow: 0 18px 42px rgb(0 0 0 / 42%);
+  --theme-panel-background: #25282b; --theme-head-background: #292c2f; --theme-head-height: 64px;
+  --theme-nav-background: #272a2d; --theme-nav-gap: 2px; --theme-nav-padding: 14px 11px 10px; --theme-nav-item-height: 42px; --theme-nav-item-radius: 7px;
+  --theme-nav-selected-background: #383c40; --theme-nav-selected-border: 0 solid transparent; --theme-nav-icon-background: transparent; --theme-nav-icon-border: 0 solid transparent; --theme-nav-icon-radius: 6px; --theme-nav-icon-size: 26px;
+  --theme-content-padding: 20px 22px; --theme-content-background: #222629;
+  --theme-card-background: #2d3134; --theme-card-border: 1px solid #3b4043; --theme-card-shadow: none; --theme-card-hover-shadow: none; --theme-card-hover-transform: none;
+  --theme-control-background: #3b4043; --theme-control-border: 1px solid #555b5f; --theme-title-accent-display: none; --theme-ambient-display: none; --theme-mascot-display: none; --theme-page-animation: none;
+}
+
+/* E · 月光紫 */
+[data-whale-desktop-settings][data-settings-theme="e"] {
+  --wm-panel-radius: 31px; --wm-card-radius: 18px; --wm-control-radius: 14px;
+  --wm-panel: #efedff; --wm-head: #f8f7ff; --wm-nav: #e8e4fb; --wm-content: #f5f3ff; --wm-surface: #fbfaff; --wm-surface-hover: #fff; --wm-elevated: #fff;
+  --wm-control: rgb(255 255 255 / 82%); --wm-control-hover: #f0edff; --wm-control-border: #cfc8ee; --wm-line: #ddd8f3; --wm-line-soft: #e6e2f7;
+  --wm-text: #302a54; --wm-row-text: #514b73; --wm-muted: #797397; --wm-accent: #8b7aeb; --wm-accent-deep: #6e5bd4; --wm-accent-soft: #e3deff; --wm-accent-border: #c4baf2; --wm-primary-text: #211653;
+  --wm-switch-track: #c9c2e6; --wm-switch-thumb: #fff; --wm-scroll: #b9b0df; --wm-panel-border: rgb(255 255 255 / 90%); --wm-panel-shadow: 0 24px 48px rgb(72 54 145 / 24%), inset 0 1px 0 rgb(255 255 255 / 88%);
+  --theme-panel-background: radial-gradient(circle at 88% 8%, rgb(139 122 235 / 18%), transparent 34%), linear-gradient(135deg, #faf9ff, #ece9ff 52%, #ddd7fa);
+  --theme-head-background: rgb(248 246 255 / 62%); --theme-head-backdrop: blur(26px) saturate(1.18); --theme-nav-background: rgb(238 234 255 / 58%); --theme-nav-gap: 7px; --theme-nav-item-height: 49px; --theme-nav-item-radius: 17px;
+  --theme-nav-selected-background: linear-gradient(110deg, rgb(225 219 255 / 90%), rgb(244 240 255 / 82%)); --theme-nav-selected-border: 1px solid rgb(255 255 255 / 88%); --theme-nav-selected-shadow: 0 12px 26px rgb(89 67 172 / 13%), inset 0 1px 0 #fff; --theme-nav-selected-color: #463a8f;
+  --theme-content-padding: 29px 31px; --theme-content-background: radial-gradient(circle at 88% 12%, rgb(139 122 235 / 15%), transparent 32%), radial-gradient(circle at 12% 92%, rgb(187 142 232 / 10%), transparent 28%), rgb(247 245 255 / 58%);
+  --theme-card-background: linear-gradient(145deg, rgb(255 255 255 / 82%), rgb(244 241 255 / 68%)); --theme-card-border: 1px solid rgb(255 255 255 / 82%); --theme-card-shadow: 0 18px 38px rgb(89 67 172 / 10%), inset 0 1px 0 #fff; --theme-card-backdrop: blur(18px); --theme-card-hover-shadow: 0 23px 46px rgb(89 67 172 / 17%), inset 0 1px 0 #fff; --theme-card-hover-transform: translateY(-4px);
+  --theme-title-accent-background: linear-gradient(135deg, #a997ff, #715ed7); --theme-title-accent-shadow: 0 0 0 4px rgb(139 122 235 / 13%), 0 0 14px rgb(139 122 235 / 20%); --theme-ambient-color: #8b7aeb; --theme-ambient-opacity: .16; --theme-ambient-duration: 18s;
+}
+
+/* F · 暖阳橙 */
+[data-whale-desktop-settings][data-settings-theme="f"] {
+  --wm-panel-radius: 25px; --wm-card-radius: 14px; --wm-control-radius: 11px;
+  --wm-panel: #fdf3ec; --wm-head: #fff7f0; --wm-nav: #fbeee2; --wm-content: #fff6ef; --wm-surface: #fffaf5; --wm-surface-hover: #fff; --wm-elevated: #fff;
+  --wm-control: rgb(255 255 255 / 82%); --wm-control-hover: #fff1e5; --wm-control-border: #edc8ae; --wm-line: #f0d6c3; --wm-line-soft: #f4dfcf;
+  --wm-text: #633b28; --wm-row-text: #7f5842; --wm-muted: #a0765e; --wm-accent: #ee9360; --wm-accent-deep: #dd7642; --wm-accent-soft: #ffe0cc; --wm-accent-border: #efbd9d; --wm-primary-text: #5a2712;
+  --wm-switch-track: #e8c5ac; --wm-switch-thumb: #fff; --wm-scroll: #d9ad8f; --wm-panel-border: rgb(255 255 255 / 88%); --wm-panel-shadow: 0 22px 42px rgb(173 112 66 / 26%), inset 0 1px 0 rgb(255 255 255 / 84%);
+  --theme-panel-background: linear-gradient(145deg, #fff9f3, #f9dfc9); --theme-head-background: #fff7ef; --theme-head-shadow: 0 8px 24px rgb(177 100 51 / 6%); --theme-nav-background: #fbeadc;
+  --theme-nav-selected-background: linear-gradient(100deg, #ffd7ba, #ffecdc); --theme-nav-selected-border: 0 solid transparent; --theme-nav-selected-shadow: inset 4px 0 0 #ef8d56, 0 8px 18px rgb(180 101 56 / 10%); --theme-nav-selected-color: #713d24;
+  --theme-content-padding: 25px 28px; --theme-content-background: linear-gradient(145deg, #fff8f2, #fdf0e5);
+  --theme-card-background: linear-gradient(180deg, #fffaf5, #fff5ed); --theme-card-border: 0 solid transparent; --theme-card-border-left: 4px solid rgb(238 137 79 / 58%); --theme-card-shadow: 0 13px 28px rgb(171 94 48 / 10%), inset 0 1px 0 #fff; --theme-card-hover-shadow: 0 16px 34px rgb(171 94 48 / 15%), inset 0 1px 0 #fff; --theme-card-hover-transform: translateX(2px);
+  --theme-title-accent-background: #ed8b54; --theme-title-accent-shadow: 0 0 0 4px rgb(237 139 84 / 14%); --theme-ambient-color: #f2a66f; --theme-ambient-opacity: .11;
+}
+
+/* G · 樱花粉 */
+[data-whale-desktop-settings][data-settings-theme="g"] {
+  --wm-panel-radius: 32px; --wm-card-radius: 20px; --wm-control-radius: 16px;
+  --wm-panel: #fdeef4; --wm-head: #fff6f9; --wm-nav: #fbe3ed; --wm-content: #fff6fa; --wm-surface: #fff9fb; --wm-surface-hover: #fff0f6; --wm-elevated: #fff;
+  --wm-control: #fff6f9; --wm-control-hover: #ffeef4; --wm-control-border: #edb9cf; --wm-line: #f3d3e0; --wm-line-soft: #f6dde7;
+  --wm-text: #7c3a55; --wm-row-text: #9c5a72; --wm-muted: #b9829a; --wm-accent: #ef7fb2; --wm-accent-deep: #e05d97; --wm-accent-soft: #fbdbe9; --wm-accent-border: #eeb0cb; --wm-primary-text: #7a1c47;
+  --wm-switch-track: #edc4d6; --wm-switch-thumb: #fff; --wm-scroll: #dca7bf; --wm-panel-border: #ecc3d4; --wm-panel-shadow: 0 22px 42px rgb(201 93 143 / 24%), inset 0 1px 0 rgb(255 255 255 / 86%);
+  --theme-panel-background: radial-gradient(circle at 86% 11%, rgb(239 127 178 / 14%), transparent 30%), linear-gradient(135deg, #fff7fb, #f9dbe8);
+  --theme-head-background: rgb(255 247 251 / 82%); --theme-head-backdrop: blur(22px); --theme-nav-background: linear-gradient(180deg, #fce7f0, #fae0eb); --theme-nav-border: 0 solid transparent; --theme-nav-gap: 7px; --theme-nav-item-height: 49px; --theme-nav-item-radius: 999px;
+  --theme-nav-selected-background: linear-gradient(100deg, #f9cfe1, #ffedf5); --theme-nav-selected-border: 0 solid transparent; --theme-nav-selected-shadow: 0 10px 22px rgb(196 91 139 / 12%); --theme-nav-selected-color: #8a3159; --theme-nav-icon-background: rgb(255 255 255 / 52%); --theme-nav-icon-border: 0 solid transparent; --theme-nav-icon-radius: 50%;
+  --theme-content-padding: 28px 30px; --theme-content-background: radial-gradient(circle at 84% 14%, rgb(239 127 178 / 12%), transparent 30%), linear-gradient(145deg, #fff8fb, #fff1f7);
+  --theme-card-background: rgb(255 252 253 / 86%); --theme-card-border: 0 solid transparent; --theme-card-shadow: 0 16px 34px rgb(190 84 133 / 10%), inset 0 1px 0 #fff; --theme-card-hover-shadow: 0 20px 42px rgb(190 84 133 / 16%), inset 0 1px 0 #fff; --theme-card-hover-transform: translateY(-3px) scale(1.002);
+  --theme-title-accent-width: 8px; --theme-title-accent-height: 6px; --theme-title-accent-radius: 70% 40% 70% 40%; --theme-title-accent-background: linear-gradient(135deg, #f49ac2, #e76ca4); --theme-title-accent-shadow: 0 0 0 4px rgb(239 127 178 / 11%); --theme-title-accent-transform: translateY(-50%) rotate(-25deg);
 }

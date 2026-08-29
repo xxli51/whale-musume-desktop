@@ -11,7 +11,7 @@
     ["b", "深海控制台", "沉浸精致"],
     ["c", "奶油手账", "温暖可爱"],
     ["d", "极简原生", "克制高效"],
-    ["e", "薄荷渐变", "清新薄荷"],
+    ["e", "月光紫", "柔雾月光"],
     ["f", "暖阳橙", "暖橙蜜桃"],
     ["g", "樱花粉", "柔粉浪漫"]
   ]);
@@ -20,7 +20,7 @@
     b: Object.freeze({ status: "专注中", line: "我会安静陪着你哦。", card: "dsh-whale-state-idle-cute.webp", navigation: "dsh-whale-state-idle-cute.webp" }),
     c: Object.freeze({ status: "开心", line: "哇～天气真好，一起摸鱼吧！", card: "dsh-whale-state-blush.webp", navigation: "dsh-whale-state-blush.webp" }),
     d: Object.freeze({ status: "空闲中", line: "随时等你哦。", card: "dsh-whale-state-waiting.webp", navigation: "dsh-whale-state-waiting.webp" }),
-    e: Object.freeze({ status: "空闲中", line: "薄荷色午后，想和你聊聊。", card: "dsh-whale-state-idle-cute.webp", navigation: "dsh-whale-settings-peek.webp" }),
+    e: Object.freeze({ status: "静候中", line: "月光落在海面上，我陪你安静待一会儿。", card: "dsh-whale-state-idle-cute.webp", navigation: "dsh-whale-settings-peek.webp" }),
     f: Object.freeze({ status: "开心", line: "阳光正好，一起出去走走吧！", card: "dsh-whale-state-daily-coffee.webp", navigation: "dsh-whale-state-daily-coffee.webp" }),
     g: Object.freeze({ status: "开心", line: "樱花开了，好想和你一起看。", card: "dsh-whale-state-blush.webp", navigation: "dsh-whale-state-blush.webp" })
   });
@@ -31,6 +31,15 @@
 
   function save(key, next) {
     storage.set(key, next);
+  }
+
+  function savedAccordionState() {
+    try {
+      var parsed = JSON.parse(value("settingsAccordionState", "{}"));
+      return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+    } catch (_error) {
+      return {};
+    }
   }
 
   function settingsTheme() {
@@ -58,8 +67,10 @@
     });
     var status = panel.querySelector("[data-dashboard-status]");
     var line = panel.querySelector("[data-dashboard-line]");
+    var themeMeta = panel.querySelector(".wm-appearance-theme .wm-summary-meta");
     if (status) status.textContent = "●  " + details.status;
     if (line) line.textContent = details.line;
+    if (themeMeta) themeMeta.textContent = themeName(next);
   }
 
   function element(tag, className, text) {
@@ -80,6 +91,8 @@
     details.appendChild(content);
     details.addEventListener("toggle", function () {
       if (!details.open) return;
+      var panel = details.closest("[data-whale-desktop-settings]");
+      if (!panel || panel.hidden) return;
       requestAnimationFrame(function () {
         var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
         summary.scrollIntoView({ block: "nearest", behavior: reduceMotion ? "auto" : "smooth" });
@@ -1040,22 +1053,37 @@
     var wasOpen = old && !old.hidden;
     if (old) old.remove();
     var panel = element("div"); panel.setAttribute("data-whale-desktop-settings", "true"); panel.setAttribute("data-settings-theme", settingsTheme()); panel.hidden = !wasOpen;
+    var ambience = element("div", "wm-settings-ambience");
+    ambience.setAttribute("aria-hidden", "true");
+    ambience.appendChild(element("i", "wm-settings-orb wm-settings-orb-one"));
+    ambience.appendChild(element("i", "wm-settings-orb wm-settings-orb-two"));
+    panel.appendChild(ambience);
     var head = element("div", "wm-settings-head");
     var title = element("div", "wm-settings-title");
     title.appendChild(element("span", "wm-settings-mark", "🐳"));
-    var titleCopy = element("div"); var panelTitle = element("strong", "", (value("petName", "鲸鱼娘").trim() || "鲸鱼娘") + " · 设置"); panelTitle.setAttribute("data-whale-pet-name", "true"); titleCopy.appendChild(panelTitle); titleCopy.appendChild(element("span", "wm-version", "Desktop v2.4.0")); title.appendChild(titleCopy); head.appendChild(title);
+    var titleCopy = element("div", "wm-settings-title-copy");
+    titleCopy.appendChild(element("span", "wm-settings-eyebrow", "WHALE COMPANION / CONTROL CENTER"));
+    var panelTitle = element("strong", "", (value("petName", "鲸鱼娘").trim() || "鲸鱼娘") + " · 设置");
+    panelTitle.setAttribute("data-whale-pet-name", "true");
+    titleCopy.appendChild(panelTitle);
+    titleCopy.appendChild(element("span", "wm-version", "Desktop v2.4.0"));
+    title.appendChild(titleCopy);
+    head.appendChild(title);
     var headActions = element("div", "wm-settings-head-actions");
+    var syncState = element("span", "wm-settings-sync-state", "本地配置已同步");
+    syncState.setAttribute("role", "status");
+    headActions.appendChild(syncState);
     var close = element("button", "wm-settings-close", "×"); close.title = "关闭设置"; close.setAttribute("aria-label", "关闭设置"); close.addEventListener("click", function () { panel.hidden = true; window.whaleDesktop.setMouseInteractive(false); window.whaleDesktop.setSettingsVisible(false); }); headActions.appendChild(close); head.appendChild(headActions); panel.appendChild(head);
     var availableWidth = Math.max(680, window.innerWidth - 32);
     var availableHeight = Math.max(430, window.innerHeight - 32);
-    var savedWidth = Number(storage.get("desktopSettingsWidth", "1055"));
-    var savedHeight = Number(storage.get("desktopSettingsHeight", "645"));
-    if (savedWidth === 900 && savedHeight === 580) {
-      savedWidth = 1055;
-      savedHeight = 645;
+    var savedWidth = Number(storage.get("desktopSettingsWidth", "1140"));
+    var savedHeight = Number(storage.get("desktopSettingsHeight", "720"));
+    if ((savedWidth === 900 && savedHeight === 580) || (savedWidth === 1055 && savedHeight === 645)) {
+      savedWidth = 1140;
+      savedHeight = 720;
     }
-    var panelWidth = Math.max(680, Math.min(Number.isFinite(savedWidth) ? savedWidth : 1055, availableWidth));
-    var panelHeight = Math.max(430, Math.min(Number.isFinite(savedHeight) ? savedHeight : 645, availableHeight));
+    var panelWidth = Math.max(680, Math.min(Number.isFinite(savedWidth) ? savedWidth : 1140, availableWidth));
+    var panelHeight = Math.max(430, Math.min(Number.isFinite(savedHeight) ? savedHeight : 720, availableHeight));
     panel.style.width = Math.round(panelWidth) + "px";
     panel.style.height = Math.round(panelHeight) + "px";
     var rawSavedX = storage.get("desktopSettingsX", null);
@@ -1105,6 +1133,30 @@
     var body = element("div", "wm-settings-body"); panel.appendChild(body);
     var nav = element("nav", "wm-settings-nav");
     nav.setAttribute("aria-label", "设置分类");
+    var navBrand = element("div", "wm-settings-nav-brand");
+    var navBrandMark = element("span", "wm-settings-nav-brand-mark", "W");
+    navBrandMark.setAttribute("aria-hidden", "true");
+    var navBrandCopy = element("span", "wm-settings-nav-brand-copy");
+    navBrandCopy.appendChild(element("strong", "", "鲸鱼控制台"));
+    navBrandCopy.appendChild(element("small", "", "PERSONAL COMPANION"));
+    navBrand.appendChild(navBrandMark);
+    navBrand.appendChild(navBrandCopy);
+    nav.appendChild(navBrand);
+    var searchWrap = element("label", "wm-settings-search");
+    searchWrap.appendChild(element("span", "", "⌕"));
+    var searchInput = document.createElement("input");
+    searchInput.type = "search";
+    searchInput.placeholder = "搜索设置分类";
+    searchInput.autocomplete = "off";
+    searchInput.setAttribute("aria-label", "搜索设置分类");
+    searchWrap.appendChild(searchInput);
+    var searchShortcut = element("kbd", "", "Ctrl F");
+    searchWrap.appendChild(searchShortcut);
+    nav.appendChild(searchWrap);
+    var navLabel = element("div", "wm-settings-nav-label");
+    navLabel.appendChild(element("span", "", "设置分类"));
+    navLabel.appendChild(element("small", "", "07"));
+    nav.appendChild(navLabel);
     var content = element("div", "wm-settings-content");
     var pageDefinitions = [
       ["general", "⌂", "通用", "常用设置"],
@@ -1116,6 +1168,26 @@
       ["about", "ⓘ", "关于", "成长与数据"]
     ];
     var pages = {};
+    var navButtons = [];
+    var accordionMemory = savedAccordionState();
+    var accordionReady = false;
+    var accordionChanging = false;
+    function accordionCards(pageId) {
+      return pages[pageId] ? Array.from(pages[pageId].querySelectorAll("details.wm-card")) : [];
+    }
+    function preferredAccordionCard(pageId, cards) {
+      var remembered = accordionMemory[pageId];
+      return cards.find(function (card) {
+        return card.getAttribute("data-settings-section") === remembered;
+      }) || cards[0] || null;
+    }
+    function restoreAccordionForPage(pageId) {
+      if (!accordionReady || pageId === "general") return;
+      var cards = accordionCards(pageId);
+      if (!cards.length || cards.some(function (card) { return card.open; })) return;
+      var preferred = preferredAccordionCard(pageId, cards);
+      if (preferred) preferred.open = true;
+    }
     function activateSettingsPage(pageId) {
       nav.querySelectorAll("[data-settings-page-target]").forEach(function (button) {
         var selected = button.getAttribute("data-settings-page-target") === pageId;
@@ -1125,18 +1197,15 @@
       content.querySelectorAll("[data-settings-page]").forEach(function (page) {
         var selected = page.getAttribute("data-settings-page") === pageId;
         page.hidden = !selected;
-        if (selected) {
-          page.querySelectorAll("details.wm-card[data-page-default-open='true']").forEach(function (card) {
-            card.open = true;
-          });
-        }
+        if (selected) restoreAccordionForPage(pageId);
       });
       content.scrollTop = 0;
     }
-    pageDefinitions.forEach(function (definition) {
+    pageDefinitions.forEach(function (definition, index) {
       var button = element("button", "wm-settings-nav-item");
       button.type = "button";
       button.setAttribute("data-settings-page-target", definition[0]);
+      button.setAttribute("data-settings-search-text", (definition[2] + " " + definition[3]).toLowerCase());
       button.appendChild(element("span", "wm-settings-nav-icon", definition[1]));
       var copy = element("span", "wm-settings-nav-copy");
       copy.appendChild(element("strong", "", definition[2]));
@@ -1144,19 +1213,90 @@
       button.appendChild(copy);
       button.addEventListener("click", function () { activateSettingsPage(definition[0]); });
       nav.appendChild(button);
+      navButtons.push(button);
       var page = element("section", "wm-settings-page");
       page.setAttribute("data-settings-page", definition[0]);
       page.hidden = definition[0] !== "general";
-      page.appendChild(element("h2", "wm-settings-page-title", definition[1] + "  " + (definition[0] === "general" ? "通用设置" : definition[2])));
-      page.appendChild(element("p", "wm-settings-page-note", definition[3]));
+      var pageHeader = element("header", "wm-settings-page-header");
+      pageHeader.appendChild(element("span", "wm-settings-page-index", "CONTROL / 0" + (index + 1)));
+      var pageHeading = element("div", "wm-settings-page-heading");
+      pageHeading.appendChild(element("h2", "wm-settings-page-title", definition[0] === "general" ? "通用设置" : definition[2]));
+      pageHeading.appendChild(element("p", "wm-settings-page-note", definition[3]));
+      pageHeader.appendChild(pageHeading);
+      var pageSignal = element("span", "wm-settings-page-signal", "ONLINE");
+      pageSignal.setAttribute("aria-hidden", "true");
+      pageHeader.appendChild(pageSignal);
+      page.appendChild(pageHeader);
       pages[definition[0]] = page;
       content.appendChild(page);
+    });
+    var searchEmpty = element("p", "wm-settings-search-empty", "没有匹配的分类");
+    searchEmpty.hidden = true;
+    nav.appendChild(searchEmpty);
+    function updateNavSearch() {
+      var query = searchInput.value.trim().toLowerCase();
+      var visibleCount = 0;
+      navButtons.forEach(function (button) {
+        var page = pages[button.getAttribute("data-settings-page-target")];
+        var searchText = button.getAttribute("data-settings-search-text") + " " + (page ? page.textContent.toLowerCase() : "");
+        var visible = !query || searchText.indexOf(query) !== -1;
+        button.hidden = !visible;
+        if (visible) visibleCount += 1;
+      });
+      searchEmpty.hidden = visibleCount !== 0;
+    }
+    searchInput.addEventListener("input", updateNavSearch);
+    searchInput.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") {
+        searchInput.value = "";
+        updateNavSearch();
+        searchInput.blur();
+        return;
+      }
+      if (event.key !== "Enter") return;
+      var firstVisible = navButtons.find(function (button) { return !button.hidden; });
+      if (firstVisible) {
+        firstVisible.click();
+        var query = searchInput.value.trim().toLowerCase();
+        var pageId = firstVisible.getAttribute("data-settings-page-target");
+        var matchingCard = accordionCards(pageId).find(function (card) {
+          return !query || card.textContent.toLowerCase().indexOf(query) !== -1;
+        });
+        if (matchingCard) {
+          matchingCard.open = true;
+          matchingCard.classList.remove("wm-accordion-search-hit");
+          requestAnimationFrame(function () { matchingCard.classList.add("wm-accordion-search-hit"); });
+          window.setTimeout(function () { matchingCard.classList.remove("wm-accordion-search-hit"); }, 1200);
+        }
+      }
+    });
+    panel.addEventListener("keydown", function (event) {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "f") {
+        event.preventDefault();
+        searchInput.focus();
+        searchInput.select();
+        return;
+      }
+      if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+      if (!event.target.closest || !event.target.closest(".wm-settings-nav-item")) return;
+      var visibleButtons = navButtons.filter(function (button) { return !button.hidden; });
+      var currentIndex = visibleButtons.indexOf(document.activeElement);
+      var direction = event.key === "ArrowDown" ? 1 : -1;
+      var nextIndex = (currentIndex + direction + visibleButtons.length) % visibleButtons.length;
+      if (visibleButtons[nextIndex]) {
+        event.preventDefault();
+        visibleButtons[nextIndex].focus();
+      }
     });
     var navMascot = document.createElement("img");
     navMascot.className = "wm-settings-nav-mascot";
     navMascot.setAttribute("data-theme-illustration", "navigation");
     navMascot.alt = "";
     nav.appendChild(navMascot);
+    var navFooter = element("div", "wm-settings-nav-footer");
+    navFooter.appendChild(element("span", "", "●"));
+    navFooter.appendChild(element("small", "", "所有系统运行正常"));
+    nav.appendChild(navFooter);
     body.appendChild(nav);
     body.appendChild(content);
     activateSettingsPage("general");
@@ -1165,48 +1305,49 @@
     renderGeneralDashboard(pages.general);
     applySettingsTheme(panel, settingsTheme());
 
-    var appearanceTheme = element("div", "wm-card wm-appearance-theme");
-    renderThemePicker(appearanceTheme, panel);
+    var appearanceTheme = section("🎨 界面主题与称呼", true, themeName(settingsTheme()));
+    appearanceTheme[0].classList.add("wm-appearance-theme");
+    renderThemePicker(appearanceTheme[1], panel);
     var titleInput = document.createElement("input"); titleInput.type = "text"; titleInput.maxLength = 8; titleInput.value = value("title", "主人"); titleInput.addEventListener("input", function () { save("title", titleInput.value); });
-    appearanceTheme.appendChild(row("如何称呼我", titleInput));
+    appearanceTheme[1].appendChild(row("如何称呼我", titleInput));
     var petNameInput = document.createElement("input"); petNameInput.type = "text"; petNameInput.maxLength = 8; petNameInput.placeholder = "鲸鱼娘"; petNameInput.value = value("petName", "鲸鱼娘"); petNameInput.addEventListener("input", function () {
       save("petName", petNameInput.value);
       panelTitle.textContent = (petNameInput.value.trim() || "鲸鱼娘") + " · 设置";
     });
-    appearanceTheme.appendChild(row("如何称呼桌宠", petNameInput)); pages.appearance.appendChild(appearanceTheme);
+    appearanceTheme[1].appendChild(row("如何称呼桌宠", petNameInput)); pages.appearance.appendChild(appearanceTheme[0]);
     /* 外观页的主题选择需要在挂载到面板后再次应用，否则初始「当前主题」不会被默认选中 */
     applySettingsTheme(panel, settingsTheme());
 
     var enabledCount = TOGGLES.filter(function (item) { return value(item[0], item[2] ? "1" : "0") !== "0"; }).length;
-    var companion = section("🎛️ 陪伴表现", true, enabledCount + "/" + TOGGLES.length + " 已启用"); companion[0].setAttribute("data-page-default-open", "true"); var switches = element("div", "wm-switches"); renderSwitches(switches); companion[1].appendChild(switches); pages.companion.appendChild(companion[0]);
-    var pomodoro = section("⏱️ 番茄钟", true, "专注与休息"); pomodoro[0].setAttribute("data-page-default-open", "true"); renderPomodoro(pomodoro[1]); pages.reminders.appendChild(pomodoro[0]);
-    var reminders = section("💧 健康与下班提醒", true, value("reminders", "1") === "0" ? "已关闭" : "已启用"); reminders[0].setAttribute("data-page-default-open", "true"); renderReminders(reminders[1]); pages.reminders.appendChild(reminders[0]);
-    var quiet = section("🔕 安静模式", true, value("quiet-mode", "0") === "1" ? "已开启" : "可定时"); quiet[0].setAttribute("data-page-default-open", "true"); renderQuiet(quiet[1]); pages.sound.appendChild(quiet[0]);
-    var display = section("🖼️ 显示个性化", true, value("displayScale", "100") + "%"); display[0].setAttribute("data-page-default-open", "true"); renderDisplay(display[1]); pages.display.appendChild(display[0]);
+    var companion = section("🎛️ 陪伴表现", true, enabledCount + "/" + TOGGLES.length + " 已启用"); var switches = element("div", "wm-switches"); renderSwitches(switches); companion[1].appendChild(switches); pages.companion.appendChild(companion[0]);
+    var pomodoro = section("⏱️ 番茄钟", true, "专注与休息"); renderPomodoro(pomodoro[1]); pages.reminders.appendChild(pomodoro[0]);
+    var reminders = section("💧 健康与下班提醒", true, value("reminders", "1") === "0" ? "已关闭" : "已启用"); renderReminders(reminders[1]); pages.reminders.appendChild(reminders[0]);
+    var quiet = section("🔕 安静模式", true, value("quiet-mode", "0") === "1" ? "已开启" : "可定时"); renderQuiet(quiet[1]); pages.sound.appendChild(quiet[0]);
+    var display = section("🖼️ 显示个性化", true, value("displayScale", "100") + "%"); renderDisplay(display[1]); pages.display.appendChild(display[0]);
     var computerLinkOn = value("computer-link", "1") !== "0";
-    var computerLink = section("🖥️ 电脑状态联动", true, computerLinkOn ? "已启用" : "已关闭"); computerLink[0].setAttribute("data-page-default-open", "true"); renderComputerLink(computerLink[1]); pages.display.appendChild(computerLink[0]);
-    var weather = section("⛅ 天气", true, value("weatherCity", "") || "未设置"); weather[0].setAttribute("data-page-default-open", "true"); renderWeather(weather[1]); pages.display.appendChild(weather[0]);
+    var computerLink = section("🖥️ 电脑状态联动", true, computerLinkOn ? "已启用" : "已关闭"); renderComputerLink(computerLink[1]); pages.display.appendChild(computerLink[0]);
+    var weather = section("⛅ 天气", true, value("weatherCity", "") || "未设置"); renderWeather(weather[1]); pages.display.appendChild(weather[0]);
     var adventureStatusValue = adventureStatus();
-    var adventure = section("🗺️ 旅行与收藏", true, adventureMeta(adventureStatusValue)); adventure[0].setAttribute("data-page-default-open", "true"); renderAdventure(adventure[1]); pages.about.appendChild(adventure[0]);
+    var adventure = section("🗺️ 旅行与收藏", true, adventureMeta(adventureStatusValue)); renderAdventure(adventure[1]); pages.about.appendChild(adventure[0]);
     var professionStatusValue = professionStatus();
-    var profession = section("🧭 职业成长", true, professionMeta(professionStatusValue)); profession[0].setAttribute("data-page-default-open", "true"); renderProfession(profession[1]); pages.about.appendChild(profession[0]);
+    var profession = section("🧭 职业成长", true, professionMeta(professionStatusValue)); renderProfession(profession[1]); pages.about.appendChild(profession[0]);
     var relationshipStatusValue = relationshipStatus();
-    var relationship = section("💞 关系与性格", true, relationshipMeta(relationshipStatusValue)); relationship[0].setAttribute("data-page-default-open", "true"); renderRelationship(relationship[1]); pages.companion.appendChild(relationship[0]);
+    var relationship = section("💞 关系与性格", true, relationshipMeta(relationshipStatusValue)); renderRelationship(relationship[1]); pages.companion.appendChild(relationship[0]);
     var houseStatusValue = houseStatus();
-    var house = section("🏠 鲸鱼小屋", true, houseMeta(houseStatusValue)); house[0].setAttribute("data-page-default-open", "true"); renderHouseEntry(house[1]); pages.about.appendChild(house[0]);
+    var house = section("🏠 鲸鱼小屋", true, houseMeta(houseStatusValue)); renderHouseEntry(house[1]); pages.about.appendChild(house[0]);
     var lifeStatusValue = lifeStatus();
-    var life = section("🌿 自主生活", true, lifeMeta(lifeStatusValue)); life[0].setAttribute("data-page-default-open", "true"); renderLife(life[1]); pages.companion.appendChild(life[0]);
+    var life = section("🌿 自主生活", true, lifeMeta(lifeStatusValue)); renderLife(life[1]); pages.companion.appendChild(life[0]);
     var dailySummaryStatusValue = dailySummaryStatus();
     var dailySummary = section("📖 每日生活总结", true, dailySummaryMeta(dailySummaryStatusValue)); renderDailySummaryEntry(dailySummary[1]); pages.about.appendChild(dailySummary[0]);
-    var daily = section("🎯 今日任务", true, "今日进度"); daily[0].setAttribute("data-page-default-open", "true"); renderDaily(daily[1]); pages.reminders.appendChild(daily[0]);
-    var week = section("📅 本周签到", true, "签到记录"); week[0].setAttribute("data-page-default-open", "true"); renderWeek(week[1]); pages.reminders.appendChild(week[0]);
-    var badge = section("🎖️ 称号", true, value("badge", "") || "未佩戴"); badge[0].setAttribute("data-page-default-open", "true"); renderBadge(badge[1]); pages.about.appendChild(badge[0]);
+    var daily = section("🎯 今日任务", true, "今日进度"); renderDaily(daily[1]); pages.reminders.appendChild(daily[0]);
+    var week = section("📅 本周签到", true, "签到记录"); renderWeek(week[1]); pages.reminders.appendChild(week[0]);
+    var badge = section("🎖️ 称号", true, value("badge", "") || "未佩戴"); renderBadge(badge[1]); pages.about.appendChild(badge[0]);
     var poseCount = 0;
     for (var pg = 0; pg < POSE_GROUPS.length; pg += 1) poseCount += POSE_GROUPS[pg].poses.length;
     var actions = section("🎭 互动与全部动作", false, poseCount + " 个动作"); renderActions(actions[1]); pages.appearance.appendChild(actions[0]);
     var achievementCount = value("achievements", "").split(",").filter(Boolean).length;
-    var achievements = section("🏅 成就墙", true, achievementCount + "/" + ACHIEVEMENTS.length + " 已解锁"); achievements[0].setAttribute("data-page-default-open", "true"); renderAchievements(achievements[1]); pages.about.appendChild(achievements[0]);
-    var reset = section("🗂️ 数据与重置", true, "位置与养成数据"); reset[0].setAttribute("data-page-default-open", "true");
+    var achievements = section("🏅 成就墙", true, achievementCount + "/" + ACHIEVEMENTS.length + " 已解锁"); renderAchievements(achievements[1]); pages.about.appendChild(achievements[0]);
+    var reset = section("🗂️ 数据与重置", true, "位置与养成数据");
     renderDataTools(reset[1]);
     var resetPosition = element("button", "", "重置到默认位置"); resetPosition.addEventListener("click", function () { storage.remove("floatX"); storage.remove("floatY"); save("float-reset", Date.now()); }); reset[1].appendChild(row("悬浮位置", resetPosition));
     var resetGrowth = element("button", "wm-danger", "重置养成"); resetGrowth.addEventListener("click", function () {
@@ -1230,6 +1371,31 @@
       refreshSection("🎖️ 称号", renderBadge);
       refreshSection("🏅 成就墙", renderAchievements);
     }); reset[1].appendChild(row("养成数据", resetGrowth)); pages.about.appendChild(reset[0]);
+
+    Object.keys(pages).forEach(function (pageId) {
+      if (pageId === "general") return;
+      var cards = accordionCards(pageId);
+      cards.forEach(function (card) {
+        var heading = card.querySelector(".wm-summary-title");
+        card.setAttribute("data-settings-section", heading ? heading.textContent : "");
+        card.open = false;
+      });
+      var preferred = preferredAccordionCard(pageId, cards);
+      if (preferred) preferred.open = true;
+      cards.forEach(function (card) {
+        card.addEventListener("toggle", function () {
+          if (accordionChanging || !card.open) return;
+          accordionChanging = true;
+          cards.forEach(function (other) {
+            if (other !== card) other.open = false;
+          });
+          accordionChanging = false;
+          accordionMemory[pageId] = card.getAttribute("data-settings-section");
+          save("settingsAccordionState", JSON.stringify(accordionMemory));
+        });
+      });
+    });
+    accordionReady = true;
 
     var resizeHint = element("span", "wm-settings-resize-hint");
     resizeHint.setAttribute("aria-hidden", "true");
